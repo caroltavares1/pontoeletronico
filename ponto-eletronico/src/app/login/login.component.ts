@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { PoModalAction, PoModalComponent, PoNotificationService, PoToasterOrientation } from '@po-ui/ng-components';
 import { PoPageLoginLiterals } from '@po-ui/ng-templates';
 import { AuthService } from '../auth/auth.service';
-import { UserService } from '../user/user.service';
+import { UserService } from '../services/user.service';
 import { NgForm } from '@angular/forms';
 
 @Component({

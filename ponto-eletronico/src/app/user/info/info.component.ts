@@ -1,9 +1,7 @@
-import { formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { PoDynamicViewField, PoNotificationService } from '@po-ui/ng-components';
-import { AuthService } from 'src/app/auth/auth.service';
-import { CabecalhoService } from '../cabecalho.service';
-import { UserService } from '../user.service';
+import { ExportToPDFService } from '../../services/exportToPDF.service';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-info',
@@ -36,7 +34,7 @@ export class InfoComponent implements OnInit {
   constructor(
     private userService: UserService,
     private poNotification: PoNotificationService,
-    private headerService: CabecalhoService
+    private pdf: ExportToPDFService
   ) { }
 
   ngOnInit(): void {
@@ -51,7 +49,7 @@ export class InfoComponent implements OnInit {
               v.user[0].cpf = this.formataCPF(v.user[0].cpf)
               this.funcionario = v.user[0]
               this.dados = { ...this.funcionario, ...this.empresa }
-              this.headerService.setHeader(this.dados)
+              this.pdf.setHeader(this.dados)
               this.hidden = true
             }, 800);
           } else {

@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { UserService } from './user.service';
+import { UserService } from '../services/user.service';
 
 const auth = environment.authorization
 
