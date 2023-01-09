@@ -34,8 +34,8 @@ WSMETHOD GET WSSERVICE bh
 	EndIf
 
 	BEGINSQL ALIAS 'TSPI'
-		SELECT
-			SPI.PI_QUANT, SP9.P9_TIPOCOD
+		SELECT DISTINCT
+			SPI.PI_QUANT, SP9.P9_TIPOCOD, SPI.PI_DATA
 		FROM %Table:SPI% AS SPI
 		INNER JOIN %Table:SP9% AS SP9 ON SPI.PI_PD = SP9.P9_CODIGO
 		WHERE
@@ -166,8 +166,8 @@ Static Function GetSaldoAnterior(nSaldoAnterior, cFilAtuacao, cMatricula, cDtIni
 	Local nSomaCreditos := nSomaDebitos := 0
 
 	BEGINSQL ALIAS 'TMP' //Lista todos os registros anteriores a data inicial informada
-		SELECT
-			SPI.PI_QUANT, SP9.P9_TIPOCOD
+		SELECT DISTINCT
+			SPI.PI_QUANT, SP9.P9_TIPOCOD, SPI.PI_DATA
 		FROM %Table:SPI% AS SPI
 		INNER JOIN %Table:SP9% AS SP9 ON SPI.PI_PD = SP9.P9_CODIGO
 		WHERE

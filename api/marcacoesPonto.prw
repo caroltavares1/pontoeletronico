@@ -181,12 +181,13 @@ Static Function ConvertHora(nHora)
 			cHora := cHora+"0"
 		EndIf
 	EndIf
-
-	If Len(cHora) == 5
+	
+	If Len(cHora) == 5 .OR. Len(cHora) == 6
 		cHora := STRTRAN(cHora,".",":") + ":00"
 	Else
 		cHora := "00:00:00"
 	EndIf
+
 Return cHora
 
 Static Function ConvertData(cData)
@@ -305,27 +306,43 @@ Static Function MTOH(nMinutos) //deve vim como um numero inteiro
 Return nMinutos
 
 Static Function GetResumo(aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
+	Local aDados := {}
+	Local aSoma := {}
+	Local nLinha := 0
 
-	BEGINSQL ALIAS 'TSPH'
-		SELECT
-			SPH.PH_PD, SUM(SPH.PH_QUANTC) AS TOTAL
-		FROM %Table:SPH% AS SPH
+	BEGINSQL ALIAS 'TSPC'
+		SELECT DISTINCT
+			SPC.PC_DATA, SPC.PC_PD, SPC.PC_QUANTC, SPC.PC_QUANTI
+		FROM %Table:SPC% AS SPC
 		WHERE
-			SPH.%NotDel%
-			AND SPH.PH_FILIAL = %exp:cFilFunc%
-			AND SPH.PH_DATA BETWEEN %exp:cDataIni% AND %exp:cDataFin%
-			AND SPH.PH_MAT = %exp:cMatricula%
-			GROUP BY SPH.PH_PD
+			SPC.%NotDel%
+			AND SPC.PC_FILIAL = %exp:cFilFunc%
+			AND SPC.PC_DATA BETWEEN %exp:cDataIni% AND %exp:cDataFin%
+			AND SPC.PC_MAT = %exp:cMatricula%
+			ORDER BY SPC.PC_DATA, SPC.PC_PD
 	ENDSQL
 
-	While !TSPH->(Eof())
-		Aadd(aResumo, JsonObject():new())
-		nPos := Len(aResumo)
-		aResumo[nPos]['codEvento'] := TSPH->PH_PD
-		aResumo[nPos]['descEvento'] := ALLTRIM(POSICIONE("SP9", 1, xFilial("SP9")+TSPH->PH_PD, "P9_DESC"))
-		aResumo[nPos]['totalHoras'] := TSPH->TOTAL
-		TSPH->(DbSkip())
+	While !TSPC->(Eof())
+		Aadd(aDados, {TSPC->PC_PD, HTOM(ConVertHora(TSPC->PC_QUANTC)), HTOM(ConvertHora(TSPC->PC_QUANTI))})
+		TSPC->(DbSkip())
 	EndDo
 
-	TSPH->(DbCloseArea())
+	For nLinha := 1 to Len(aDados)
+		nPos := ascan(asoma,{ |x| x[1] = aDados[nLinha,1] } )
+		If Empty(nPos)
+			aadd(asoma,{aDados[nLinha, 1],aDados[nLinha, 2]-aDados[nLinha, 3]})
+		Else
+			asoma[nPos,2] += aDados[nLinha,2] - aDados[nLinha, 3]
+		EndIf
+	Next nLinha
+
+	For nLinha := 1 To Len(asoma)
+		Aadd(aResumo, JsonObject():new())
+		nPos := Len(aResumo)
+		aResumo[nPos]['codEvento'] := asoma[nLinha,1]
+		aResumo[nPos]['descEvento'] := ALLTRIM(POSICIONE("SP9", 1, xFilial("SP9")+ asoma[nLinha,1], "P9_DESC"))
+		aResumo[nPos]['totalHoras'] := ConvertHora(MTOH(asoma[nLinha,2]))
+	Next
+
+	TSPC->(DbCloseArea())
 Return

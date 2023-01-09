@@ -11,7 +11,8 @@ const httpOptions = {
       'Content-Type': 'application/json',
       'Authorization': auth,
     }
-  )
+  ),
+  params : {}
 };
 
 @Injectable({
@@ -27,19 +28,35 @@ export class UserService {
   constructor(private http: HttpClient) { }
 
   public login(formData: any): Observable<any> {
-    return this.http.get<any>(this.apiURL + `/participantes/?cpf=${formData.login}&senha=${formData.password}`, httpOptions).pipe(
+    const options = httpOptions
+    options.params = {
+      'cpf' : formData.login,
+      'senha' : formData.password
+    }
+    
+    return this.http.get<any>(this.apiURL + `/participantes/`, options).pipe(
       map((resposta: any) => resposta)
     );
   }
 
   public getUser(): Observable<any> {
-    return this.http.get<any>(this.apiURL + `/funcionarios/?cpf=${this.userCPF}`, httpOptions).pipe(
+    const options = httpOptions
+    options.params = {
+      'cpf' : this.userCPF
+    }
+
+    return this.http.get<any>(this.apiURL + `/funcionarios/`, options).pipe(
       map((resposta: any) => resposta)
     );
   }
 
   public getFilial(): Observable<any> {
-    return this.http.get<any>(this.apiURL + `/filiais/?filial=${this.filatu}`, httpOptions).pipe(
+    const options = httpOptions
+    options.params = {
+      'filial' : this.filatu
+    }
+
+    return this.http.get<any>(this.apiURL + `/filiais/`, options).pipe(
       map((resposta: any) => resposta)
     );
   }
