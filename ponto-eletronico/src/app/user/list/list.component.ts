@@ -307,7 +307,7 @@ export class ListComponent implements OnInit {
           {
             columns: [
               { text: `Matrícula: ${header.matricula}`, margin: [15, 5, 5, 5] },
-              { text: `Nome: ${header.cnpj}`, margin: [15, 5, 5, 5] },
+              { text: `Nome: ${header.nome}`, margin: [15, 5, 5, 5] },
               { text: `Admissão: ${header.admissao}`, margin: [15, 5, 5, 5] },
             ]
           },

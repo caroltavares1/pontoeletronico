@@ -53,7 +53,7 @@ export class InfoComponent implements OnInit {
               this.dados = { ...this.funcionario, ...this.empresa }
               this.headerService.setHeader(this.dados)
               this.hidden = true
-            }, 500);
+            }, 800);
           } else {
             this.poNotification.error(v.message)
           }
@@ -83,7 +83,7 @@ export class InfoComponent implements OnInit {
                 endereco: v.endereco,
                 emissao: new Date().toLocaleDateString()
               }
-            }, 500);
+            }, 200);
           } else {
             this.empresa = {
               empresa: '',
