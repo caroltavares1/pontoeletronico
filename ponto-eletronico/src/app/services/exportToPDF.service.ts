@@ -93,6 +93,11 @@ export class ExportToPDFService {
         ],
         margin: [40, 5, 2, 5]
       },
+      footer: [
+        { text: '**Espelho de ponto apenas para consulta. O original será entregue pelo RH no fechamento mensal.',
+        margin: [240, 5, 0, 5], fontSize: 9 },
+
+      ],
       content: [
         this.table(marcacoes, columns, propM),
         { canvas: [{ type: 'line', x1: 15, y1: 15, x2: 732, y2: 15, lineWidth: 1, }] },
