@@ -261,23 +261,23 @@ export class ListComponent implements OnInit {
     let header: any = {}
     header = this.headerService.getHeader()
 
-    let marcacoes = this.items
+    let marcacoes = structuredClone(this.items) //Cria uma copia por valor e não por referência
     let columns = [
       'Data', 'Dia', '1ª Entrada', '1ª Saída', '2ª Entrada', '2ª Saída',
       'Abono  ', 'Horas Extras', 'Abstenção', 'Jornada', 'Observação']
     let propM = ['data', 'dia', '1E', '1S', '2E', '2S', 'abono', 'horasExtras', 'abstencao', 'jornada', 'observacoes']
 
-    let horas = this.bancohorarios
+    let horas = structuredClone(this.bancohorarios)
     let horasCol = [
       'Saldo Anterior', 'Créditos', 'Débitos', 'Saldo Atual'
     ]
     let horasProp = ['saldoAnterior', 'totalCreditos', 'totalDebitos', 'saldoAtual']
 
-    let turnos = this.itemsHorarios
+    let turnos = structuredClone(this.itemsHorarios)
     let turnosCol = ['Dia', '1ª Entrada', '1ª Saída', '2ª Entrada', '2ª Saída', 'Turno']
     let turnosProp = ['dia', '1E', '1S', '2E', '2S', 'turno']
 
-    let resumo = this.resumoItems
+    let resumo = structuredClone(this.resumoItems)
     let resumoCol = ['Código', 'Descrição', 'Total de Horas']
     let resumoProp = ['codEvento', 'descEvento', 'totalHoras']
 
@@ -355,7 +355,7 @@ export class ListComponent implements OnInit {
   }
 
 
-  public buildTableBody(data: any, columns: any, col: any) {
+  public buildTableBody(data: any, columns: any, col: any, flag?:boolean) {
     let body = [];
 
     body.push(columns);
@@ -365,7 +365,10 @@ export class ListComponent implements OnInit {
 
       col.forEach((column: any) => {
         let rc
-        (row[column] != null) ? rc = row[column].toString() : rc = ''
+        if (row[column] == '00:00:00' && flag == true) {
+          row[column] = ''
+        }
+        (row[column] == null) ? rc = '' : rc = row[column].toString()
         dataRow.push(rc);
       })
       body.push(dataRow);
@@ -385,7 +388,7 @@ export class ListComponent implements OnInit {
       table: {
         headerRows: 1,
         widths: [60, 50, 50, 50, 50, 50, 50, 60, 50, 50, 100,],
-        body: this.buildTableBody(data, columns, col),
+        body: this.buildTableBody(data, columns, col, true),
 
       },
       layout: {
@@ -407,7 +410,7 @@ export class ListComponent implements OnInit {
       table: {
         headerRows: 1,
         widths: [170, 170, 170, 172],
-        body: this.buildTableBody(data, columns, col),
+        body: this.buildTableBody(data, columns, col, false),
       },
       layout: {
         fillColor: function (i:any, node:any) {
@@ -429,7 +432,7 @@ export class ListComponent implements OnInit {
       table: {
         headerRows: 1,
         widths: [80, 80, 80, 80, 80, 262],
-        body: this.buildTableBody(data, columns, col),
+        body: this.buildTableBody(data, columns, col, false),
       },
       layout: {
         fillColor: function (i:any, node:any) {
@@ -451,7 +454,7 @@ export class ListComponent implements OnInit {
       table: {
         headerRows: 1,
         widths: [80, 400, 210],
-        body: this.buildTableBody(data, columns, col),
+        body: this.buildTableBody(data, columns, col, false),
       },
       layout: {
         fillColor: function (i:any, node:any) {
