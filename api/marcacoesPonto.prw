@@ -328,20 +328,22 @@ Static Function GetResumo(aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
 	EndDo
 
 	For nLinha := 1 to Len(aDados)
-		nPos := ascan(asoma,{ |x| x[1] = aDados[nLinha,1] } )
+		nPos := ascan(aSoma,{ |x| x[1] = aDados[nLinha,1] } )
 		If Empty(nPos)
-			aadd(asoma,{aDados[nLinha, 1],aDados[nLinha, 2]-aDados[nLinha, 3]})
+			aadd(aSoma,{aDados[nLinha, 1],aDados[nLinha, 2]-aDados[nLinha, 3]})
 		Else
-			asoma[nPos,2] += aDados[nLinha,2] - aDados[nLinha, 3]
+			aSoma[nPos,2] += aDados[nLinha,2] - aDados[nLinha, 3]
 		EndIf
 	Next nLinha
 
-	For nLinha := 1 To Len(asoma)
+	ASORT(aSoma, , , { | x,y | x[1] < y[1] } )
+
+	For nLinha := 1 To Len(aSoma)
 		Aadd(aResumo, JsonObject():new())
 		nPos := Len(aResumo)
-		aResumo[nPos]['codEvento'] := asoma[nLinha,1]
-		aResumo[nPos]['descEvento'] := ALLTRIM(POSICIONE("SP9", 1, xFilial("SP9")+ asoma[nLinha,1], "P9_DESC"))
-		aResumo[nPos]['totalHoras'] := ConvertHora(MTOH(asoma[nLinha,2]))
+		aResumo[nPos]['codEvento'] := aSoma[nLinha,1]
+		aResumo[nPos]['descEvento'] := ALLTRIM(POSICIONE("SP9", 1, xFilial("SP9")+ aSoma[nLinha,1], "P9_DESC"))
+		aResumo[nPos]['totalHoras'] := ConvertHora(MTOH(aSoma[nLinha,2]))
 	Next
 
 	TSPC->(DbCloseArea())
