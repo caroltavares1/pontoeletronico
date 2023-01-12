@@ -12,15 +12,15 @@ export class ExportToPDFService {
 
   constructor() { }
 
-  setHeader(header: any){
+  setHeader(header: any) {
     this.cabecalho = header
   }
 
-  getHeader(){
+  getHeader() {
     return this.cabecalho
   }
 
-  public openPDF(items: any[], bh: any[], turno: any[], resumos: any[], start: string, end:string): void {
+  public openPDF(items: any[], bh: any[], turno: any[], resumos: any[], start: string, end: string): void {
     let header: any = {}
     header = this.getHeader()
 
@@ -32,9 +32,9 @@ export class ExportToPDFService {
 
     let horas = structuredClone(bh)
     let horasCol = [
-      'Saldo Anterior', 'Créditos', 'Débitos', 'Saldo Atual'
+      'Saldo Anterior', 'Débitos', 'Créditos', 'Saldo Atual'
     ]
-    let horasProp = ['saldoAnterior', 'totalCreditos', 'totalDebitos', 'saldoAtual']
+    let horasProp = ['saldoAnterior', 'totalDebitos', 'totalCreditos', 'saldoAtual']
 
     let turnos = structuredClone(turno)
     let turnosCol = ['Dia', '1ª Entrada', '1ª Saída', '2ª Entrada', '2ª Saída', 'Turno']
@@ -83,7 +83,7 @@ export class ExportToPDFService {
           },
           {
             columns: [
-              { text: `categoria: ${header.categoria}`, margin: [15, 2, 5, 5] },
+              { text: `Categoria: ${header.categoria}`, margin: [15, 2, 5, 5] },
               { text: `Situação: ${header.situacao}`, margin: [15, 2, 5, 5] },
               { text: `Departamento: ${header.departamento}`, margin: [15, 2, 5, 5] },
             ]
@@ -94,8 +94,10 @@ export class ExportToPDFService {
         margin: [40, 5, 2, 5]
       },
       footer: [
-        { text: '**Espelho de ponto apenas para consulta. O original será entregue pelo RH no fechamento mensal.',
-        margin: [240, 5, 0, 5], fontSize: 9 },
+        {
+          text: '**Espelho de ponto apenas para consulta. O original será entregue pelo RH no fechamento mensal.',
+          margin: [240, 5, 0, 5], fontSize: 9
+        },
 
       ],
       content: [
@@ -123,7 +125,7 @@ export class ExportToPDFService {
   }
 
 
-  public buildTableBody(data: any, columns: any, col: any, flag?:boolean) {
+  public buildTableBody(data: any, columns: any, col: any, flag?: boolean) {
     let body = [];
 
     body.push(columns);
@@ -160,7 +162,7 @@ export class ExportToPDFService {
 
       },
       layout: {
-        fillColor: function (i:any, node:any) {
+        fillColor: function (i: any, node: any) {
           return (i % 2 === 0) ? '#e5e5e5' : null;
         }
       }
@@ -181,7 +183,7 @@ export class ExportToPDFService {
         body: this.buildTableBody(data, columns, col, false),
       },
       layout: {
-        fillColor: function (i:any, node:any) {
+        fillColor: function (i: any, node: any) {
           return (i % 2 === 0) ? '#e5e5e5' : null;
         }
       }
@@ -203,7 +205,7 @@ export class ExportToPDFService {
         body: this.buildTableBody(data, columns, col, false),
       },
       layout: {
-        fillColor: function (i:any, node:any) {
+        fillColor: function (i: any, node: any) {
           return (i % 2 === 0) ? '#e5e5e5' : null;
         }
       }
@@ -225,7 +227,7 @@ export class ExportToPDFService {
         body: this.buildTableBody(data, columns, col, false),
       },
       layout: {
-        fillColor: function (i:any, node:any) {
+        fillColor: function (i: any, node: any) {
           return (i % 2 === 0) ? '#e5e5e5' : null;
         }
       }

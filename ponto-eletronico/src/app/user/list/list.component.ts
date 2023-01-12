@@ -65,8 +65,8 @@ export class ListComponent implements OnInit {
 
   banco: Array<PoTableColumn> = [
     { property: 'saldoAnterior', width: '25%', label: 'Saldo Anterior', type: 'string' },
-    { property: 'totalCreditos', width: '25%', label: 'Créditos', type: 'string' },
     { property: 'totalDebitos', width: '25%', label: 'Débitos', type: 'string' },
+    { property: 'totalCreditos', width: '25%', label: 'Créditos', type: 'string' },
     { property: 'saldoAtual', width: '25%', label: 'Saldo Atual', type: 'string' },
   ];
 
@@ -246,7 +246,7 @@ export class ListComponent implements OnInit {
     this.getlist()
   }
 
-  public openPDF(){
+  public openPDF() {
     this.pdf.openPDF(this.items, this.itemsBH, this.itemsHorarios, this.itemsResumo, this.start, this.end)
   }
 
