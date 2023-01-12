@@ -78,14 +78,14 @@ export class LoginComponent implements OnInit {
 
   resetPassword(form: NgForm) {
     let cpf = form.form.value.cpf
-    let senha = form.form.value.senha
+    let senha = form.form.value.password
     this.userService.resetPassword(cpf, senha)
       .subscribe({
         next: (v: any) => {
-          if (v.erro == undefined){
+          if (v.erro == undefined) {
             this.poNotification.success("Sua senha foi resetada com sucesso")
             this.poModal.close()
-          }else{
+          } else {
             this.poNotification.error("Senha informada não coincide com o padrão ou o CPF está incorreto. Tente novamente")
           }
 

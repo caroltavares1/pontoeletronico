@@ -12,7 +12,7 @@ const httpOptions = {
       'Authorization': auth,
     }
   ),
-  params : {}
+  params: {}
 };
 
 @Injectable({
@@ -30,10 +30,10 @@ export class UserService {
   public login(formData: any): Observable<any> {
     const options = httpOptions
     options.params = {
-      'cpf' : formData.login,
-      'senha' : formData.password
+      'cpf': formData.login,
+      'senha': formData.password
     }
-    
+
     return this.http.get<any>(this.apiURL + `/participantes/`, options).pipe(
       map((resposta: any) => resposta)
     );
@@ -42,7 +42,7 @@ export class UserService {
   public getUser(): Observable<any> {
     const options = httpOptions
     options.params = {
-      'cpf' : this.userCPF
+      'cpf': this.userCPF
     }
 
     return this.http.get<any>(this.apiURL + `/funcionarios/`, options).pipe(
@@ -53,7 +53,7 @@ export class UserService {
   public getFilial(): Observable<any> {
     const options = httpOptions
     options.params = {
-      'filial' : this.filatu
+      'filial': this.filatu
     }
 
     return this.http.get<any>(this.apiURL + `/filiais/`, options).pipe(
@@ -61,23 +61,27 @@ export class UserService {
     );
   }
 
-  public getUserCPF(){
+  public getUserCPF() {
     return this.userCPF
   }
 
   public altPassword(senhaAtual: string, novaSenha: string) {
+    const options = httpOptions
+    options.params = {}
     let body = {
       cpf: this.userCPF,
-      senhaAtual : senhaAtual,
+      senhaAtual: senhaAtual,
       novaSenha: novaSenha
     }
-    return this.http.put<any>(this.apiURL + '/participantes/', JSON.stringify(body), httpOptions).pipe(take(1))
+    return this.http.put<any>(this.apiURL + '/participantes/', JSON.stringify(body), options).pipe(take(1))
 
   }
 
-  public resetPassword(cpf: string, senha: string){
-    let url = this.apiURL+`/participantes/reset/?cpf=${cpf}&senha=${senha}`
-    return this.http.put<any>(url, httpOptions).pipe(take(1))
+  public resetPassword(cpf: string, senha: string) {
+    const options = httpOptions
+    options.params = {}
+    let url = this.apiURL + `/participantes/reset/?cpf=${cpf}&senha=${senha}`
+    return this.http.put<any>(url, {}, options).pipe(take(1))
 
   }
 }

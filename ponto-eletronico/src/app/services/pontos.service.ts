@@ -24,20 +24,6 @@ export class PontosService {
   turno = ''
   seq = ''
 
-  resumo: Array<any> = [
-    {
-      codigo: '001',
-      descricao: 'HORAS NORMAIS',
-      calculo: 159.29,
-      inform: 0.00
-    },
-    {
-      codigo: '014',
-      descricao: 'SAIDA ANTECIPADA',
-      calculo: 7.29,
-      inform: 0.00
-    }
-  ]
 
   constructor(private userService: UserService, private http: HttpClient) { }
 
@@ -47,31 +33,27 @@ export class PontosService {
     let mat = this.userService.matricula
     let url = ''
     if (dtini == undefined && dtfin == undefined)
-      url = this.apiURL+ `/marcacoes/?filial=${filial}&matricula=${mat}`
+      url = this.apiURL + `/marcacoes/?filial=${filial}&matricula=${mat}`
     else
-      url = this.apiURL+ `/marcacoes/?filial=${filial}&matricula=${mat}&dtinicial=${dtini}&dtfinal=${dtfin}`
+      url = this.apiURL + `/marcacoes/?filial=${filial}&matricula=${mat}&dtinicial=${dtini}&dtfinal=${dtfin}`
 
-    return this.http.get<any>(url, httpOptions,  ).pipe(
+    return this.http.get<any>(url, httpOptions,).pipe(
       map((resposta: any) => resposta)
     );
   }
   public listHorarios() {
-    let url = this.apiURL+ `/turnos/?turno=${this.turno}&seq=${this.seq}`
-    return this.http.get<any>(url, httpOptions,  ).pipe(
+    let url = this.apiURL + `/turnos/?turno=${this.turno}&seq=${this.seq}`
+    return this.http.get<any>(url, httpOptions,).pipe(
       map((resposta: any) => resposta)
     );
   }
 
-  public getBancoHoras(dtini: string, dtfin: string){
+  public getBancoHoras(dtini: string, dtfin: string) {
     let filial = this.userService.filatu
     let mat = this.userService.matricula
     let url = this.apiURL + `/bh/?FILIAL=${filial}&MATRICULA=${mat}&DTINICIAL=${dtini}&DTFINAL=${dtfin}`
-    return this.http.get<any>(url, httpOptions,  ).pipe(
+    return this.http.get<any>(url, httpOptions,).pipe(
       map((resposta: any) => resposta)
     );
-  }
-
-  public listResumo() {
-    return this.resumo
   }
 }
