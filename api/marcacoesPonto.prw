@@ -87,7 +87,7 @@ WSMETHOD GET WSSERVICE marcacoes
 		Aadd(aDados, JsonObject():new())
 		nPos := Len(aDados)
 		GetAbono(AllTrim(TSP8->P8_MAT), TSP8->P8_DATA, @cHorasAbonadas, @cMotivoAbono)
-		GetTurno(@cTurno, @cSqTurno)
+		GetTurno(@cTurno, @cSqTurno, AllTrim(TSP8->P8_FILIAL))
 		aDados[nPos]['filial' ] := AllTrim(TSP8->P8_FILIAL)
 		aDados[nPos]['matricula' ] := AllTrim(TSP8->P8_MAT)
 		aDados[nPos]['data' ] := ConvertData(AllTrim(TSP8->P8_DATA))
@@ -211,7 +211,7 @@ Static Function GetAbono(cMatricula, cDataAbono, cHorasAbonadas, cMotivoAbono)
 	SPK->(RestArea(aAreaSPK))
 Return
 
-Static Function GetTurno(cTurno, cSqTurno)
+Static Function GetTurno(cTurno, cSqTurno, cFilFunc)
 	Local nDia := DOW(STOD(TSP8->P8_DATA))
 
 	BEGINSQL ALIAS 'TSPJ'
@@ -220,6 +220,7 @@ Static Function GetTurno(cTurno, cSqTurno)
 		FROM %Table:SPJ% AS SPJ
 		WHERE
 			SPJ.%NotDel%
+			AND SPJ.PJ_FILIAL = %exp:LEFT(cFilFunc, 2)%
 			AND SPJ.PJ_TURNO = %exp:TSP8->P8_TURNO%
 			AND SPJ.PJ_SEMANA = %exp:TSP8->P8_SEMANA%
 			AND SPJ.PJ_DIA = %exp:nDia%
