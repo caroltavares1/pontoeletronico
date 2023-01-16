@@ -19,7 +19,10 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local lRet := .T.
 	Local aDados := {}
 	Local aResumo := {}
-	Local aPontos := {}
+	Local aLinha := {}
+	Local aMarcacoes := {}
+	Local aFinsSem := {}
+	Local aFeriados := {}
 	Local aParams := Self:AQueryString
 	Local cFilFunc := ""
 	Local cMatricula := ""
@@ -33,6 +36,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local cHoras1T := cHoras2T := cTotalHoras := ""
 	Local cTurno := ""
 	Local cSqTurno := ""
+	Local nCont := 0
 
 	Default cDataIni := cDataFin := "19000101"
 
@@ -82,56 +86,77 @@ WSMETHOD GET WSSERVICE marcacoes
 	EndIf
 
 	GetResumo(@aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
-	GetFinalSemana(cDataIni, cDataFin)
 	GetTurno(@cTurno, @cSqTurno, cFilFunc)
 
+	If !TSP8->(Eof())
+		aFinsSem := GetFinalSemana(cDataIni, cDataFin)
+		aFeriados := GetFeriados(cDataIni, cDataFin)
+	EndIf
+
 	While !TSP8->(Eof())
+		Aadd(aMarcacoes, {})
+		nPos := Len(aMarcacoes)
+		GetAbono(AllTrim(TSP8->P8_MAT), TSP8->P8_DATA, @cHorasAbonadas, @cMotivoAbono)
+		Aadd(aLinha, ConvertData(AllTrim(TSP8->P8_DATA))) //1-data
+		Aadd(aLinha, AllTrim(TSP8->P8_FILIAL)) //2-filial
+		Aadd(aLinha, AllTrim(TSP8->P8_MAT)) //3-matricula
+		Aadd(aLinha, DiaSemana(STOD(TSP8->P8_DATA))) //4-dia
+		Aadd(aLinha, AllTrim(TSP8->P8_CC)) //5-centrocusto
+		Aadd(aLinha, AllTrim(TSP8->P8_CC)) //6-ordemClassificacao
+		Aadd(aLinha, AllTrim(TSP8->P8_MOTIVRG)) //7-motivoRegistro
+		Aadd(aLinha, AllTrim(TSP8->P8_TURNO)) //8-turno
+		Aadd(aLinha, cSqTurno) //9-seqTurno
+		Aadd(aLinha, cHorasAbonadas) //10-abono
+		Aadd(aLinha, cMotivoAbono) //11-observacoes
+		Aadd(aLinha, AllTrim(TSP8->P8_TPMARCA)) //12-tipoMarca
+		Aadd(aLinha, ConvertHora(TSP8->P8_HORA)) //13-marcacao
+
+		aMarcacoes[nPos] := aLinha
+		aLinha := {}
+		TSP8->(DbSkip())
+	EndDo
+
+	For nCont := 1 To Len(aFinsSem)
+		Aadd(aMarcacoes, aFinsSem[nCont])
+	Next
+
+	For nCont := 1 To Len(aFeriados)
+		Aadd(aMarcacoes, aFeriados[nCont])
+	Next
+
+	nCont := 1
+	aSort(aMarcacoes, , , {|x, y| x[1] < y[1]})
+	While nCont <= Len(aMarcacoes)
 		Aadd(aDados, JsonObject():new())
 		nPos := Len(aDados)
-		GetAbono(AllTrim(TSP8->P8_MAT), TSP8->P8_DATA, @cHorasAbonadas, @cMotivoAbono)
-		aDados[nPos]['filial' ] := AllTrim(TSP8->P8_FILIAL)
-		aDados[nPos]['matricula' ] := AllTrim(TSP8->P8_MAT)
-		aDados[nPos]['data' ] := ConvertData(AllTrim(TSP8->P8_DATA))
-		aDados[nPos]['dia' ] := DiaSemana(STOD(TSP8->P8_DATA))
-		aDados[nPos]['centrocusto'] := AllTrim(TSP8->P8_CC)
-		aDados[nPos]['ordemClassificacao'] := AllTrim(TSP8->P8_CC)
-		aDados[nPos]['motivoRegistro'] := AllTrim(TSP8->P8_MOTIVRG)
-		aDados[nPos]['turno'] := AllTrim(TSP8->P8_TURNO)
-		aDados[nPos]['seqTurno'] := cSqTurno
-		aDados[nPos]['abono'] := cHorasAbonadas
-		aDados[nPos]['observacoes'] := cMotivoAbono
+		aDados[nPos]['data' ] := aMarcacoes[nCont][1]
+		aDados[nPos]['filial' ] := aMarcacoes[nCont][2]
+		aDados[nPos]['matricula' ] := aMarcacoes[nCont][3]
+		aDados[nPos]['dia' ] := aMarcacoes[nCont][4]
+		aDados[nPos]['centrocusto'] := aMarcacoes[nCont][5]
+		aDados[nPos]['ordemClassificacao'] := aMarcacoes[nCont][6]
+		aDados[nPos]['motivoRegistro'] := aMarcacoes[nCont][7]
+		aDados[nPos]['turno'] := aMarcacoes[nCont][8]
+		aDados[nPos]['seqTurno'] := aMarcacoes[nCont][9]
+		aDados[nPos]['abono'] := aMarcacoes[nCont][10]
+		aDados[nPos]['observacoes'] := aMarcacoes[nCont][11]
 
-		dDatAux := TSP8->P8_DATA
-		While dDatAux == TSP8->P8_DATA
-			Aadd(aPontos, JsonObject():new())
-			nPosPont := Len(aPontos)
-			If AllTrim(TSP8->P8_TPMARCA) == "1E"
-				aDados[nPos]['1E'] := ConvertHora(TSP8->P8_HORA)
+		dDatAux := aMarcacoes[nCont][1]
+		While nCont <= Len(aMarcacoes) .AND. dDatAux == aMarcacoes[nCont][1]
+			If aMarcacoes[nCont][12] == "1E"
+				aDados[nPos]['1E'] := aMarcacoes[nCont][13]
 			EndIf
-			If AllTrim(TSP8->P8_TPMARCA) == "1S"
-				aDados[nPos]['1S'] := ConvertHora(TSP8->P8_HORA)
+			If aMarcacoes[nCont][12] == "1S"
+				aDados[nPos]['1S'] := aMarcacoes[nCont][13]
 			EndIf
 
-			If AllTrim(TSP8->P8_TPMARCA) == "2E"
-				aDados[nPos]['2E'] := ConvertHora(TSP8->P8_HORA)
+			If aMarcacoes[nCont][12] == "2E"
+				aDados[nPos]['2E'] := aMarcacoes[nCont][13]
 			EndIf
-			If AllTrim(TSP8->P8_TPMARCA) == "2S"
-				aDados[nPos]['2S'] := ConvertHora(TSP8->P8_HORA)
+			If aMarcacoes[nCont][12] == "2S"
+				aDados[nPos]['2S'] := aMarcacoes[nCont][13]
 			EndIf
-			If AllTrim(TSP8->P8_TPMARCA) == "3E"
-				aDados[nPos]['3E'] := ConvertHora(TSP8->P8_HORA)
-			EndIf
-			If AllTrim(TSP8->P8_TPMARCA) == "3S"
-				aDados[nPos]['3S'] := ConvertHora(TSP8->P8_HORA)
-			EndIf
-			If AllTrim(TSP8->P8_TPMARCA) == "4E"
-				aDados[nPos]['4E'] := ConvertHora(TSP8->P8_HORA)
-			EndIf
-			If AllTrim(TSP8->P8_TPMARCA) == "4S"
-				aDados[nPos]['4S'] := ConvertHora(TSP8->P8_HORA)
-			EndIf
-
-			TSP8->(DbSkip())
+			nCont++
 		EndDo
 		cHoras1T := SomaHoras(aDados[nPos]['1E'], aDados[nPos]['1S'])
 		cHoras2T := SomaHoras(aDados[nPos]['2E'], aDados[nPos]['2S'])
@@ -139,8 +164,8 @@ WSMETHOD GET WSSERVICE marcacoes
 		aDados[nPos]['jornada'] := cTotalHoras
 		aDados[nPos]['horasExtras'] := SomaHoras(cTurno, cTotalHoras, "E")
 		aDados[nPos]['abstencao'] := SomaHoras(cTurno, cTotalHoras, "A")
-	EndDo
 
+	EndDo
 	TSP8->(DbCloseArea())
 
 	If Len(aDados) == 0
@@ -358,11 +383,32 @@ Static Function GetFinalSemana(cDataIni, cDataFin)
 
 	While dInicial <= dFinal
 		If DOW(dInicial) == 7
-			Aadd(aDias, {DTOS(dInicial), "** Compensado **"})
+			Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",DiaSemana(dInicial),"","","","","","","** Compensado **","",""})
 		EndIf
 		If DOW(dInicial) == 1
-			Aadd(aDias, {DTOS(dInicial), "** D.S.R. **"})
+			Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",DiaSemana(dInicial),"","","","","","","** D.S.R. **","",""})
 		EndIf
 		dInicial := DaySum(dInicial, 1)
 	EndDo
 Return aDias
+
+Static Function GetFeriados(cDataIni, cDataFin)
+	Local aFeriados := {}
+
+	BEGINSQL ALIAS 'TSP3'
+		SELECT
+			SP3.P3_DATA AS 'DATA', SP3.P3_DESC AS 'DESC'
+		FROM %Table:SP3% AS SP3
+		WHERE
+			SP3.%NotDel%
+			AND SP3.P3_DATA BETWEEN %exp:cDataIni% AND %exp:cDataFin%
+	ENDSQL
+
+	While !TSP3->(Eof())
+		Aadd(aFeriados, {ConvertData(TSP3->DATA),"","",DiaSemana(STOD(TSP3->DATA)),"","","","","","",TSP3->DESC,"",""})
+		TSP3->(DbSkip())
+	EndDo
+
+	TSP3->(DbCloseArea())
+
+Return aFeriados
