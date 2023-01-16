@@ -1,7 +1,7 @@
 #INCLUDE 'TOTVS.CH'
 #INCLUDE 'RESTFUL.CH'
 
-WSRESTFUL marcacoes DESCRIPTION 'Manipulacao de Clientes'
+WSRESTFUL marcacoes DESCRIPTION 'Consulta de marcacoes do relogio de ponto'
 	Self:SetHeader('Access-Control-Allow-Credentials' , "true")
 
 	//Criação dos Metodos
@@ -56,7 +56,7 @@ WSMETHOD GET WSSERVICE marcacoes
 
 		BEGINSQL ALIAS 'TSP8'
 		SELECT
-			SP8.R_E_C_N_O_, SP8.P8_DATA, SP8.P8_TPMARCA, SP8.P8_FILIAL, SP8.P8_MAT,
+			SP8.P8_DATA, SP8.P8_TPMARCA, SP8.P8_FILIAL, SP8.P8_MAT,
 			SP8.P8_CC, SP8.P8_MOTIVRG, SP8.P8_TURNO, SP8.P8_HORA, SP8.P8_SEMANA
 		FROM %Table:SP8% AS SP8
 		WHERE
@@ -69,7 +69,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	Else
 		BEGINSQL ALIAS 'TSP8'
 		SELECT
-			SP8.R_E_C_N_O_, SP8.P8_DATA, SP8.P8_TPMARCA, SP8.P8_FILIAL, SP8.P8_MAT,
+			SP8.P8_DATA, SP8.P8_TPMARCA, SP8.P8_FILIAL, SP8.P8_MAT,
 			SP8.P8_CC, SP8.P8_MOTIVRG, SP8.P8_TURNO, SP8.P8_HORA, SP8.P8_SEMANA
 		FROM %Table:SP8% AS SP8
 		WHERE
@@ -181,7 +181,7 @@ Static Function ConvertHora(nHora)
 			cHora := cHora+"0"
 		EndIf
 	EndIf
-	
+
 	If Len(cHora) == 5 .OR. Len(cHora) == 6
 		cHora := STRTRAN(cHora,".",":") + ":00"
 	Else
