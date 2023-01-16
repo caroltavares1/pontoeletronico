@@ -124,8 +124,7 @@ export class ExportToPDFService {
     pdfMake.createPdf(dd).download("espelho-ponto.pdf");
   }
 
-
-  public buildTableBody(data: any, columns: any, col: any, flag?: boolean) {
+  public buildTableBody(data: any[], columns: any[], col: any[], flag?: boolean) {
     let body = [];
 
     body.push(columns);
@@ -147,7 +146,7 @@ export class ExportToPDFService {
     return body;
   }
 
-  public table(data: any, columns: any, col: any) {
+  public table(data: any[], columns: any[], col: any[]) {
     return {
       margin: [15, 20, 0, 0],
       //layout: 'lightHorizontalLines',
@@ -169,7 +168,7 @@ export class ExportToPDFService {
     };
 
   }
-  public tableBH(data: any, columns: any, col: any) {
+  public tableBH(data: any[], columns: any[], col: any[]) {
     return {
       margin: [15, 2, 0, 0],
       //layout: 'lightHorizontalLines',
@@ -191,7 +190,7 @@ export class ExportToPDFService {
 
   }
 
-  public tableTurno(data: any, columns: any, col: any) {
+  public tableTurno(data: any[], columns: any[], col: any[]) {
     return {
       margin: [15, 2, 0, 0],
       //layout: 'lightHorizontalLines',
@@ -213,7 +212,7 @@ export class ExportToPDFService {
 
   }
 
-  public tableResumo(data: any, columns: any, col: any) {
+  public tableResumo(data: any[], columns: any[], col: any[]) {
     return {
       margin: [15, 2, 0, 0],
       //layout: 'lightHorizontalLines',

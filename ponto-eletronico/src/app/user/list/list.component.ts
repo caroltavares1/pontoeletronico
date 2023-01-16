@@ -17,7 +17,6 @@ export class ListComponent implements OnInit {
   itemsBH: Array<any> = []
   itemsResumo: Array<any> = []
   loading = true
-  loadingH = true
   loadingB = true
   start = ''
   end = ''
@@ -116,6 +115,7 @@ export class ListComponent implements OnInit {
               this.getHorarios(turno, seq)
             }, 500);
           } else {
+            this.loading = false
             if (ini == undefined && fin == undefined) {
               this.poDialog.alert({
                 literals: { ok: 'Fechar' },
@@ -147,6 +147,8 @@ export class ListComponent implements OnInit {
           if (v.bh != undefined) {
             this.itemsBH = v.bh
             this.loadingB = false
+          } else {
+            this.loadingB = false
           }
         }
       })
@@ -161,7 +163,6 @@ export class ListComponent implements OnInit {
           if (v != undefined) {
             setTimeout(() => {
               this.itemsHorarios = v.horarios
-              this.loadingH = false
             }, 500);
 
           }
