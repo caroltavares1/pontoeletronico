@@ -35,7 +35,7 @@
             <br>
             <p class="po-font-text-large cor">Horários</p>
             <po-table
-                [p-loading]="loadingH"
+                [p-loading]="loading"
                 p-container="shadow"
                 [p-sort]="true"
                 [p-columns]="horarios"
@@ -46,6 +46,7 @@
             <br>
 
             <po-table
+                [p-loading]="loading"
                 p-container="shadow"
                 [p-sort]="true"
                 [p-columns]="resumoCols"
