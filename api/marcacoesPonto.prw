@@ -82,12 +82,13 @@ WSMETHOD GET WSSERVICE marcacoes
 	EndIf
 
 	GetResumo(@aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
+	GetFinalSemana(cDataIni, cDataFin)
+	GetTurno(@cTurno, @cSqTurno, cFilFunc)
 
 	While !TSP8->(Eof())
 		Aadd(aDados, JsonObject():new())
 		nPos := Len(aDados)
 		GetAbono(AllTrim(TSP8->P8_MAT), TSP8->P8_DATA, @cHorasAbonadas, @cMotivoAbono)
-		GetTurno(@cTurno, @cSqTurno, AllTrim(TSP8->P8_FILIAL))
 		aDados[nPos]['filial' ] := AllTrim(TSP8->P8_FILIAL)
 		aDados[nPos]['matricula' ] := AllTrim(TSP8->P8_MAT)
 		aDados[nPos]['data' ] := ConvertData(AllTrim(TSP8->P8_DATA))
@@ -349,3 +350,19 @@ Static Function GetResumo(aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
 
 	TSPC->(DbCloseArea())
 Return
+
+Static Function GetFinalSemana(cDataIni, cDataFin)
+	Local aDias := {}
+	Local dInicial := STOD(cDataIni)
+	Local dFinal := STOD(cDataFin)
+
+	While dInicial <= dFinal
+		If DOW(dInicial) == 7
+			Aadd(aDias, {DTOS(dInicial), "** Compensado **"})
+		EndIf
+		If DOW(dInicial) == 1
+			Aadd(aDias, {DTOS(dInicial), "** D.S.R. **"})
+		EndIf
+		dInicial := DaySum(dInicial, 1)
+	EndDo
+Return aDias
