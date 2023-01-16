@@ -1,7 +1,7 @@
 #INCLUDE 'TOTVS.CH'
 #INCLUDE 'RESTFUL.CH'
 
-WSRESTFUL marcacoes DESCRIPTION 'Manipulacao de Clientes'
+WSRESTFUL marcacoes DESCRIPTION 'Consulta de marcacoes do relogio de ponto'
 	Self:SetHeader('Access-Control-Allow-Credentials' , "true")
 
 	//Criação dos Metodos
@@ -56,7 +56,7 @@ WSMETHOD GET WSSERVICE marcacoes
 
 		BEGINSQL ALIAS 'TSP8'
 		SELECT
-			SP8.R_E_C_N_O_, SP8.P8_DATA, SP8.P8_TPMARCA, SP8.P8_FILIAL, SP8.P8_MAT,
+			SP8.P8_DATA, SP8.P8_TPMARCA, SP8.P8_FILIAL, SP8.P8_MAT,
 			SP8.P8_CC, SP8.P8_MOTIVRG, SP8.P8_TURNO, SP8.P8_HORA, SP8.P8_SEMANA
 		FROM %Table:SP8% AS SP8
 		WHERE
@@ -69,7 +69,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	Else
 		BEGINSQL ALIAS 'TSP8'
 		SELECT
-			SP8.R_E_C_N_O_, SP8.P8_DATA, SP8.P8_TPMARCA, SP8.P8_FILIAL, SP8.P8_MAT,
+			SP8.P8_DATA, SP8.P8_TPMARCA, SP8.P8_FILIAL, SP8.P8_MAT,
 			SP8.P8_CC, SP8.P8_MOTIVRG, SP8.P8_TURNO, SP8.P8_HORA, SP8.P8_SEMANA
 		FROM %Table:SP8% AS SP8
 		WHERE
@@ -87,7 +87,7 @@ WSMETHOD GET WSSERVICE marcacoes
 		Aadd(aDados, JsonObject():new())
 		nPos := Len(aDados)
 		GetAbono(AllTrim(TSP8->P8_MAT), TSP8->P8_DATA, @cHorasAbonadas, @cMotivoAbono)
-		GetTurno(@cTurno, @cSqTurno)
+		GetTurno(@cTurno, @cSqTurno, AllTrim(TSP8->P8_FILIAL))
 		aDados[nPos]['filial' ] := AllTrim(TSP8->P8_FILIAL)
 		aDados[nPos]['matricula' ] := AllTrim(TSP8->P8_MAT)
 		aDados[nPos]['data' ] := ConvertData(AllTrim(TSP8->P8_DATA))
@@ -181,7 +181,7 @@ Static Function ConvertHora(nHora)
 			cHora := cHora+"0"
 		EndIf
 	EndIf
-	
+
 	If Len(cHora) == 5 .OR. Len(cHora) == 6
 		cHora := STRTRAN(cHora,".",":") + ":00"
 	Else
@@ -211,7 +211,7 @@ Static Function GetAbono(cMatricula, cDataAbono, cHorasAbonadas, cMotivoAbono)
 	SPK->(RestArea(aAreaSPK))
 Return
 
-Static Function GetTurno(cTurno, cSqTurno)
+Static Function GetTurno(cTurno, cSqTurno, cFilFunc)
 	Local nDia := DOW(STOD(TSP8->P8_DATA))
 
 	BEGINSQL ALIAS 'TSPJ'
@@ -220,6 +220,7 @@ Static Function GetTurno(cTurno, cSqTurno)
 		FROM %Table:SPJ% AS SPJ
 		WHERE
 			SPJ.%NotDel%
+			AND SPJ.PJ_FILIAL = %exp:LEFT(cFilFunc, 2)%
 			AND SPJ.PJ_TURNO = %exp:TSP8->P8_TURNO%
 			AND SPJ.PJ_SEMANA = %exp:TSP8->P8_SEMANA%
 			AND SPJ.PJ_DIA = %exp:nDia%
