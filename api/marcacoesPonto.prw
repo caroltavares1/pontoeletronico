@@ -89,8 +89,8 @@ WSMETHOD GET WSSERVICE marcacoes
 	GetTurno(@cTurno, @cSqTurno, cFilFunc)
 
 	If !TSP8->(Eof())
-		aFinsSem := GetFinalSemana(cDataIni, cDataFin)
-		aFeriados := GetFeriados(cDataIni, cDataFin)
+		aFinsSem := GetFinalSemana(cDataIni, cDataFin, cFilFunc, cMatricula)
+		aFeriados := GetFeriados(cDataIni, cDataFin, cFilFunc)
 	EndIf
 
 	While !TSP8->(Eof())
@@ -246,7 +246,7 @@ Static Function GetTurno(cTurno, cSqTurno, cFilFunc)
 		FROM %Table:SPJ% AS SPJ
 		WHERE
 			SPJ.%NotDel%
-			AND SPJ.PJ_FILIAL = %exp:LEFT(cFilFunc, 2)%
+			AND SPJ.PJ_FILIAL = %exp:cFilFunc%
 			AND SPJ.PJ_TURNO = %exp:TSP8->P8_TURNO%
 			AND SPJ.PJ_SEMANA = %exp:TSP8->P8_SEMANA%
 			AND SPJ.PJ_DIA = %exp:nDia%
@@ -376,23 +376,29 @@ Static Function GetResumo(aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
 	TSPC->(DbCloseArea())
 Return
 
-Static Function GetFinalSemana(cDataIni, cDataFin)
+Static Function GetFinalSemana(cDataIni, cDataFin, cFilFunc, cMatricula)
 	Local aDias := {}
 	Local dInicial := STOD(cDataIni)
 	Local dFinal := STOD(cDataFin)
 
 	While dInicial <= dFinal
 		If DOW(dInicial) == 7
-			Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",DiaSemana(dInicial),"","","","","","","** Compensado **","",""})
+			SP8->(DbSetOrder(2))
+			If !SP8->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial)))
+				Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",DiaSemana(dInicial),"","","","","","","** Compensado **","",""})
+			EndIf
 		EndIf
 		If DOW(dInicial) == 1
-			Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",DiaSemana(dInicial),"","","","","","","** D.S.R. **","",""})
+			SP8->(DbSetOrder(2))
+			If !SP8->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial)))
+				Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",DiaSemana(dInicial),"","","","","","","** D.S.R. **","",""})
+			EndIf
 		EndIf
 		dInicial := DaySum(dInicial, 1)
 	EndDo
 Return aDias
 
-Static Function GetFeriados(cDataIni, cDataFin)
+Static Function GetFeriados(cDataIni, cDataFin, cFilFunc)
 	Local aFeriados := {}
 
 	BEGINSQL ALIAS 'TSP3'
@@ -402,6 +408,7 @@ Static Function GetFeriados(cDataIni, cDataFin)
 		WHERE
 			SP3.%NotDel%
 			AND SP3.P3_DATA BETWEEN %exp:cDataIni% AND %exp:cDataFin%
+			AND SP3.P3_FILIAL = %exp:cFilFunc%
 	ENDSQL
 
 	While !TSP3->(Eof())

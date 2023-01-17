@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -42,7 +42,7 @@ export class PontosService {
     );
   }
   public listHorarios() {
-    let url = this.apiURL + `/turnos/?turno=${this.turno}&seq=${this.seq}`
+    let url = this.apiURL + `/turnos/?turno=${this.turno}&seq=${this.seq}&filial=${this.userService.filatu}`
     return this.http.get<any>(url, httpOptions,).pipe(
       map((resposta: any) => resposta)
     );

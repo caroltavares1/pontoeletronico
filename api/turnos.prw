@@ -19,11 +19,13 @@ WSMETHOD GET WSSERVICE turnos
 	Local aParams := Self:AQueryString
 	Local nPosTurno := aScan(aParams,{|x| x[1] == "TURNO"})
 	Local nPosSqTurno := aScan(aParams,{|x| x[1] == "SEQ"})
-	Local cTurno := cSqTurno := ""
+	Local nPosFil := aScan(aParams,{|x| x[1] == "FILIAL"})
+	Local cTurno := cSqTurno := cFilFunc := ""
 
-	If nPosTurno > 0 .AND. nPosSqTurno > 0
+	If nPosTurno > 0 .AND. nPosSqTurno > 0 .AND. nPosFil > 0
 		cTurno := aParams[nPosTurno,2]
 		cSqTurno := aParams[nPosSqTurno,2]
+		cFilFunc := aParams[nPosFil,2]
 	EndIf
 
 	BEGINSQL ALIAS 'TSPJ'
@@ -32,7 +34,7 @@ WSMETHOD GET WSSERVICE turnos
     FROM %Table:SPJ% AS SPJ
     WHERE
       SPJ.%NotDel%
-      AND SPJ.PJ_FILIAL = %exp:xFilial("SPJ")%
+      AND SPJ.PJ_FILIAL = %exp:cFilFunc%
       AND SPJ.PJ_TURNO = %exp:cTurno%
       AND SPJ.PJ_SEMANA = %exp:cSqTurno%
 	ENDSQL
