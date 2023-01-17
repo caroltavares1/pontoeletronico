@@ -34,7 +34,7 @@ WSMETHOD GET WSSERVICE turnos
     FROM %Table:SPJ% AS SPJ
     WHERE
       SPJ.%NotDel%
-      AND SPJ.PJ_FILIAL = %exp:cFilFunc%
+      AND SPJ.PJ_FILIAL = %exp:LEFT(cFilFunc,2)%
       AND SPJ.PJ_TURNO = %exp:cTurno%
       AND SPJ.PJ_SEMANA = %exp:cSqTurno%
 	ENDSQL

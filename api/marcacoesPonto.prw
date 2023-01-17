@@ -89,8 +89,8 @@ WSMETHOD GET WSSERVICE marcacoes
 	GetTurno(@cTurno, @cSqTurno, cFilFunc)
 
 	If !TSP8->(Eof())
-		aFinsSem := GetFinalSemana(cDataIni, cDataFin, cFilFunc, cMatricula)
-		aFeriados := GetFeriados(cDataIni, cDataFin, cFilFunc)
+		aFinsSem := GetFinalSemana(cDataIni, cDataFin, cFilFunc, cMatricula, AllTrim(TSP8->P8_TURNO), cSqTurno)
+		aFeriados := GetFeriados(cDataIni, cDataFin, cFilFunc, AllTrim(TSP8->P8_TURNO), cSqTurno)
 	EndIf
 
 	While !TSP8->(Eof())
@@ -246,7 +246,7 @@ Static Function GetTurno(cTurno, cSqTurno, cFilFunc)
 		FROM %Table:SPJ% AS SPJ
 		WHERE
 			SPJ.%NotDel%
-			AND SPJ.PJ_FILIAL = %exp:cFilFunc%
+			AND SPJ.PJ_FILIAL = %exp:LEFT(cFilFunc,2)%
 			AND SPJ.PJ_TURNO = %exp:TSP8->P8_TURNO%
 			AND SPJ.PJ_SEMANA = %exp:TSP8->P8_SEMANA%
 			AND SPJ.PJ_DIA = %exp:nDia%
@@ -376,7 +376,7 @@ Static Function GetResumo(aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
 	TSPC->(DbCloseArea())
 Return
 
-Static Function GetFinalSemana(cDataIni, cDataFin, cFilFunc, cMatricula)
+Static Function GetFinalSemana(cDataIni, cDataFin, cFilFunc, cMatricula, cTurno, cSqTurno)
 	Local aDias := {}
 	Local dInicial := STOD(cDataIni)
 	Local dFinal := STOD(cDataFin)
@@ -385,20 +385,20 @@ Static Function GetFinalSemana(cDataIni, cDataFin, cFilFunc, cMatricula)
 		If DOW(dInicial) == 7
 			SP8->(DbSetOrder(2))
 			If !SP8->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial)))
-				Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",DiaSemana(dInicial),"","","","","","","** Compensado **","",""})
+				Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",DiaSemana(dInicial),"","","",cTurno,cSqTurno,"","** Compensado **","",""})
 			EndIf
 		EndIf
 		If DOW(dInicial) == 1
 			SP8->(DbSetOrder(2))
 			If !SP8->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial)))
-				Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",DiaSemana(dInicial),"","","","","","","** D.S.R. **","",""})
+				Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",DiaSemana(dInicial),"","","",cTurno,cSqTurno,"","** D.S.R. **","",""})
 			EndIf
 		EndIf
 		dInicial := DaySum(dInicial, 1)
 	EndDo
 Return aDias
 
-Static Function GetFeriados(cDataIni, cDataFin, cFilFunc)
+Static Function GetFeriados(cDataIni, cDataFin, cFilFunc,  cTurno, cSqTurno)
 	Local aFeriados := {}
 
 	BEGINSQL ALIAS 'TSP3'
@@ -412,7 +412,7 @@ Static Function GetFeriados(cDataIni, cDataFin, cFilFunc)
 	ENDSQL
 
 	While !TSP3->(Eof())
-		Aadd(aFeriados, {ConvertData(TSP3->DATA),"","",DiaSemana(STOD(TSP3->DATA)),"","","","","","",TSP3->DESC,"",""})
+		Aadd(aFeriados, {ConvertData(TSP3->DATA),"","",DiaSemana(STOD(TSP3->DATA)),"","","",cTurno,cSqTurno,"",TSP3->DESC,"",""})
 		TSP3->(DbSkip())
 	EndDo
 
