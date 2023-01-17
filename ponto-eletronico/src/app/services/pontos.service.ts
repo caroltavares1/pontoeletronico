@@ -30,7 +30,6 @@ export class PontosService {
 
 
   public list(dtini?: string, dtfin?: string) {
-    console.log(dtini, dtfin)
     let filial = this.userService.filatu
     let mat = this.userService.matricula
     const options = httpOptions
