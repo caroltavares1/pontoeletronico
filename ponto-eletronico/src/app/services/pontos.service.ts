@@ -12,7 +12,8 @@ const httpOptions = {
       'Content-Type': 'application/json',
       'Authorization': auth,
     }
-  )
+  ),
+  params: {}
 };
 
 @Injectable({
@@ -29,21 +30,32 @@ export class PontosService {
 
 
   public list(dtini?: string, dtfin?: string) {
+    console.log(dtini, dtfin)
     let filial = this.userService.filatu
     let mat = this.userService.matricula
-    let url = ''
-    if (dtini == undefined && dtfin == undefined)
-      url = this.apiURL + `/marcacoes/?filial=${filial}&matricula=${mat}`
-    else
-      url = this.apiURL + `/marcacoes/?filial=${filial}&matricula=${mat}&dtinicial=${dtini}&dtfinal=${dtfin}`
+    const options = httpOptions
+    options.params = {
+      'filial': filial,
+      'matricula': mat,
+      'dtinicial': dtini,
+      'dtfinal': dtfin
+    }
+    let url = this.apiURL + `/marcacoes/`
 
-    return this.http.get<any>(url, httpOptions,).pipe(
+    return this.http.get<any>(url, options,).pipe(
       map((resposta: any) => resposta)
     );
   }
   public listHorarios() {
-    let url = this.apiURL + `/turnos/?turno=${this.turno}&seq=${this.seq}`
-    return this.http.get<any>(url, httpOptions,).pipe(
+    let filial = this.userService.filatu
+    const options = httpOptions
+    options.params = {
+      'turno': this.turno,
+      'seq': this.seq,
+      'filial': filial
+    }
+    let url = this.apiURL + `/turnos/`
+    return this.http.get<any>(url, options,).pipe(
       map((resposta: any) => resposta)
     );
   }
@@ -51,8 +63,15 @@ export class PontosService {
   public getBancoHoras(dtini: string, dtfin: string) {
     let filial = this.userService.filatu
     let mat = this.userService.matricula
-    let url = this.apiURL + `/bh/?FILIAL=${filial}&MATRICULA=${mat}&DTINICIAL=${dtini}&DTFINAL=${dtfin}`
-    return this.http.get<any>(url, httpOptions,).pipe(
+    const options = httpOptions
+    options.params = {
+      'filial': filial,
+      'matricula': mat,
+      'dtinicial': dtini,
+      'dtfinal': dtfin
+    }
+    let url = this.apiURL + `/bh/`
+    return this.http.get<any>(url, options,).pipe(
       map((resposta: any) => resposta)
     );
   }
