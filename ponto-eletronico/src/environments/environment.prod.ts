@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
   title: 'Ambiente de Producao',
-  apiURL: 'http://lk5.shineray.com.br:8097/rest',
+  apiURL: 'localhost:8090/rest',
   authorization: "Basic " + btoa("saulomaciel:17072610")
 };

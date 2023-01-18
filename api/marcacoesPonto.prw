@@ -37,6 +37,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local cTurno := ""
 	Local cSqTurno := ""
 	Local nCont := 0
+	Local nRegSP8 := 0
 
 	Default cDataIni := cDataFin := "19000101"
 
@@ -61,7 +62,7 @@ WSMETHOD GET WSSERVICE marcacoes
 		BEGINSQL ALIAS 'TSP8'
 		SELECT
 			SP8.P8_DATA, SP8.P8_TPMARCA, SP8.P8_FILIAL, SP8.P8_MAT,
-			SP8.P8_CC, SP8.P8_MOTIVRG, SP8.P8_TURNO, SP8.P8_HORA, SP8.P8_SEMANA
+			SP8.P8_CC, SP8.P8_MOTIVRG, SP8.P8_TURNO, SP8.P8_HORA, SP8.P8_SEMANA, SP8.R_E_C_N_O_
 		FROM %Table:SP8% AS SP8
 		WHERE
 			SP8.%NotDel%
@@ -74,7 +75,7 @@ WSMETHOD GET WSSERVICE marcacoes
 		BEGINSQL ALIAS 'TSP8'
 		SELECT
 			SP8.P8_DATA, SP8.P8_TPMARCA, SP8.P8_FILIAL, SP8.P8_MAT,
-			SP8.P8_CC, SP8.P8_MOTIVRG, SP8.P8_TURNO, SP8.P8_HORA, SP8.P8_SEMANA
+			SP8.P8_CC, SP8.P8_MOTIVRG, SP8.P8_TURNO, SP8.P8_HORA, SP8.P8_SEMANA, SP8.R_E_C_N_O_
 		FROM %Table:SP8% AS SP8
 		WHERE
 			SP8.%NotDel%
@@ -88,12 +89,10 @@ WSMETHOD GET WSSERVICE marcacoes
 	GetResumo(@aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
 	GetTurno(@cTurno, @cSqTurno, cFilFunc)
 
-	If !TSP8->(Eof())
-		aFinsSem := GetFinalSemana(cDataIni, cDataFin, cFilFunc, cMatricula, AllTrim(TSP8->P8_TURNO), cSqTurno)
-		aFeriados := GetFeriados(cDataIni, cDataFin, cFilFunc, AllTrim(TSP8->P8_TURNO), cSqTurno)
-	EndIf
-
 	While !TSP8->(Eof())
+		If TSP8->R_E_C_N_O_ > nRegSP8
+			nRegSP8 := TSP8->R_E_C_N_O_
+		EndIf
 		Aadd(aMarcacoes, {})
 		nPos := Len(aMarcacoes)
 		GetAbono(AllTrim(TSP8->P8_MAT), TSP8->P8_DATA, @cHorasAbonadas, @cMotivoAbono)
@@ -115,6 +114,12 @@ WSMETHOD GET WSSERVICE marcacoes
 		aLinha := {}
 		TSP8->(DbSkip())
 	EndDo
+
+	If nRegSP8 > 0
+		SP8->(DbGoto(nRegSP8))
+		aFinsSem := GetFinalSemana(cDataIni, DTOS(SP8->P8_DATA), cFilFunc, cMatricula, AllTrim(SP8->P8_TURNO), cSqTurno)
+		aFeriados := GetFeriados(cDataIni, DTOS(SP8->P8_DATA), cFilFunc, AllTrim(SP8->P8_TURNO), cSqTurno)
+	EndIf
 
 	For nCont := 1 To Len(aFinsSem)
 		Aadd(aMarcacoes, aFinsSem[nCont])
