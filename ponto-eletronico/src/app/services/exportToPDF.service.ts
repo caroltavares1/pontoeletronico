@@ -27,7 +27,7 @@ export class ExportToPDFService {
     let marcacoes = structuredClone(items) //Cria uma copia por valor e não por referência
     let columns = [
       'Data', 'Dia', '1ª Entrada', '1ª Saída', '2ª Entrada', '2ª Saída',
-      'Abono  ', 'Horas Extras', 'Abstenção', 'Jornada', 'Observação']
+      'Abono  ', 'Horas Extras', 'Absent.', 'Jornada', 'Observação']
     let propM = ['data', 'dia', '1E', '1S', '2E', '2S', 'abono', 'horasExtras', 'abstencao', 'jornada', 'observacoes']
 
     let horas = structuredClone(bh)
@@ -124,7 +124,7 @@ export class ExportToPDFService {
     pdfMake.createPdf(dd).download("espelho-ponto.pdf");
   }
 
-  public buildTableBody(data: any[], columns: any[], col: any[], flag?: boolean) {
+  public buildTableBody(data: any[], columns: any[], col: any[], flag?: boolean, ausente: boolean = false) {
     let body = [];
 
     body.push(columns);
@@ -132,17 +132,35 @@ export class ExportToPDFService {
     data.forEach((row: any) => {
       let dataRow: any = [];
 
-      col.forEach((column: any) => {
-        let rc
-        if (row[column] == '00:00:00' && flag == true) {
-          row[column] = ''
-        }
-        (row[column] == null) ? rc = '' : rc = row[column].toString()
-        dataRow.push(rc);
-      })
-      body.push(dataRow);
-    });
+      if (ausente) {
+        dataRow.push(row['data'].toString())
+        dataRow.push(row['dia'].toString())
 
+        dataRow.push({ text: '** Ausente **', colSpan: 4, alignment: 'center' })
+        dataRow.push('')
+        dataRow.push('')
+        dataRow.push('')
+
+        dataRow.push(row['abono'].toString())
+        dataRow.push(row['horasExtras'].toString())
+        dataRow.push(row['abstencao'].toString())
+        dataRow.push(row['jornada'].toString())
+        dataRow.push(row['observacoes'].toString())
+
+        body.push(dataRow);
+      } else {
+
+        col.forEach((column: any) => {
+          let rc
+          if (row[column] == '00:00:00' /* && flag == true */) {
+            row[column] = ''
+          }
+          (row[column] == null) ? rc = '' : rc = row[column].toString()
+          dataRow.push(rc);
+        })
+        body.push(dataRow);
+      }
+    });
     return body;
   }
 
