@@ -23,6 +23,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local aMarcacoes := {}
 	Local aFinsSem := {}
 	Local aFeriados := {}
+	Local aAbonos := {}
 	Local aParams := Self:AQueryString
 	Local cFilFunc := ""
 	Local cMatricula := ""
@@ -89,17 +90,29 @@ WSMETHOD GET WSSERVICE marcacoes
 	GetResumo(@aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
 	GetTurno(@cTurno, @cSqTurno, cFilFunc)
 
-	While !TSP8->(Eof())
+	While !TSP8->(Eof()) //Varre o resultado da query para pegar o recno do ultimo registro
 		If TSP8->R_E_C_N_O_ > nRegSP8
 			nRegSP8 := TSP8->R_E_C_N_O_
 		EndIf
+		TSP8->(DbSkip())
+	EndDo
+
+	If nRegSP8 > 0 //Com o ultimo registro encontrado limita o resultado das buscas de fins de semana, feriados e abonos ate a data do ultimo registro
+		SP8->(DbGoto(nRegSP8))
+		aFinsSem := GetFinalSemana(cDataIni, DTOS(SP8->P8_DATA), cFilFunc, cMatricula, AllTrim(SP8->P8_TURNO), cSqTurno)
+		aFeriados := GetFeriados(cDataIni, DTOS(SP8->P8_DATA), cFilFunc, AllTrim(SP8->P8_TURNO), cSqTurno)
+		aAbonos := GetAbonos(cDataIni, cDataFin, cFilFunc, cMatricula, AllTrim(SP8->P8_TURNO), cSqTurno)
+	EndIf
+
+	TSP8->(DBGOTOP()) //Volta para o topo da tabela temporaria
+	While !TSP8->(Eof())
 		Aadd(aMarcacoes, {})
 		nPos := Len(aMarcacoes)
-		GetAbono(AllTrim(TSP8->P8_MAT), TSP8->P8_DATA, @cHorasAbonadas, @cMotivoAbono)
+		GetAbono(aAbonos, TSP8->P8_DATA, @cHorasAbonadas, @cMotivoAbono)
 		Aadd(aLinha, ConvertData(AllTrim(TSP8->P8_DATA))) //1-data
 		Aadd(aLinha, AllTrim(TSP8->P8_FILIAL)) //2-filial
 		Aadd(aLinha, AllTrim(TSP8->P8_MAT)) //3-matricula
-		Aadd(aLinha, DiaSemana(STOD(TSP8->P8_DATA))) //4-dia
+		Aadd(aLinha, Alltrim(DiaSemana(STOD(TSP8->P8_DATA)))) //4-dia
 		Aadd(aLinha, AllTrim(TSP8->P8_CC)) //5-centrocusto
 		Aadd(aLinha, AllTrim(TSP8->P8_CC)) //6-ordemClassificacao
 		Aadd(aLinha, AllTrim(TSP8->P8_MOTIVRG)) //7-motivoRegistro
@@ -115,18 +128,18 @@ WSMETHOD GET WSSERVICE marcacoes
 		TSP8->(DbSkip())
 	EndDo
 
-	If nRegSP8 > 0
-		SP8->(DbGoto(nRegSP8))
-		aFinsSem := GetFinalSemana(cDataIni, DTOS(SP8->P8_DATA), cFilFunc, cMatricula, AllTrim(SP8->P8_TURNO), cSqTurno)
-		aFeriados := GetFeriados(cDataIni, DTOS(SP8->P8_DATA), cFilFunc, AllTrim(SP8->P8_TURNO), cSqTurno)
-	EndIf
-
 	For nCont := 1 To Len(aFinsSem)
 		Aadd(aMarcacoes, aFinsSem[nCont])
 	Next
 
 	For nCont := 1 To Len(aFeriados)
 		Aadd(aMarcacoes, aFeriados[nCont])
+	Next
+
+	For nCont := 1 To Len(aAbonos)
+		If Len(aAbonos[nCont]) == 13
+			Aadd(aMarcacoes, aAbonos[nCont])
+		EndIf
 	Next
 
 	nCont := 1
@@ -230,16 +243,13 @@ Static Function ConvertData(cData)
 	cDtCorrigida := cAno+"-"+cMes+"-"+cDia
 Return cDtCorrigida
 
-Static Function GetAbono(cMatricula, cDataAbono, cHorasAbonadas, cMotivoAbono)
-	Local aAreaSPK := SPK->(GetArea())
+Static Function GetAbono(aAbonos, cDataAbono, cHorasAbonadas, cMotivoAbono)
+	Local nPosAbon := aScan(aAbonos,{|x| x[6] == cDataAbono})
 
-	SPK->(DbSetOrder(1))
-	If SPK->(MsSeek(xFilial("SPK")+cMatricula+cDataAbono))
-		cMotivoAbono := ALLTRIM(POSICIONE("SP6", 1, xFilial("SP6")+SPK->PK_CODABO, "P6_DESC"))
-		cHorasAbonadas := ConvertHora(SPK->PK_HRSABO)
+	If nPosAbon > 0
+		cMotivoAbono := aAbonos[nPosAbon,3]
+		cHorasAbonadas := ConvertHora(aAbonos[nPosAbon,4])
 	EndIf
-
-	SPK->(RestArea(aAreaSPK))
 Return
 
 Static Function GetTurno(cTurno, cSqTurno, cFilFunc)
@@ -385,22 +395,27 @@ Static Function GetFinalSemana(cDataIni, cDataFin, cFilFunc, cMatricula, cTurno,
 	Local aDias := {}
 	Local dInicial := STOD(cDataIni)
 	Local dFinal := STOD(cDataFin)
+	Local aArea := GetArea()
+	Local aAreaSP8 := SP8->(GetArea())
 
 	While dInicial <= dFinal
 		If DOW(dInicial) == 7
 			SP8->(DbSetOrder(2))
 			If !SP8->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial)))
-				Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",DiaSemana(dInicial),"","","",cTurno,cSqTurno,"","** Compensado **","",""})
+				Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"","** Compensado **","",""})
 			EndIf
 		EndIf
 		If DOW(dInicial) == 1
 			SP8->(DbSetOrder(2))
 			If !SP8->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial)))
-				Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",DiaSemana(dInicial),"","","",cTurno,cSqTurno,"","** D.S.R. **","",""})
+				Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"","** D.S.R. **","",""})
 			EndIf
 		EndIf
 		dInicial := DaySum(dInicial, 1)
 	EndDo
+
+	SP8->(RestArea(aAreaSP8))
+	RestArea(aArea)
 Return aDias
 
 Static Function GetFeriados(cDataIni, cDataFin, cFilFunc,  cTurno, cSqTurno)
@@ -417,10 +432,41 @@ Static Function GetFeriados(cDataIni, cDataFin, cFilFunc,  cTurno, cSqTurno)
 	ENDSQL
 
 	While !TSP3->(Eof())
-		Aadd(aFeriados, {ConvertData(TSP3->DATA),"","",DiaSemana(STOD(TSP3->DATA)),"","","",cTurno,cSqTurno,"",TSP3->DESC,"",""})
+		Aadd(aFeriados, {ConvertData(TSP3->DATA),"","",ALLTRIM(DiaSemana(STOD(TSP3->DATA))),"","","",cTurno,cSqTurno,"",ALLTRIM(TSP3->DESC),"",""})
 		TSP3->(DbSkip())
 	EndDo
 
 	TSP3->(DbCloseArea())
 
 Return aFeriados
+
+Static Function GetAbonos(cDataIni, cDataFim, cFilFunc, cMatricula, cTurno, cSqTurno)
+	Local aRet := {}
+
+	BEGINSQL ALIAS 'TSPK'
+		SELECT
+			SPK.PK_MAT, SPK.PK_CODABO, SP6.P6_DESC, SPK.PK_HRSABO, 
+			SPK.PK_TPMARCA, SPK.PK_DATA, SPK.R_E_C_N_O_
+		FROM %Table:SPK% AS SPK
+		INNER JOIN %Table:SP6% AS SP6
+		ON SP6.P6_FILIAL = %exp:Left(cFilFunc,2)% AND SP6.P6_CODIGO = SPK.PK_CODABO
+		WHERE
+			SPK.%NotDel% AND SP6.%NotDel%
+			AND SPK.PK_FILIAL = %exp:cFilFunc%
+			AND SPK.PK_MAT = %exp:cMatricula%
+			AND SPK.PK_DATA BETWEEN %exp:cDataIni% AND %exp:cDataFim%
+	ENDSQL
+
+	While !TSPK->(Eof())
+		SP8->(DbSetOrder(2))
+		If SP8->(MsSeek(cFilFunc+cMatricula+TSPK->PK_DATA))
+			Aadd(aRet, {TSPK->PK_MAT, TSPK->PK_CODABO, ALLTRIM(TSPK->P6_DESC), TSPK->PK_HRSABO, TSPK->PK_TPMARCA, TSPK->PK_DATA, TSPK->R_E_C_N_O_})
+		Else
+			Aadd(aRet, {ConvertData(TSPK->PK_DATA),"","",ALLTRIM(DiaSemana(STOD(TSPK->PK_DATA))),"","","",cTurno,cSqTurno, ConvertHoras(TSPK->PK_HRSABO),ALLTRIM(TSPK->P6_DESC),"",""})
+		EndIf
+
+		TSPK->(DbSkip())
+	EndDo
+	TSPK->(DbCloseArea())
+
+Return aRet
