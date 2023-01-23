@@ -15,6 +15,7 @@ WSMETHOD GET WSSERVICE marcacoes
 
 	Local aArea := GetArea()
 	Local aAreaSP8 := SP8->(GetArea())
+	Local aAreaSPA := SPA->(GetArea())
 	Local cResponse := JsonObject():New()
 	Local lRet := .T.
 	Local aDados := {}
@@ -40,6 +41,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local cSqTurno := ""
 	Local nCont := 0
 	Local nRegSP8 := 0
+	Private nTolAbst := 0
 
 	Default cDataIni := cDataFin := "19000101"
 
@@ -89,6 +91,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	EndIf
 
 	GetResumo(@aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
+	GetTolerancias(cFilFunc, cMatricula, @nTolAbst)
 	
 	While !TSP8->(Eof()) //Varre o resultado da query para pegar o recno do ultimo registro
 		If TSP8->R_E_C_N_O_ > nRegSP8
@@ -110,6 +113,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	While !TSP8->(Eof())
 		Aadd(aMarcacoes, {})
 		nPos := Len(aMarcacoes)
+		cHorasAbonadas := cMotivoAbono := ""
 		GetAbono(aAbonos, TSP8->P8_DATA, @cHorasAbonadas, @cMotivoAbono)
 		Aadd(aLinha, ConvertData(AllTrim(TSP8->P8_DATA))) //1-data
 		Aadd(aLinha, AllTrim(TSP8->P8_FILIAL)) //2-filial
@@ -202,6 +206,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	Self:SetContentType('application/json')
 	Self:SetResponse(EncodeUTF8(cResponse:toJson()))
 
+	SPA->(RestArea(aAreaSPA))
 	SP8->(RestArea(aAreaSP8))
 	RestArea(aArea)
 Return lRet
@@ -333,7 +338,7 @@ Static Function SomaHoras(cHoraIni, cHoraFin, cTipo)
 		esperado := HTOM(cHoraIni)
 		trabalhado := HTOM(cHoraFin)
 
-		If trabalhado < esperado
+		If trabalhado < esperado .AND. (esperado - trabalhado) > HTOM(ConvertHora(NTOLABST))
 			cHoraSomada := MTOH(esperado - trabalhado)
 		Else
 			cHoraSomada := "00:00"
@@ -489,3 +494,21 @@ Static Function GetAbonos(cDataIni, cDataFim, cFilFunc, cMatricula, cTurno, cSqT
 	TSPK->(DbCloseArea())
 
 Return aRet
+
+Static Function GetTolerancias(cFilFunc, cMatricula, nTolAbst)
+	Local aArea := GetArea()
+	Local aAreaSPA := SPA->(GetArea())
+	Local aAreaSRA := SRA->(GetArea())
+	
+	SRA->(DbSetOrder(1))
+	If SRA->(MsSeek(cFilFunc+cMatricula))
+		SPA->(DbSetOrder(1))
+		If SPA->(MsSeek(xFilial("SPA")+SRA->RA_REGRA))
+			nTolAbst := SPA->PA_TOLFALT
+		EndIf
+	EndIf
+	
+	SRA->(RestArea(aAreaSRA))
+	SPA->(RestArea(aAreaSPA))
+	RestArea(aArea)
+Return
