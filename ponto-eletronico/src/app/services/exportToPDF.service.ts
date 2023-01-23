@@ -90,7 +90,7 @@ export class ExportToPDFService {
           },
           { canvas: [{ type: 'line', x1: 15, y1: 0, x2: 732, y2: 0, lineWidth: 1, }] },
         ],
-        margin: [40, 5, 2, 5], fontSize: 11
+        margin: [40, 5, 2, 5]
       },
       footer: [
         {
