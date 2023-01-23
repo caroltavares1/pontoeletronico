@@ -129,6 +129,7 @@ WSMETHOD GET WSSERVICE marcacoes
 		Aadd(aLinha, AllTrim(TSP8->P8_TPMARCA)) //12-tipoMarca
 		Aadd(aLinha, ConvertHora(TSP8->P8_HORA)) //13-marcacao
 		Aadd(aLinha, .F.) //14-diaAbonado
+		Aadd(aLinha, ConvertHora(0)) //14-diaAbonado
 
 		aMarcacoes[nPos] := aLinha
 		aLinha := {}
@@ -183,6 +184,7 @@ WSMETHOD GET WSSERVICE marcacoes
 			EndIf
 			cTurno := GetTurno(aTurnos, "T", STOD(STRTRAN(aMarcacoes[nCont][1],"-","")))
 			aDados[nPos]['diaAbonado'] := aMarcacoes[nCont][14]
+			aDados[nPos]['adicNoturno'] := aMarcacoes[nCont][15]
 			nCont++
 		EndDo
 		cHoras1T := SomaHoras(aDados[nPos]['1E'], aDados[nPos]['1S'])
@@ -428,13 +430,13 @@ Static Function GetFinalSemana(cDataIni, cDataFin, cFilFunc, cMatricula, cTurno,
 		If DOW(dInicial) == 7
 			SP8->(DbSetOrder(2))
 			If !SP8->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial)))
-				Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"","** Compensado **","","",.F.})
+				Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"","** Compensado **","","",.F.,ConvertHora(0)})
 			EndIf
 		EndIf
 		If DOW(dInicial) == 1
 			SP8->(DbSetOrder(2))
 			If !SP8->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial)))
-				Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"","** D.S.R. **","","",.F.})
+				Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"","** D.S.R. **","","",.F.,ConvertHora(0)})
 			EndIf
 		EndIf
 		dInicial := DaySum(dInicial, 1)
@@ -458,7 +460,7 @@ Static Function GetFeriados(cDataIni, cDataFin, cFilFunc,  cTurno, cSqTurno)
 	ENDSQL
 
 	While !TSP3->(Eof())
-		Aadd(aFeriados, {ConvertData(TSP3->DATA),"","",ALLTRIM(DiaSemana(STOD(TSP3->DATA))),"","","",cTurno,cSqTurno,"",ALLTRIM(TSP3->DESC),"","",.F.})
+		Aadd(aFeriados, {ConvertData(TSP3->DATA),"","",ALLTRIM(DiaSemana(STOD(TSP3->DATA))),"","","",cTurno,cSqTurno,"",ALLTRIM(TSP3->DESC),"","",.F.,ConvertHora(0)})
 		TSP3->(DbSkip())
 	EndDo
 
@@ -488,7 +490,7 @@ Static Function GetAbonos(cDataIni, cDataFim, cFilFunc, cMatricula, cTurno, cSqT
 		If SP8->(MsSeek(cFilFunc+cMatricula+TSPK->PK_DATA))
 			Aadd(aRet, {TSPK->PK_MAT, TSPK->PK_CODABO, ALLTRIM(TSPK->P6_DESC), TSPK->PK_HRSABO, TSPK->PK_TPMARCA, TSPK->PK_DATA, TSPK->R_E_C_N_O_})
 		Else
-			Aadd(aRet, {ConvertData(TSPK->PK_DATA),"","",ALLTRIM(DiaSemana(STOD(TSPK->PK_DATA))),"","","",cTurno,cSqTurno, ConvertHoras(TSPK->PK_HRSABO),ALLTRIM(TSPK->P6_DESC),"","",.T.})
+			Aadd(aRet, {ConvertData(TSPK->PK_DATA),"","",ALLTRIM(DiaSemana(STOD(TSPK->PK_DATA))),"","","",cTurno,cSqTurno, ConvertHoras(TSPK->PK_HRSABO),ALLTRIM(TSPK->P6_DESC),"","",.T.,ConvertHora(0)})
 		EndIf
 
 		TSPK->(DbSkip())
