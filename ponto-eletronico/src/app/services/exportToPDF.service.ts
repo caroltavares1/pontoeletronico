@@ -27,8 +27,8 @@ export class ExportToPDFService {
     let marcacoes = structuredClone(items) //Cria uma copia por valor e não por referência
     let columns = [
       'Data', 'Dia', '1ª Entrada', '1ª Saída', '2ª Entrada', '2ª Saída',
-      'Abono  ', 'Horas Extras', 'Absent.', 'Jornada', 'Observação']
-    let propM = ['data', 'dia', '1E', '1S', '2E', '2S', 'abono', 'horasExtras', 'abstencao', 'jornada', 'observacoes']
+      'Abono  ', 'Horas Extras', 'Absent.', 'Jornada', 'Ad. Not.', 'Observação']
+    let propM = ['data', 'dia', '1E', '1S', '2E', '2S', 'abono', 'horasExtras', 'abstencao', 'jornada', 'adicNoturno', 'observacoes']
 
     let horas = structuredClone(bh)
     let horasCol = [
@@ -50,7 +50,6 @@ export class ExportToPDFService {
       pageMargins: [40, 150, 40, 60],
       pageSize: 'A4',
       pageOrientation: "landscape",
-      //header: `Espelho do Ponto ${this.start} - ${this.end}`,
       header: {
         stack: [
           { text: `Espelho do Ponto ${start} - ${end}`, margin: [260, 5, 0, 5] },
@@ -91,7 +90,7 @@ export class ExportToPDFService {
           },
           { canvas: [{ type: 'line', x1: 15, y1: 0, x2: 732, y2: 0, lineWidth: 1, }] },
         ],
-        margin: [40, 5, 2, 5]
+        margin: [40, 5, 2, 5], fontSize: 11
       },
       footer: [
         {
@@ -103,22 +102,24 @@ export class ExportToPDFService {
       content: [
         this.table(marcacoes, columns, propM),
         { canvas: [{ type: 'line', x1: 15, y1: 15, x2: 732, y2: 15, lineWidth: 1, }] },
-        { text: 'Banco de Horas', margin: [15, 5, 5, 0] },
+        { text: 'Banco de Horas', margin: [15, 5, 5, 0], fontSize: 10, id: 'BREAK' },
         this.tableBH(horas, horasCol, horasProp),
         { canvas: [{ type: 'line', x1: 15, y1: 15, x2: 732, y2: 15, lineWidth: 1, }] },
-        { text: 'Horários', margin: [15, 5, 5, 0] },
+        { text: 'Horários', margin: [15, 5, 5, 0], fontSize: 10, id: 'BREAK2' },
         this.tableTurno(turnos, turnosCol, turnosProp),
         { canvas: [{ type: 'line', x1: 15, y1: 15, x2: 732, y2: 15, lineWidth: 1, }] },
         { text: '', margin: [15, 10, 5, 0] },
         this.tableResumo(resumo, resumoCol, resumoProp),
       ],
-      styles: {
-        header: {
-          margin: 'auto',
-          alignment: 'center',
-          bold: true
-        },
+      pageBreakBefore: function (
+        currentNode: any,
+        followingNodesOnPage: any,
+        nodesOnNextPage: any,
+        previousNodesOnPage: any) {
+        //Break para não separar a tabela e o texto acima dela
+        return (currentNode.id === 'BREAK' || currentNode.id === 'BREAK2') && followingNodesOnPage.length === 29;
       }
+
     }
 
     pdfMake.createPdf(dd).download("espelho-ponto.pdf");
@@ -131,8 +132,7 @@ export class ExportToPDFService {
 
     data.forEach((row: any) => {
       let dataRow: any = [];
-
-      if (ausente) {
+      if (ausente && row['diaAbonado'] == true) {
         dataRow.push(row['data'].toString())
         dataRow.push(row['dia'].toString())
 
@@ -142,12 +142,31 @@ export class ExportToPDFService {
         dataRow.push('')
 
         dataRow.push(row['abono'].toString())
-        dataRow.push(row['horasExtras'].toString())
+        dataRow.push('')
         dataRow.push(row['abstencao'].toString())
-        dataRow.push(row['jornada'].toString())
+        dataRow.push('')
+        dataRow.push('')
         dataRow.push(row['observacoes'].toString())
 
         body.push(dataRow);
+      } else if (ausente && row['jornada'] == '00:00:00') {
+        dataRow.push(row['data'].toString())
+        dataRow.push(row['dia'].toString())
+
+        dataRow.push({ text: '', colSpan: 4, alignment: 'center' })
+        dataRow.push('')
+        dataRow.push('')
+        dataRow.push('')
+
+        dataRow.push('')
+        dataRow.push('')
+        dataRow.push('')
+        dataRow.push('')
+        dataRow.push('')
+        dataRow.push(row['observacoes'].toString())
+
+        body.push(dataRow);
+
       } else {
 
         col.forEach((column: any) => {
@@ -166,16 +185,16 @@ export class ExportToPDFService {
 
   public table(data: any[], columns: any[], col: any[]) {
     return {
-      margin: [15, 20, 0, 0],
+      margin: [15, 5, 0, 5],
       //layout: 'lightHorizontalLines',
       color: '#444',
-      fontSize: 10, bold: false,
+      fontSize: 9, bold: false,
       alignment: 'center',
       //styles: 'table',
       table: {
         headerRows: 1,
-        widths: [60, 50, 50, 50, 50, 50, 50, 60, 50, 50, 100,],
-        body: this.buildTableBody(data, columns, col, true),
+        widths: [50, 40, 50, 40, 50, 40, 40, 60, 50, 40, 40, 105],
+        body: this.buildTableBody(data, columns, col, true, true),
 
       },
       layout: {
@@ -188,15 +207,15 @@ export class ExportToPDFService {
   }
   public tableBH(data: any[], columns: any[], col: any[]) {
     return {
-      margin: [15, 2, 0, 0],
+      margin: [15, 2, 0, 5],
       //layout: 'lightHorizontalLines',
       color: '#444',
-      fontSize: 10, bold: false,
+      fontSize: 9, bold: false,
       alignment: 'center',
       //styles: 'table',
       table: {
         headerRows: 1,
-        widths: [170, 170, 170, 172],
+        widths: [170, 170, 170, 170],
         body: this.buildTableBody(data, columns, col, false),
       },
       layout: {
@@ -210,10 +229,10 @@ export class ExportToPDFService {
 
   public tableTurno(data: any[], columns: any[], col: any[]) {
     return {
-      margin: [15, 2, 0, 0],
+      margin: [15, 2, 0, 5],
       //layout: 'lightHorizontalLines',
       color: '#444',
-      fontSize: 10, bold: false,
+      fontSize: 9, bold: false,
       alignment: 'center',
       //styles: 'table',
       table: {
@@ -232,10 +251,10 @@ export class ExportToPDFService {
 
   public tableResumo(data: any[], columns: any[], col: any[]) {
     return {
-      margin: [15, 2, 0, 0],
+      margin: [15, 2, 0, 5],
       //layout: 'lightHorizontalLines',
       color: '#444',
-      fontSize: 10, bold: false,
+      fontSize: 9, bold: false,
       alignment: 'center',
       //styles: 'table',
       table: {

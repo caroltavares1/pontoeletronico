@@ -44,10 +44,12 @@ export class ListComponent implements OnInit {
     { property: '2S', width: '6,25%', label: '2ª Saída', type: 'time', format: 'HH:mm' },
     { property: 'abono', width: '6,25%', label: 'Abono' },
     { property: 'horasExtras', width: '6,25%', label: 'Horas Extras', type: 'time', format: 'HH:mm' },
-    { property: 'abstencao', width: '6,25%', label: 'Absten.', type: 'time', format: 'HH:mm' },
+    { property: 'abstencao', width: '6,25%', label: 'Absent.', type: 'time', format: 'HH:mm' },
     { property: 'jornada', width: '6,25%', label: 'Jornada', type: 'time', format: 'HH:mm' },
+    { property: 'adicNoturno', width: '6,25%', label: 'Ad. Not.', type: 'time', format: 'HH:mm' },
     { property: 'observacoes', width: '6,25%', label: 'Observação' },
-    { property: 'matricula', visible: false, type: 'string' }
+    { property: 'matricula', visible: false, type: 'string' },
+    { property: 'diaAbonado', visible: false, type: 'boolean' }
 
   ];
 
@@ -57,8 +59,7 @@ export class ListComponent implements OnInit {
     { property: '1S', width: '14,625%', label: '1ª Saída', type: 'time', format: 'HH:mm' },
     { property: '2E', width: '14,625%', label: '2ª Entrada', type: 'time', format: 'HH:mm' },
     { property: '2S', width: '14,625%', label: '2ª Saída', type: 'time', format: 'HH:mm' },
-    { property: 'turno', width: '25%', label: 'Turno' },
-    { property: 'matricula', visible: false, type: 'string' }
+    { property: 'turno', width: '25%', label: 'Turno' }
 
   ];
 
