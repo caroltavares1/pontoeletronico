@@ -145,7 +145,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	Next
 
 	For nCont := 1 To Len(aAbonos)
-		If Len(aAbonos[nCont]) == 14
+		If Len(aAbonos[nCont]) > 7
 			Aadd(aMarcacoes, aAbonos[nCont])
 		EndIf
 	Next
