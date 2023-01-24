@@ -42,6 +42,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local nCont := 0
 	Local nRegSP8 := 0
 	Private nTolAbst := 0
+	Private nTolHoEx := 0
 
 	Default cDataIni := cDataFin := "19000101"
 
@@ -91,7 +92,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	EndIf
 
 	GetResumo(@aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
-	GetTolerancias(cFilFunc, cMatricula, @nTolAbst)
+	GetTolerancias(cFilFunc, cMatricula, @nTolAbst, @nTolHoEx)
 
 	While !TSP8->(Eof()) //Varre o resultado da query para pegar o recno do ultimo registro
 		If TSP8->R_E_C_N_O_ > nRegSP8
@@ -331,7 +332,7 @@ Static Function SomaHoras(cHoraIni, cHoraFin, cTipo)
 		esperado := HTOM(cHoraIni)
 		trabalhado := HTOM(cHoraFin)
 
-		If trabalhado > esperado
+		If trabalhado > esperado .AND. (trabalhado - esperado) > HTOM(ConvertHora(nTolHoEx))
 			cHoraSomada := MTOH(trabalhado - esperado)
 		Else
 			cHoraSomada := "00:00"
@@ -342,7 +343,7 @@ Static Function SomaHoras(cHoraIni, cHoraFin, cTipo)
 		esperado := HTOM(cHoraIni)
 		trabalhado := HTOM(cHoraFin)
 
-		If trabalhado < esperado .AND. (esperado - trabalhado) > HTOM(ConvertHora(NTOLABST))
+		If trabalhado < esperado .AND. (esperado - trabalhado) > HTOM(ConvertHora(nTolAbst))
 			cHoraSomada := MTOH(esperado - trabalhado)
 		Else
 			cHoraSomada := "00:00"
@@ -499,7 +500,7 @@ Static Function GetAbonos(cDataIni, cDataFim, cFilFunc, cMatricula, cTurno, cSqT
 
 Return aRet
 
-Static Function GetTolerancias(cFilFunc, cMatricula, nTolAbst)
+Static Function GetTolerancias(cFilFunc, cMatricula, nTolAbst, nTolHoEx)
 	Local aArea := GetArea()
 	Local aAreaSPA := SPA->(GetArea())
 	Local aAreaSRA := SRA->(GetArea())
@@ -509,6 +510,7 @@ Static Function GetTolerancias(cFilFunc, cMatricula, nTolAbst)
 		SPA->(DbSetOrder(1))
 		If SPA->(MsSeek(xFilial("SPA")+SRA->RA_REGRA))
 			nTolAbst := SPA->PA_TOLFALT
+			nTolHoEx := SPA->PA_TOLHEPE
 		EndIf
 	EndIf
 
