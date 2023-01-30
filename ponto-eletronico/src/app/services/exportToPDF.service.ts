@@ -27,8 +27,9 @@ export class ExportToPDFService {
     let marcacoes = structuredClone(items) //Cria uma copia por valor e não por referência
     let columns = [
       'Data', 'Dia', '1ª Entrada', '1ª Saída', '2ª Entrada', '2ª Saída',
+      '3ª Entrada', '3ª Saída', '4ª Entrada', '4ª Saída',
       'Abono  ', 'Horas Extras', 'Absent.', 'Jornada', 'Ad. Not.', 'Observação']
-    let propM = ['data', 'dia', '1E', '1S', '2E', '2S', 'abono', 'horasExtras', 'abstencao', 'jornada', 'adicNoturno', 'observacoes']
+    let propM = ['data', 'dia', '1E', '1S', '2E', '2S', '3E', '3S', '4E', '4S', 'abono', 'horasExtras', 'abstencao', 'jornada', 'adicNoturno', 'observacoes']
 
     let horas = structuredClone(bh)
     let horasCol = [
@@ -47,7 +48,7 @@ export class ExportToPDFService {
 
 
     var dd = {
-      pageMargins: [40, 150, 40, 60],
+      pageMargins: [40, 120, 40, 60],
       pageSize: 'A4',
       pageOrientation: "landscape",
       header: {
@@ -90,12 +91,12 @@ export class ExportToPDFService {
           },
           { canvas: [{ type: 'line', x1: 15, y1: 0, x2: 732, y2: 0, lineWidth: 1, }] },
         ],
-        margin: [40, 5, 2, 5]
+        margin: [40, 5, 2, 2], fontSize: 8
       },
       footer: [
         {
           text: '**Espelho de ponto apenas para consulta. O original será entregue pelo RH no fechamento mensal.',
-          margin: [240, 5, 0, 5], fontSize: 9
+          margin: [240, 5, 0, 5], fontSize: 7
         },
 
       ],
@@ -136,7 +137,11 @@ export class ExportToPDFService {
         dataRow.push(row['data'].toString())
         dataRow.push(row['dia'].toString())
 
-        dataRow.push({ text: '** Ausente **', colSpan: 4, alignment: 'center' })
+        dataRow.push({ text: '** Ausente **', colSpan: 8, alignment: 'center' })
+        dataRow.push('')
+        dataRow.push('')
+        dataRow.push('')
+        dataRow.push('')
         dataRow.push('')
         dataRow.push('')
         dataRow.push('')
@@ -149,11 +154,15 @@ export class ExportToPDFService {
         dataRow.push(row['observacoes'].toString())
 
         body.push(dataRow);
-      } else if (ausente && row['jornada'] == '00:00:00') {
+      } else if (ausente && row['jornada'] == '00:00') {
         dataRow.push(row['data'].toString())
         dataRow.push(row['dia'].toString())
 
-        dataRow.push({ text: '', colSpan: 4, alignment: 'center' })
+        dataRow.push({ text: '', colSpan: 8, alignment: 'center' })
+        dataRow.push('')
+        dataRow.push('')
+        dataRow.push('')
+        dataRow.push('')
         dataRow.push('')
         dataRow.push('')
         dataRow.push('')
@@ -171,7 +180,7 @@ export class ExportToPDFService {
 
         col.forEach((column: any) => {
           let rc
-          if (row[column] == '00:00:00' /* && flag == true */) {
+          if (row[column] == '00:00' /* && flag == true */) {
             row[column] = ''
           }
           (row[column] == null) ? rc = '' : rc = row[column].toString()
@@ -188,12 +197,12 @@ export class ExportToPDFService {
       margin: [15, 5, 0, 5],
       //layout: 'lightHorizontalLines',
       color: '#444',
-      fontSize: 9, bold: false,
+      fontSize: 7, bold: false,
       alignment: 'center',
       //styles: 'table',
       table: {
         headerRows: 1,
-        widths: [50, 40, 50, 40, 50, 40, 40, 60, 50, 40, 40, 105],
+        widths: ['auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 137],
         body: this.buildTableBody(data, columns, col, true, true),
 
       },
@@ -208,9 +217,9 @@ export class ExportToPDFService {
   public tableBH(data: any[], columns: any[], col: any[]) {
     return {
       margin: [15, 2, 0, 5],
-      //layout: 'lightHorizontalLines',
+      //layout: 'ligtHorizontalLines',
       color: '#444',
-      fontSize: 9, bold: false,
+      fontSize: 7, bold: false,
       alignment: 'center',
       //styles: 'table',
       table: {
@@ -232,7 +241,7 @@ export class ExportToPDFService {
       margin: [15, 2, 0, 5],
       //layout: 'lightHorizontalLines',
       color: '#444',
-      fontSize: 9, bold: false,
+      fontSize: 7, bold: false,
       alignment: 'center',
       //styles: 'table',
       table: {
@@ -254,7 +263,7 @@ export class ExportToPDFService {
       margin: [15, 2, 0, 5],
       //layout: 'lightHorizontalLines',
       color: '#444',
-      fontSize: 9, bold: false,
+      fontSize: 7, bold: false,
       alignment: 'center',
       //styles: 'table',
       table: {
