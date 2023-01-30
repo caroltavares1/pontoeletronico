@@ -25,6 +25,7 @@ WSMETHOD GET WSSERVICE bh
 	Local nSaldoAtual := 0
 	Local aDados := {}
 	Local lSaldoNeg := .F.
+	Local lCalcBH := .F.
 
 	If nPosMatricula > 0 .AND. nPosFilial > 0 .AND. nPosDtIni > 0 .AND. nPosDtFin > 0
 		cFilAtuacao := aParams[nPosFilial,2]
@@ -55,6 +56,7 @@ WSMETHOD GET WSSERVICE bh
 		TSPI->(DbSkip())
 	EndDo
 
+	lCalcBH := CalculaBH(cFilAtuacao, cMatricula)
 	GetSaldoAnterior(@nSaldoAnterior, cFilAtuacao, cMatricula, cDtInicial, @lSaldoNeg)
 
 	Aadd(aDados, JsonObject():new())
@@ -71,6 +73,7 @@ WSMETHOD GET WSSERVICE bh
 	aDados[nPos]['totalDebitos'] := ConvertHora(MTOH(nSomaDebitos))
 	aDados[nPos]['totalCreditos'] := ConvertHora(MTOH(nSomaCreditos))
 	aDados[nPos]['saldoAtual'] := ConvertHora(MTOH(nSaldoAtual))
+	aDados[nPos]['consideraBH'] := lCalcBH
 
 	TSPI->(DbCloseArea())
 
@@ -195,3 +198,26 @@ Static Function GetSaldoAnterior(nSaldoAnterior, cFilAtuacao, cMatricula, cDtIni
 
 	TMP->(DbCloseArea())
 Return
+
+Static Function CalculaBH(cFilAtuacao, cMatricula)
+	Local lCalculaBancoHoras := .F.
+
+	BEGINSQL ALIAS 'TSRA'
+		SELECT
+			SRA.RA_ACUMBH, SRA.RA_BHFOL
+		FROM %Table:SRA% AS SRA
+		WHERE
+			SRA.%NotDel%
+			AND SRA.RA_FILIAL = %exp:cFilAtuacao%
+			AND SRA.RA_MAT = %exp:cMatricula%
+	ENDSQL
+
+	While !TSRA->(Eof())	
+		If TSRA->RA_ACUMBH == 'S' .AND. TSRA->RA_BHFOL == 'S'
+			lCalculaBancoHoras := .T.
+		EndIf
+		TSRA->(DbSkip())
+	EndDo
+	
+	TSRA->(DbCloseArea())
+Return lCalculaBancoHoras
