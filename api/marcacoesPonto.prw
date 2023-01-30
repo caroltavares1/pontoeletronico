@@ -36,7 +36,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local dDatAux := CTOD("")
 	Local nMes := 0
 	Local cHorasAbonadas := cMotivoAbono := ""
-	Local cHoras1T := cHoras2T := cTotalHoras := ""
+	Local cHoras1T := cHoras2T := cHoras3T := cHoras4T := cTotalHoras := ""
 	Local cTurno := ""
 	Local cSqTurno := ""
 	Local nCont := 0
@@ -183,6 +183,21 @@ WSMETHOD GET WSSERVICE marcacoes
 			If aMarcacoes[nCont][12] == "2S"
 				aDados[nPos]['2S'] := aMarcacoes[nCont][13]
 			EndIf
+
+			If aMarcacoes[nCont][12] == "3E"
+				aDados[nPos]['3E'] := aMarcacoes[nCont][13]
+			EndIf
+			If aMarcacoes[nCont][12] == "3S"
+				aDados[nPos]['3S'] := aMarcacoes[nCont][13]
+			EndIf
+
+			If aMarcacoes[nCont][12] == "4E"
+				aDados[nPos]['4E'] := aMarcacoes[nCont][13]
+			EndIf
+			If aMarcacoes[nCont][12] == "4S"
+				aDados[nPos]['4S'] := aMarcacoes[nCont][13]
+			EndIf
+			
 			cTurno := GetTurno(aTurnos, "T", STOD(STRTRAN(aMarcacoes[nCont][1],"-","")))
 			aDados[nPos]['diaAbonado'] := aMarcacoes[nCont][14]
 			aDados[nPos]['adicNoturno'] := aMarcacoes[nCont][15]
@@ -190,7 +205,12 @@ WSMETHOD GET WSSERVICE marcacoes
 		EndDo
 		cHoras1T := SomaHoras(aDados[nPos]['1E'], aDados[nPos]['1S'])
 		cHoras2T := SomaHoras(aDados[nPos]['2E'], aDados[nPos]['2S'])
+		cHoras3T := SomaHoras(aDados[nPos]['3E'], aDados[nPos]['3S'])
+		cHoras4T := SomaHoras(aDados[nPos]['4E'], aDados[nPos]['4S'])
 		cTotalHoras := SomaHoras(cHoras1T, cHoras2T, "S")
+		cTotalHoras := SomaHoras(cTotalHoras, cHoras3T, "S") //Soma terceiro turno
+		cTotalHoras := SomaHoras(cTotalHoras, cHoras4T, "S") //Soma quarto turno
+		
 		aDados[nPos]['jornada'] := cTotalHoras
 		aDados[nPos]['horasExtras'] := SomaHoras(cTurno, cTotalHoras, "E")
 		aDados[nPos]['abstencao'] := SomaHoras(cTurno, cTotalHoras, "A")
@@ -240,9 +260,9 @@ Static Function ConvertHora(nHora)
 	EndIf
 
 	If Len(cHora) == 5 .OR. Len(cHora) == 6
-		cHora := STRTRAN(cHora,".",":") + ":00"
+		cHora := STRTRAN(cHora,".",":")
 	Else
-		cHora := "00:00:00"
+		cHora := "00:00"
 	EndIf
 
 Return cHora
