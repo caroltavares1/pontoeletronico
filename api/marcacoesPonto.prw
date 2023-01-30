@@ -337,49 +337,49 @@ Static Function SomaHoras(cHoraIni, cHoraFin, cTipo)
 
 	If cTipo == "D" .AND. lHorasValidas
 
-		inicial := HTOM(cHoraIni)
-		final := HTOM(cHoraFin)
+		inicial := U_HTOM(cHoraIni)
+		final := U_HTOM(cHoraFin)
 
 		If final > inicial
-			cHoraSomada := MTOH(final - inicial)
+			cHoraSomada := U_MTOH(final - inicial)
 		Else //Caso a hora da saida seja feita num dia posterior ao da entrada
 			cHoraFin := SomaHoras(cHoraFin, "24:00:00", "S")
-			inicial := HTOM(cHoraIni)
-			final := HTOM(cHoraFin)
-			cHoraSomada := MTOH(final - inicial)
+			inicial := U_HTOM(cHoraIni)
+			final := U_HTOM(cHoraFin)
+			cHoraSomada := U_MTOH(final - inicial)
 		EndIf
 	EndIf
 
 	If cTipo == "E" .AND. lHorasValidas
-		esperado := HTOM(cHoraIni)
-		trabalhado := HTOM(cHoraFin)
+		esperado := U_HTOM(cHoraIni)
+		trabalhado := U_HTOM(cHoraFin)
 
-		If trabalhado > esperado .AND. (trabalhado - esperado) > HTOM(U_ConvertHora(nTolHoEx))
-			cHoraSomada := MTOH(trabalhado - esperado)
+		If trabalhado > esperado .AND. (trabalhado - esperado) > U_HTOM(U_ConvertHora(nTolHoEx))
+			cHoraSomada := U_MTOH(trabalhado - esperado)
 		Else
 			cHoraSomada := "00:00"
 		EndIf
 	EndIf
 
 	If cTipo == "A" .AND. lHorasValidas
-		esperado := HTOM(cHoraIni)
-		trabalhado := HTOM(cHoraFin)
+		esperado := U_HTOM(cHoraIni)
+		trabalhado := U_HTOM(cHoraFin)
 
-		If trabalhado < esperado .AND. (esperado - trabalhado) > HTOM(U_ConvertHora(nTolAbst))
-			cHoraSomada := MTOH(esperado - trabalhado)
+		If trabalhado < esperado .AND. (esperado - trabalhado) > U_HTOM(U_ConvertHora(nTolAbst))
+			cHoraSomada := U_MTOH(esperado - trabalhado)
 		Else
 			cHoraSomada := "00:00"
 		EndIf
 	EndIf
 
 	If cTipo == "S" .AND. lHorasValidas
-		nSoma := HTOM(cHoraIni) + HTOM(cHoraFin)
-		cHoraSomada := MTOH(nSoma)
+		nSoma := U_HTOM(cHoraIni) + U_HTOM(cHoraFin)
+		cHoraSomada := U_MTOH(nSoma)
 	EndIf
 
 Return U_ConvertHora(cHoraSomada)
 
-Static Function HTOM(cHora) //00:00 formato que deve ser recebido
+User Function HTOM(cHora) //00:00 formato que deve ser recebido
 	Local nMinutos := 0
 	Local nHo := Val(SUBSTR(cHora,1,2)) //pego apenas a parte da hora
 	Local nMi := Val(SUBSTR(cHora,4,2)) //pego apenas a parte dos minutos
@@ -388,7 +388,7 @@ Static Function HTOM(cHora) //00:00 formato que deve ser recebido
 
 Return nMinutos
 
-Static Function MTOH(nMinutos) //deve vim como um numero inteiro
+User Function MTOH(nMinutos) //deve vim como um numero inteiro
 	Local nResto := 0
 
 	nResto := Mod(nMinutos, 60) //Separo quantos minutos faltam para horas completas
@@ -416,7 +416,7 @@ Static Function GetResumo(aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
 	ENDSQL
 
 	While !TSPC->(Eof())
-		Aadd(aDados, {TSPC->PC_PD, HTOM(U_ConVertHora(TSPC->PC_QUANTC)), HTOM(U_ConvertHora(TSPC->PC_QUANTI))})
+		Aadd(aDados, {TSPC->PC_PD, U_HTOM(U_ConVertHora(TSPC->PC_QUANTC)), U_HTOM(U_ConvertHora(TSPC->PC_QUANTI))})
 		TSPC->(DbSkip())
 	EndDo
 
@@ -436,7 +436,7 @@ Static Function GetResumo(aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
 		nPos := Len(aResumo)
 		aResumo[nPos]['codEvento'] := aSoma[nLinha,1]
 		aResumo[nPos]['descEvento'] := ALLTRIM(POSICIONE("SP9", 1, xFilial("SP9")+ aSoma[nLinha,1], "P9_DESC"))
-		aResumo[nPos]['totalHoras'] := U_ConvertHora(MTOH(aSoma[nLinha,2]))
+		aResumo[nPos]['totalHoras'] := U_ConvertHora(U_MTOH(aSoma[nLinha,2]))
 	Next
 
 	TSPC->(DbCloseArea())

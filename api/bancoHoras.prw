@@ -48,10 +48,10 @@ WSMETHOD GET WSSERVICE bh
 
 	While !TSPI->(Eof())
 		If Val(TSPI->P9_TIPOCOD) == 1
-			nSomaCreditos += HTOM(U_ConvertHora(TSPI->PI_QUANT))
+			nSomaCreditos += U_HTOM(U_ConvertHora(TSPI->PI_QUANT))
 		EndIf
 		If Val(TSPI->P9_TIPOCOD) == 2
-			nSomaDebitos += HTOM(U_ConvertHora(TSPI->PI_QUANT))
+			nSomaDebitos += U_HTOM(U_ConvertHora(TSPI->PI_QUANT))
 		EndIf
 		TSPI->(DbSkip())
 	EndDo
@@ -61,7 +61,7 @@ WSMETHOD GET WSSERVICE bh
 
 	Aadd(aDados, JsonObject():new())
 	nPos := Len(aDados)
-	nSaldoAnterior := HTOM(U_ConvertHora(nSaldoAnterior))
+	nSaldoAnterior := U_HTOM(U_ConvertHora(nSaldoAnterior))
 	
 	If lSaldoNeg //Se o saldo de horas anterior for negativo, entao ele é tratado como debito
 		nSaldoAtual := nSomaCreditos - nSaldoAnterior - nSomaDebitos
@@ -69,10 +69,10 @@ WSMETHOD GET WSSERVICE bh
 	Else
 		nSaldoAtual := nSaldoAnterior + nSomaCreditos - nSomaDebitos
 	EndIf
-	aDados[nPos]['saldoAnterior'] := U_ConvertHora(MTOH(nSaldoAnterior))
-	aDados[nPos]['totalDebitos'] := U_ConvertHora(MTOH(nSomaDebitos))
-	aDados[nPos]['totalCreditos'] := U_ConvertHora(MTOH(nSomaCreditos))
-	aDados[nPos]['saldoAtual'] := U_ConvertHora(MTOH(nSaldoAtual))
+	aDados[nPos]['saldoAnterior'] := U_ConvertHora(U_MTOH(nSaldoAnterior))
+	aDados[nPos]['totalDebitos'] := U_ConvertHora(U_MTOH(nSomaDebitos))
+	aDados[nPos]['totalCreditos'] := U_ConvertHora(U_MTOH(nSomaCreditos))
+	aDados[nPos]['saldoAtual'] := U_ConvertHora(U_MTOH(nSaldoAtual))
 	aDados[nPos]['consideraBH'] := lCalcBH
 
 	TSPI->(DbCloseArea())
@@ -116,25 +116,6 @@ Static Function DiaExtenso(nDia)
 	EndIf
 Return cDia
 
-Static Function HTOM(cHora) //00:00 formato que deve ser recebido
-	Local nMinutos := 0
-	Local nHo := Val(SUBSTR(cHora,1,2)) //pego apenas a parte da hora
-	Local nMi := Val(SUBSTR(cHora,4,2)) //pego apenas a parte dos minutos
-
-	nMinutos := (nHo * 60) + nMi //Transformo horas em minutos e adiciono os minutos
-
-Return nMinutos
-
-Static Function MTOH(nMinutos) //deve vim como um numero inteiro
-	Local nResto := 0
-
-	nResto := Mod(nMinutos, 60) //Separo quantos minutos faltam para horas completas
-	nMinutos -= nResto //Retiro dos minutos a quantidades que sobraram da divisao para horas
-	nMinutos /= 60 //transformo os minutos em horas
-	nMinutos += (nResto / 100) //adiciono os minutos que tinham sobrado a hora
-
-Return nMinutos
-
 Static Function GetSaldoAnterior(nSaldoAnterior, cFilAtuacao, cMatricula, cDtInicial, lSaldoNeg)
 	Local nSomaCreditos := nSomaDebitos := 0
 
@@ -152,15 +133,15 @@ Static Function GetSaldoAnterior(nSaldoAnterior, cFilAtuacao, cMatricula, cDtIni
 
 	While !TMP->(Eof()) //soma todos os debitos e creditos 
 		If Val(TMP->P9_TIPOCOD) == 1
-			nSomaCreditos += HTOM(U_ConvertHora(TMP->PI_QUANT))
+			nSomaCreditos += U_HTOM(U_ConvertHora(TMP->PI_QUANT))
 		EndIf
 		If Val(TMP->P9_TIPOCOD) == 2
-			nSomaDebitos += HTOM(U_ConvertHora(TMP->PI_QUANT))
+			nSomaDebitos += U_HTOM(U_ConvertHora(TMP->PI_QUANT))
 		EndIf
 		TMP->(DbSkip())
 	EndDo
 
-	nSaldoAnterior := MTOH(nSomaCreditos - nSomaDebitos)
+	nSaldoAnterior := U_MTOH(nSomaCreditos - nSomaDebitos)
 	If nSaldoAnterior < 0
 		lSaldoNeg := .T.
 		nSaldoAnterior *= -1 //Caso o saldo resulte num valor negativo, nesse ponto é transformado em positivo
