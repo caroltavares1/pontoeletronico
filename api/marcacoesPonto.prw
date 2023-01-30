@@ -36,12 +36,13 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local dDatAux := CTOD("")
 	Local nMes := 0
 	Local cHorasAbonadas := cMotivoAbono := ""
-	Local cHoras1T := cHoras2T := cTotalHoras := ""
+	Local cHoras1T := cHoras2T := cHoras3T := cHoras4T := cTotalHoras := ""
 	Local cTurno := ""
 	Local cSqTurno := ""
 	Local nCont := 0
 	Local nRegSP8 := 0
 	Private nTolAbst := 0
+	Private nTolHoEx := 0
 
 	Default cDataIni := cDataFin := "19000101"
 
@@ -73,6 +74,7 @@ WSMETHOD GET WSSERVICE marcacoes
 			AND SP8.P8_FILIAL = %exp:cFilFunc%
 			AND SP8.P8_MAT = %exp:cMatricula%
 			AND MONTH(SP8.P8_DATA) = %exp:nMes%
+			AND SP8.P8_TPMCREP != 'D'
 			ORDER BY SP8.P8_DATA
 		ENDSQL
 	Else
@@ -86,12 +88,13 @@ WSMETHOD GET WSSERVICE marcacoes
 			AND SP8.P8_FILIAL = %exp:cFilFunc%
 			AND SP8.P8_MAT = %exp:cMatricula%
 			AND SP8.P8_DATA BETWEEN %exp:cDataIni% AND %exp:cDataFin%
+			AND SP8.P8_TPMCREP != 'D'
 			ORDER BY SP8.P8_DATA
 		ENDSQL
 	EndIf
 
 	GetResumo(@aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
-	GetTolerancias(cFilFunc, cMatricula, @nTolAbst)
+	GetTolerancias(cFilFunc, cMatricula, @nTolAbst, @nTolHoEx)
 
 	While !TSP8->(Eof()) //Varre o resultado da query para pegar o recno do ultimo registro
 		If TSP8->R_E_C_N_O_ > nRegSP8
@@ -127,9 +130,9 @@ WSMETHOD GET WSSERVICE marcacoes
 		Aadd(aLinha, cHorasAbonadas) //10-abono
 		Aadd(aLinha, cMotivoAbono) //11-observacoes
 		Aadd(aLinha, AllTrim(TSP8->P8_TPMARCA)) //12-tipoMarca
-		Aadd(aLinha, ConvertHora(TSP8->P8_HORA)) //13-marcacao
+		Aadd(aLinha, U_ConvertHora(TSP8->P8_HORA)) //13-marcacao
 		Aadd(aLinha, .F.) //14-diaAbonado
-		Aadd(aLinha, ConvertHora(0)) //14-diaAbonado
+		Aadd(aLinha, U_ConvertHora(0)) //14-diaAbonado
 
 		aMarcacoes[nPos] := aLinha
 		aLinha := {}
@@ -182,6 +185,21 @@ WSMETHOD GET WSSERVICE marcacoes
 			If aMarcacoes[nCont][12] == "2S"
 				aDados[nPos]['2S'] := aMarcacoes[nCont][13]
 			EndIf
+
+			If aMarcacoes[nCont][12] == "3E"
+				aDados[nPos]['3E'] := aMarcacoes[nCont][13]
+			EndIf
+			If aMarcacoes[nCont][12] == "3S"
+				aDados[nPos]['3S'] := aMarcacoes[nCont][13]
+			EndIf
+
+			If aMarcacoes[nCont][12] == "4E"
+				aDados[nPos]['4E'] := aMarcacoes[nCont][13]
+			EndIf
+			If aMarcacoes[nCont][12] == "4S"
+				aDados[nPos]['4S'] := aMarcacoes[nCont][13]
+			EndIf
+			
 			cTurno := GetTurno(aTurnos, "T", STOD(STRTRAN(aMarcacoes[nCont][1],"-","")))
 			aDados[nPos]['diaAbonado'] := aMarcacoes[nCont][14]
 			aDados[nPos]['adicNoturno'] := aMarcacoes[nCont][15]
@@ -189,7 +207,12 @@ WSMETHOD GET WSSERVICE marcacoes
 		EndDo
 		cHoras1T := SomaHoras(aDados[nPos]['1E'], aDados[nPos]['1S'])
 		cHoras2T := SomaHoras(aDados[nPos]['2E'], aDados[nPos]['2S'])
+		cHoras3T := SomaHoras(aDados[nPos]['3E'], aDados[nPos]['3S'])
+		cHoras4T := SomaHoras(aDados[nPos]['4E'], aDados[nPos]['4S'])
 		cTotalHoras := SomaHoras(cHoras1T, cHoras2T, "S")
+		cTotalHoras := SomaHoras(cTotalHoras, cHoras3T, "S") //Soma terceiro turno
+		cTotalHoras := SomaHoras(cTotalHoras, cHoras4T, "S") //Soma quarto turno
+		
 		aDados[nPos]['jornada'] := cTotalHoras
 		aDados[nPos]['horasExtras'] := SomaHoras(cTurno, cTotalHoras, "E")
 		aDados[nPos]['abstencao'] := SomaHoras(cTurno, cTotalHoras, "A")
@@ -215,7 +238,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	RestArea(aArea)
 Return lRet
 
-Static Function ConvertHora(nHora)
+User Function ConvertHora(nHora)
 	Local cHora := CValToChar(nHora)
 
 	If Len(cHora) == 1
@@ -239,9 +262,9 @@ Static Function ConvertHora(nHora)
 	EndIf
 
 	If Len(cHora) == 5 .OR. Len(cHora) == 6
-		cHora := STRTRAN(cHora,".",":") + ":00"
+		cHora := STRTRAN(cHora,".",":")
 	Else
-		cHora := "00:00:00"
+		cHora := "00:00"
 	EndIf
 
 Return cHora
@@ -260,7 +283,7 @@ Static Function GetAbono(aAbonos, cDataAbono, cHorasAbonadas, cMotivoAbono)
 
 	If nPosAbon > 0
 		cMotivoAbono := aAbonos[nPosAbon,3]
-		cHorasAbonadas := ConvertHora(aAbonos[nPosAbon,4])
+		cHorasAbonadas := U_ConvertHora(aAbonos[nPosAbon,4])
 	EndIf
 Return
 
@@ -279,7 +302,7 @@ Static Function GetTurnos(aTurnos, cFilFunc)
 	ENDSQL
 
 	While !TSPJ->(Eof())
-		cTurno := ConvertHora(TSPJ->PJ_HRTOTAL - TSPJ->PJ_HRSINT1)
+		cTurno := U_ConvertHora(TSPJ->PJ_HRTOTAL - TSPJ->PJ_HRSINT1)
 		cSqTurno := TSPJ->PJ_SEMANA
 		Aadd(aTurnos, {TSPJ->PJ_DIA, cTurno, cSqTurno})
 		TSPJ->(DbSkip())
@@ -314,49 +337,49 @@ Static Function SomaHoras(cHoraIni, cHoraFin, cTipo)
 
 	If cTipo == "D" .AND. lHorasValidas
 
-		inicial := HTOM(cHoraIni)
-		final := HTOM(cHoraFin)
+		inicial := U_HTOM(cHoraIni)
+		final := U_HTOM(cHoraFin)
 
 		If final > inicial
-			cHoraSomada := MTOH(final - inicial)
+			cHoraSomada := U_MTOH(final - inicial)
 		Else //Caso a hora da saida seja feita num dia posterior ao da entrada
 			cHoraFin := SomaHoras(cHoraFin, "24:00:00", "S")
-			inicial := HTOM(cHoraIni)
-			final := HTOM(cHoraFin)
-			cHoraSomada := MTOH(final - inicial)
+			inicial := U_HTOM(cHoraIni)
+			final := U_HTOM(cHoraFin)
+			cHoraSomada := U_MTOH(final - inicial)
 		EndIf
 	EndIf
 
 	If cTipo == "E" .AND. lHorasValidas
-		esperado := HTOM(cHoraIni)
-		trabalhado := HTOM(cHoraFin)
+		esperado := U_HTOM(cHoraIni)
+		trabalhado := U_HTOM(cHoraFin)
 
-		If trabalhado > esperado
-			cHoraSomada := MTOH(trabalhado - esperado)
+		If trabalhado > esperado .AND. (trabalhado - esperado) > U_HTOM(U_ConvertHora(nTolHoEx))
+			cHoraSomada := U_MTOH(trabalhado - esperado)
 		Else
 			cHoraSomada := "00:00"
 		EndIf
 	EndIf
 
 	If cTipo == "A" .AND. lHorasValidas
-		esperado := HTOM(cHoraIni)
-		trabalhado := HTOM(cHoraFin)
+		esperado := U_HTOM(cHoraIni)
+		trabalhado := U_HTOM(cHoraFin)
 
-		If trabalhado < esperado .AND. (esperado - trabalhado) > HTOM(ConvertHora(NTOLABST))
-			cHoraSomada := MTOH(esperado - trabalhado)
+		If trabalhado < esperado .AND. (esperado - trabalhado) > U_HTOM(U_ConvertHora(nTolAbst))
+			cHoraSomada := U_MTOH(esperado - trabalhado)
 		Else
 			cHoraSomada := "00:00"
 		EndIf
 	EndIf
 
 	If cTipo == "S" .AND. lHorasValidas
-		nSoma := HTOM(cHoraIni) + HTOM(cHoraFin)
-		cHoraSomada := MTOH(nSoma)
+		nSoma := U_HTOM(cHoraIni) + U_HTOM(cHoraFin)
+		cHoraSomada := U_MTOH(nSoma)
 	EndIf
 
-Return ConvertHora(cHoraSomada)
+Return U_ConvertHora(cHoraSomada)
 
-Static Function HTOM(cHora) //00:00 formato que deve ser recebido
+User Function HTOM(cHora) //00:00 formato que deve ser recebido
 	Local nMinutos := 0
 	Local nHo := Val(SUBSTR(cHora,1,2)) //pego apenas a parte da hora
 	Local nMi := Val(SUBSTR(cHora,4,2)) //pego apenas a parte dos minutos
@@ -365,7 +388,7 @@ Static Function HTOM(cHora) //00:00 formato que deve ser recebido
 
 Return nMinutos
 
-Static Function MTOH(nMinutos) //deve vim como um numero inteiro
+User Function MTOH(nMinutos) //deve vim como um numero inteiro
 	Local nResto := 0
 
 	nResto := Mod(nMinutos, 60) //Separo quantos minutos faltam para horas completas
@@ -393,7 +416,7 @@ Static Function GetResumo(aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
 	ENDSQL
 
 	While !TSPC->(Eof())
-		Aadd(aDados, {TSPC->PC_PD, HTOM(ConVertHora(TSPC->PC_QUANTC)), HTOM(ConvertHora(TSPC->PC_QUANTI))})
+		Aadd(aDados, {TSPC->PC_PD, U_HTOM(U_ConVertHora(TSPC->PC_QUANTC)), U_HTOM(U_ConvertHora(TSPC->PC_QUANTI))})
 		TSPC->(DbSkip())
 	EndDo
 
@@ -413,7 +436,7 @@ Static Function GetResumo(aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
 		nPos := Len(aResumo)
 		aResumo[nPos]['codEvento'] := aSoma[nLinha,1]
 		aResumo[nPos]['descEvento'] := ALLTRIM(POSICIONE("SP9", 1, xFilial("SP9")+ aSoma[nLinha,1], "P9_DESC"))
-		aResumo[nPos]['totalHoras'] := ConvertHora(MTOH(aSoma[nLinha,2]))
+		aResumo[nPos]['totalHoras'] := U_ConvertHora(U_MTOH(aSoma[nLinha,2]))
 	Next
 
 	TSPC->(DbCloseArea())
@@ -426,17 +449,25 @@ Static Function GetFinalSemana(cDataIni, cDataFin, cFilFunc, cMatricula, cTurno,
 	Local aArea := GetArea()
 	Local aAreaSP8 := SP8->(GetArea())
 
+	SPJ->(DbSetOrder(1)) //PJ_FILIAL + PJ_TURNO + PJ_SEMANA + PJ_DIA
 	While dInicial <= dFinal
-		If DOW(dInicial) == 7
-			SP8->(DbSetOrder(2))
-			If !SP8->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial)))
-				Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"","** Compensado **","","",.F.,ConvertHora(0)})
+		SP3->(DbSetOrder(1))
+		If !SP3->(MsSeek(cFilFunc+DTOS(dInicial)))
+			If DOW(dInicial) == 7
+				If SPJ->(MsSeek(Left(cFilFunc,2)+"  "+cTurno+cSqTurno+"7"))
+					SP8->(DbSetOrder(2))
+					If !SP8->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial))) .AND. SPJ->PJ_TPDIA == 'C'
+						Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"","** Compensado **","","",.F.,U_ConvertHora(0)})
+					EndIf
+				EndIf
 			EndIf
-		EndIf
-		If DOW(dInicial) == 1
-			SP8->(DbSetOrder(2))
-			If !SP8->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial)))
-				Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"","** D.S.R. **","","",.F.,ConvertHora(0)})
+			If DOW(dInicial) == 1
+				If SPJ->(MsSeek(Left(cFilFunc,2)+"  "+cTurno+cSqTurno+"1"))
+					SP8->(DbSetOrder(2))
+					If !SP8->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial))) .AND. SPJ->PJ_TPDIA == 'D'
+						Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"","** D.S.R. **","","",.F.,U_ConvertHora(0)})
+					EndIf
+				EndIf
 			EndIf
 		EndIf
 		dInicial := DaySum(dInicial, 1)
@@ -451,7 +482,7 @@ Static Function GetFeriados(cDataIni, cDataFin, cFilFunc,  cTurno, cSqTurno)
 
 	BEGINSQL ALIAS 'TSP3'
 		SELECT
-			SP3.P3_DATA AS 'DATA', SP3.P3_DESC AS 'DESC'
+			SP3.P3_DATA AS 'DATA', SP3.P3_DESC AS 'DESC', SP3.P3_FIXO AS 'FIXO', SP3.P3_MESDIA
 		FROM %Table:SP3% AS SP3
 		WHERE
 			SP3.%NotDel%
@@ -460,7 +491,13 @@ Static Function GetFeriados(cDataIni, cDataFin, cFilFunc,  cTurno, cSqTurno)
 	ENDSQL
 
 	While !TSP3->(Eof())
-		Aadd(aFeriados, {ConvertData(TSP3->DATA),"","",ALLTRIM(DiaSemana(STOD(TSP3->DATA))),"","","",cTurno,cSqTurno,"",ALLTRIM(TSP3->DESC),"","",.F.,ConvertHora(0)})
+		If TSP3->FIXO == 'S'
+			cAno := cValToChar(Ano(Date()))
+			cMesDia := TSP3->P3_MESDIA
+			Aadd(aFeriados, {ConvertData(cAno+cMesDia),"","",ALLTRIM(DiaSemana(STOD(TSP3->DATA))),"","","",cTurno,cSqTurno,"",ALLTRIM(TSP3->DESC),"","",.F.,U_ConvertHora(0)})
+		Else
+			Aadd(aFeriados, {ConvertData(TSP3->DATA),"","",ALLTRIM(DiaSemana(STOD(TSP3->DATA))),"","","",cTurno,cSqTurno,"",ALLTRIM(TSP3->DESC),"","",.F.,U_ConvertHora(0)})
+		EndIf
 		TSP3->(DbSkip())
 	EndDo
 
@@ -490,7 +527,7 @@ Static Function GetAbonos(cDataIni, cDataFim, cFilFunc, cMatricula, cTurno, cSqT
 		If SP8->(MsSeek(cFilFunc+cMatricula+TSPK->PK_DATA))
 			Aadd(aRet, {TSPK->PK_MAT, TSPK->PK_CODABO, ALLTRIM(TSPK->P6_DESC), TSPK->PK_HRSABO, TSPK->PK_TPMARCA, TSPK->PK_DATA, TSPK->R_E_C_N_O_})
 		Else
-			Aadd(aRet, {ConvertData(TSPK->PK_DATA),"","",ALLTRIM(DiaSemana(STOD(TSPK->PK_DATA))),"","","",cTurno,cSqTurno, ConvertHoras(TSPK->PK_HRSABO),ALLTRIM(TSPK->P6_DESC),"","",.T.,ConvertHora(0)})
+			Aadd(aRet, {ConvertData(TSPK->PK_DATA),"","",ALLTRIM(DiaSemana(STOD(TSPK->PK_DATA))),"","","",cTurno,cSqTurno, U_ConvertHoras(TSPK->PK_HRSABO),ALLTRIM(TSPK->P6_DESC),"","",.T.,U_ConvertHora(0)})
 		EndIf
 
 		TSPK->(DbSkip())
@@ -499,7 +536,7 @@ Static Function GetAbonos(cDataIni, cDataFim, cFilFunc, cMatricula, cTurno, cSqT
 
 Return aRet
 
-Static Function GetTolerancias(cFilFunc, cMatricula, nTolAbst)
+Static Function GetTolerancias(cFilFunc, cMatricula, nTolAbst, nTolHoEx)
 	Local aArea := GetArea()
 	Local aAreaSPA := SPA->(GetArea())
 	Local aAreaSRA := SRA->(GetArea())
@@ -509,6 +546,7 @@ Static Function GetTolerancias(cFilFunc, cMatricula, nTolAbst)
 		SPA->(DbSetOrder(1))
 		If SPA->(MsSeek(xFilial("SPA")+SRA->RA_REGRA))
 			nTolAbst := SPA->PA_TOLFALT
+			nTolHoEx := SPA->PA_TOLHEPE
 		EndIf
 	EndIf
 
