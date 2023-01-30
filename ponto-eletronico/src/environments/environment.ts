@@ -5,7 +5,7 @@
 export const environment = {
   production: false,
   title: 'Ambiente de Desenvolvimento',
-  apiURL: 'http://192.168.41.60:8092/rest',
+  apiURL: 'http://192.168.41.60:8090/rest',
   authorization: "Basic " + btoa("admin:")
 };
 /* export const environment = {

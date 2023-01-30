@@ -20,7 +20,7 @@ export class ExportToPDFService {
     return this.cabecalho
   }
 
-  public openPDF(items: any[], bh: any[], turno: any[], resumos: any[], start: string, end: string): void {
+  public openPDF(items: any[], bh: any[], turno: any[], resumos: any[], start: string, end: string, consideraBH: boolean): void {
     let header: any = {}
     header = this.getHeader()
 
@@ -102,9 +102,9 @@ export class ExportToPDFService {
       content: [
         this.table(marcacoes, columns, propM),
         { canvas: [{ type: 'line', x1: 15, y1: 15, x2: 732, y2: 15, lineWidth: 1, }] },
-        { text: 'Banco de Horas', margin: [15, 5, 5, 0], fontSize: 10, id: 'BREAK' },
-        this.tableBH(horas, horasCol, horasProp),
-        { canvas: [{ type: 'line', x1: 15, y1: 15, x2: 732, y2: 15, lineWidth: 1, }] },
+        (consideraBH) ? ({ text: 'Banco de Horas', margin: [15, 5, 5, 0], fontSize: 10, id: 'BREAK' }) : { text: '', margin: [15, 5, 5, 0] },
+        (consideraBH) ? this.tableBH(horas, horasCol, horasProp) : { text: '', margin: [15, 5, 5, 0] },
+        (consideraBH) ? { canvas: [{ type: 'line', x1: 15, y1: 15, x2: 732, y2: 15, lineWidth: 1, }] } : { text: '', margin: [15, 5, 5, 0] },
         { text: 'Horários', margin: [15, 5, 5, 0], fontSize: 10, id: 'BREAK2' },
         this.tableTurno(turnos, turnosCol, turnosProp),
         { canvas: [{ type: 'line', x1: 15, y1: 15, x2: 732, y2: 15, lineWidth: 1, }] },

@@ -20,17 +20,19 @@
                 [p-items]="items"
                 [p-striped]="true">
             </po-table>
-
             <br>
-            <p class="po-font-text-large cor">Banco de Horas</p>
-            <po-table
-                [p-loading]="loadingB"
-                p-container="shadow"
-                [p-sort]="true"
-                [p-columns]="banco"
-                [p-items]="itemsBH"
-                [p-striped]="true">
-            </po-table>
+
+            <div *ngIf="consideraBH">
+                <p class="po-font-text-large cor">Banco de Horas</p>
+                <po-table
+                    [p-loading]="loadingB"
+                    p-container="shadow"
+                    [p-sort]="true"
+                    [p-columns]="banco"
+                    [p-items]="itemsBH"
+                    [p-striped]="true">
+                </po-table>
+            </div>
 
             <br>
             <p class="po-font-text-large cor">Horários</p>

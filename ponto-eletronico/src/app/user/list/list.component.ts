@@ -20,6 +20,7 @@ export class ListComponent implements OnInit {
   loadingB = true
   start = ''
   end = ''
+  consideraBH = false
 
   customLiterals: PoPageDynamicSearchLiterals = {
     searchPlaceholder: 'Buscar uma data'
@@ -146,6 +147,7 @@ export class ListComponent implements OnInit {
       .subscribe({
         next: (v: any) => {
           if (v.bh != undefined) {
+            this.consideraBH = v.bh[0].consideraBH
             this.itemsBH = v.bh
             this.loadingB = false
           } else {
@@ -249,7 +251,14 @@ export class ListComponent implements OnInit {
   }
 
   public openPDF() {
-    this.pdf.openPDF(this.items, this.itemsBH, this.itemsHorarios, this.itemsResumo, this.start, this.end)
+    this.pdf.openPDF(
+      this.items,
+      this.itemsBH,
+      this.itemsHorarios,
+      this.itemsResumo,
+      this.start,
+      this.end,
+      this.consideraBH)
   }
 
 }
