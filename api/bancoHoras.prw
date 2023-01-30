@@ -48,10 +48,10 @@ WSMETHOD GET WSSERVICE bh
 
 	While !TSPI->(Eof())
 		If Val(TSPI->P9_TIPOCOD) == 1
-			nSomaCreditos += HTOM(ConvertHoras(TSPI->PI_QUANT))
+			nSomaCreditos += HTOM(U_ConvertHora(TSPI->PI_QUANT))
 		EndIf
 		If Val(TSPI->P9_TIPOCOD) == 2
-			nSomaDebitos += HTOM(ConvertHoras(TSPI->PI_QUANT))
+			nSomaDebitos += HTOM(U_ConvertHora(TSPI->PI_QUANT))
 		EndIf
 		TSPI->(DbSkip())
 	EndDo
@@ -61,7 +61,7 @@ WSMETHOD GET WSSERVICE bh
 
 	Aadd(aDados, JsonObject():new())
 	nPos := Len(aDados)
-	nSaldoAnterior := HTOM(ConvertHora(nSaldoAnterior))
+	nSaldoAnterior := HTOM(U_ConvertHora(nSaldoAnterior))
 	
 	If lSaldoNeg //Se o saldo de horas anterior for negativo, entao ele é tratado como debito
 		nSaldoAtual := nSomaCreditos - nSaldoAnterior - nSomaDebitos
@@ -69,10 +69,10 @@ WSMETHOD GET WSSERVICE bh
 	Else
 		nSaldoAtual := nSaldoAnterior + nSomaCreditos - nSomaDebitos
 	EndIf
-	aDados[nPos]['saldoAnterior'] := ConvertHora(MTOH(nSaldoAnterior))
-	aDados[nPos]['totalDebitos'] := ConvertHora(MTOH(nSomaDebitos))
-	aDados[nPos]['totalCreditos'] := ConvertHora(MTOH(nSomaCreditos))
-	aDados[nPos]['saldoAtual'] := ConvertHora(MTOH(nSaldoAtual))
+	aDados[nPos]['saldoAnterior'] := U_ConvertHora(MTOH(nSaldoAnterior))
+	aDados[nPos]['totalDebitos'] := U_ConvertHora(MTOH(nSomaDebitos))
+	aDados[nPos]['totalCreditos'] := U_ConvertHora(MTOH(nSomaCreditos))
+	aDados[nPos]['saldoAtual'] := U_ConvertHora(MTOH(nSaldoAtual))
 	aDados[nPos]['consideraBH'] := lCalcBH
 
 	TSPI->(DbCloseArea())
@@ -88,36 +88,6 @@ WSMETHOD GET WSSERVICE bh
 	Self:SetContentType('application/json')
 	Self:SetResponse(EncodeUTF8(cResponse:toJson()))
 Return lRet
-
-Static Function ConvertHora(nHora)
-	Local cHora := CValToChar(nHora)
-
-	If Len(cHora) == 1
-		cHora := "0"+cHora+".00"
-	EndIf
-
-	If Len(cHora) == 2
-		cHora := cHora+".00"
-	EndIf
-
-	If Len(cHora) == 3
-		cHora := "0"+cHora+"0"
-	EndIf
-
-	If Len(cHora) == 4
-		If SubStr(cHora, 2, 1) == "."
-			cHora := "0"+cHora
-		Else
-			cHora := cHora+"0"
-		EndIf
-	EndIf
-
-	If Len(cHora) == 5
-		cHora := STRTRAN(cHora,".",":") + ":00"
-	Else
-		cHora := "00:00:00"
-	EndIf
-Return cHora
 
 Static Function DiaExtenso(nDia)
 	Local cDia
@@ -182,10 +152,10 @@ Static Function GetSaldoAnterior(nSaldoAnterior, cFilAtuacao, cMatricula, cDtIni
 
 	While !TMP->(Eof()) //soma todos os debitos e creditos 
 		If Val(TMP->P9_TIPOCOD) == 1
-			nSomaCreditos += HTOM(ConvertHoras(TMP->PI_QUANT))
+			nSomaCreditos += HTOM(U_ConvertHora(TMP->PI_QUANT))
 		EndIf
 		If Val(TMP->P9_TIPOCOD) == 2
-			nSomaDebitos += HTOM(ConvertHoras(TMP->PI_QUANT))
+			nSomaDebitos += HTOM(U_ConvertHora(TMP->PI_QUANT))
 		EndIf
 		TMP->(DbSkip())
 	EndDo
