@@ -20,6 +20,7 @@ export class ListComponent implements OnInit {
   loadingB = true
   start = ''
   end = ''
+  consideraBH = false
 
   customLiterals: PoPageDynamicSearchLiterals = {
     searchPlaceholder: 'Buscar uma data'
@@ -35,19 +36,23 @@ export class ListComponent implements OnInit {
   ]
 
   columns: Array<PoTableColumn> = [
-    { property: 'data', type: 'date', width: '6,25%', label: 'Data' },
-    { property: 'dataATE', type: 'date', width: '6,25%', label: 'Data', visible: false }, //Apenas usado na busca
-    { property: 'dia', width: '6,25%', label: 'Dia' },
-    { property: '1E', width: '6,25%', label: '1ª Entrada', type: 'time', format: 'HH:mm' },
-    { property: '1S', width: '6,25%', label: '1ª Saída', type: 'time', format: 'HH:mm' },
-    { property: '2E', width: '6,25%', label: '2ª Entrada', type: 'time', format: 'HH:mm' },
-    { property: '2S', width: '6,25%', label: '2ª Saída', type: 'time', format: 'HH:mm' },
-    { property: 'abono', width: '6,25%', label: 'Abono' },
-    { property: 'horasExtras', width: '6,25%', label: 'Horas Extras', type: 'time', format: 'HH:mm' },
-    { property: 'abstencao', width: '6,25%', label: 'Absent.', type: 'time', format: 'HH:mm' },
-    { property: 'jornada', width: '6,25%', label: 'Jornada', type: 'time', format: 'HH:mm' },
-    { property: 'adicNoturno', width: '6,25%', label: 'Ad. Not.', type: 'time', format: 'HH:mm' },
-    { property: 'observacoes', width: '6,25%', label: 'Observação' },
+    { property: 'data', type: 'date', label: 'Data' },
+    { property: 'dataATE', type: 'date', label: 'Data', visible: false }, //Apenas usado na busca
+    { property: 'dia', label: 'Dia' },
+    { property: '1E', label: '1ª Entrada', type: 'string' },
+    { property: '1S', label: '1ª Saída', type: 'string' },
+    { property: '2E', label: '2ª Entrada', type: 'string' },
+    { property: '2S', label: '2ª Saída', type: 'string' },
+    { property: '3E', label: '3ª Entrada', type: 'string' },
+    { property: '3S', label: '3ª Saída', type: 'string' },
+    { property: '4E', label: '4ª Entrada', type: 'string' },
+    { property: '4S', label: '4ª Saída', type: 'string' },
+    { property: 'abono', label: 'Abono' },
+    { property: 'horasExtras', label: 'Horas Extras', type: 'string' },
+    { property: 'abstencao', label: 'Absent.', type: 'string' },
+    { property: 'jornada', label: 'Jornada', type: 'string' },
+    { property: 'adicNoturno', label: 'Ad. Not.', type: 'string' },
+    { property: 'observacoes', label: 'Observação' },
     { property: 'matricula', visible: false, type: 'string' },
     { property: 'diaAbonado', visible: false, type: 'boolean' }
 
@@ -55,10 +60,10 @@ export class ListComponent implements OnInit {
 
   horarios: Array<PoTableColumn> = [
     { property: 'dia', type: 'string', width: '12,5%', label: 'Dia' },
-    { property: '1E', width: '14,625%', label: '1ª Entrada', type: 'time', format: 'HH:mm' },
-    { property: '1S', width: '14,625%', label: '1ª Saída', type: 'time', format: 'HH:mm' },
-    { property: '2E', width: '14,625%', label: '2ª Entrada', type: 'time', format: 'HH:mm' },
-    { property: '2S', width: '14,625%', label: '2ª Saída', type: 'time', format: 'HH:mm' },
+    { property: '1E', width: '14,625%', label: '1ª Entrada', type: 'string' },
+    { property: '1S', width: '14,625%', label: '1ª Saída', type: 'string' },
+    { property: '2E', width: '14,625%', label: '2ª Entrada', type: 'string' },
+    { property: '2S', width: '14,625%', label: '2ª Saída', type: 'string' },
     { property: 'turno', width: '25%', label: 'Turno' }
 
   ];
@@ -146,6 +151,7 @@ export class ListComponent implements OnInit {
       .subscribe({
         next: (v: any) => {
           if (v.bh != undefined) {
+            this.consideraBH = v.bh[0].consideraBH
             this.itemsBH = v.bh
             this.loadingB = false
           } else {
@@ -249,7 +255,14 @@ export class ListComponent implements OnInit {
   }
 
   public openPDF() {
-    this.pdf.openPDF(this.items, this.itemsBH, this.itemsHorarios, this.itemsResumo, this.start, this.end)
+    this.pdf.openPDF(
+      this.items,
+      this.itemsBH,
+      this.itemsHorarios,
+      this.itemsResumo,
+      this.start,
+      this.end,
+      this.consideraBH)
   }
 
 }
