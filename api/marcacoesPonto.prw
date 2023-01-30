@@ -460,7 +460,7 @@ Static Function GetFeriados(cDataIni, cDataFin, cFilFunc,  cTurno, cSqTurno)
 
 	BEGINSQL ALIAS 'TSP3'
 		SELECT
-			SP3.P3_DATA AS 'DATA', SP3.P3_DESC AS 'DESC'
+			SP3.P3_DATA AS 'DATA', SP3.P3_DESC AS 'DESC', SP3.P3_FIXO AS 'FIXO', SP3.P3_MESDIA
 		FROM %Table:SP3% AS SP3
 		WHERE
 			SP3.%NotDel%
@@ -469,7 +469,13 @@ Static Function GetFeriados(cDataIni, cDataFin, cFilFunc,  cTurno, cSqTurno)
 	ENDSQL
 
 	While !TSP3->(Eof())
-		Aadd(aFeriados, {ConvertData(TSP3->DATA),"","",ALLTRIM(DiaSemana(STOD(TSP3->DATA))),"","","",cTurno,cSqTurno,"",ALLTRIM(TSP3->DESC),"","",.F.,ConvertHora(0)})
+		If TSP3->FIXO == 'S'
+			cAno := cValToChar(Ano(Date()))
+			cMesDia := TSP3->P3_MESDIA
+			Aadd(aFeriados, {ConvertData(cAno+cMesDia),"","",ALLTRIM(DiaSemana(STOD(TSP3->DATA))),"","","",cTurno,cSqTurno,"",ALLTRIM(TSP3->DESC),"","",.F.,ConvertHora(0)})
+		Else
+			Aadd(aFeriados, {ConvertData(TSP3->DATA),"","",ALLTRIM(DiaSemana(STOD(TSP3->DATA))),"","","",cTurno,cSqTurno,"",ALLTRIM(TSP3->DESC),"","",.F.,ConvertHora(0)})
+		EndIf
 		TSP3->(DbSkip())
 	EndDo
 
