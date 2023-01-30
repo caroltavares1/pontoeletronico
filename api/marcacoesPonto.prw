@@ -432,7 +432,7 @@ Static Function GetFinalSemana(cDataIni, cDataFin, cFilFunc, cMatricula, cTurno,
 		SP3->(DbSetOrder(1))
 		If !SP3->(MsSeek(cFilFunc+DTOS(dInicial)))
 			If DOW(dInicial) == 7
-				If SPJ->(MsSeek(Left(cFilFunc,2)+cTurno+cSqTurno+"7"))
+				If SPJ->(MsSeek(Left(cFilFunc,2)+"  "+cTurno+cSqTurno+"7"))
 					SP8->(DbSetOrder(2))
 					If !SP8->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial))) .AND. SPJ->PJ_TPDIA == 'C'
 						Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"","** Compensado **","","",.F.,ConvertHora(0)})
@@ -440,7 +440,7 @@ Static Function GetFinalSemana(cDataIni, cDataFin, cFilFunc, cMatricula, cTurno,
 				EndIf
 			EndIf
 			If DOW(dInicial) == 1
-				If SPJ->(MsSeek(Left(cFilFunc,2)+cTurno+cSqTurno+"1"))
+				If SPJ->(MsSeek(Left(cFilFunc,2)+"  "+cTurno+cSqTurno+"1"))
 					SP8->(DbSetOrder(2))
 					If !SP8->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial))) .AND. SPJ->PJ_TPDIA == 'D'
 						Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"","** D.S.R. **","","",.F.,ConvertHora(0)})
