@@ -25,7 +25,9 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local aFinsSem := {}
 	Local aFeriados := {}
 	Local aAbonos := {}
-	Local aTurnos :={}
+	Local aTurnos := {}
+	Local aAfasta := {}
+	Local aAfastamentos := {}
 	Local aParams := Self:AQueryString
 	Local cFilFunc := ""
 	Local cMatricula := ""
@@ -103,14 +105,20 @@ WSMETHOD GET WSSERVICE marcacoes
 		TSP8->(DbSkip())
 	EndDo
 
+	GetTurnos(@aTurnos, cFilFunc)
 	If nRegSP8 > 0 //Com o ultimo registro encontrado limita o resultado das buscas de fins de semana, feriados e abonos ate a data do ultimo registro
 		SP8->(DbGoto(nRegSP8))
-		GetTurnos(@aTurnos, cFilFunc)
 		cSqTurno := GetTurno(aTurnos, "S", SP8->P8_DATA)
 		aFinsSem := GetFinalSemana(cDataIni, DTOS(SP8->P8_DATA), cFilFunc, cMatricula, AllTrim(SP8->P8_TURNO), cSqTurno)
 		aFeriados := GetFeriados(cDataIni, DTOS(SP8->P8_DATA), cFilFunc, AllTrim(SP8->P8_TURNO), cSqTurno)
 		aAbonos := GetAbonos(cDataIni, cDataFin, cFilFunc, cMatricula, AllTrim(SP8->P8_TURNO), cSqTurno)
 	EndIf
+
+	fAfastaPer( @aAfasta , STOD(cDataIni) , STOD(cDataFin) , ALLTRIM(cFilFunc) , cMatricula)
+	If Empty(cSqTurno)
+		cSqTurno := GetTurno(aTurnos, "S", STOD(cDataIni))
+	EndIf 
+	aAfastamentos := GetAfastamentos(cFilFunc, aAfasta, GetTurno(aTurnos, "T", STOD(cDataIni)), cSqTurno)
 
 	TSP8->(DBGOTOP()) //Volta para o topo da tabela temporaria
 	While !TSP8->(Eof())
@@ -145,6 +153,10 @@ WSMETHOD GET WSSERVICE marcacoes
 
 	For nCont := 1 To Len(aFeriados)
 		Aadd(aMarcacoes, aFeriados[nCont])
+	Next
+
+	For nCont := 1 To Len(aAfastamentos)
+		Aadd(aMarcacoes, aAfastamentos[nCont])
 	Next
 
 	For nCont := 1 To Len(aAbonos)
@@ -199,7 +211,7 @@ WSMETHOD GET WSSERVICE marcacoes
 			If aMarcacoes[nCont][12] == "4S"
 				aDados[nPos]['4S'] := aMarcacoes[nCont][13]
 			EndIf
-			
+
 			cTurno := GetTurno(aTurnos, "T", STOD(STRTRAN(aMarcacoes[nCont][1],"-","")))
 			aDados[nPos]['diaAbonado'] := aMarcacoes[nCont][14]
 			aDados[nPos]['adicNoturno'] := aMarcacoes[nCont][15]
@@ -212,7 +224,7 @@ WSMETHOD GET WSSERVICE marcacoes
 		cTotalHoras := SomaHoras(cHoras1T, cHoras2T, "S")
 		cTotalHoras := SomaHoras(cTotalHoras, cHoras3T, "S") //Soma terceiro turno
 		cTotalHoras := SomaHoras(cTotalHoras, cHoras4T, "S") //Soma quarto turno
-		
+
 		aDados[nPos]['jornada'] := cTotalHoras
 		aDados[nPos]['horasExtras'] := SomaHoras(cTurno, cTotalHoras, "E")
 		aDados[nPos]['abstencao'] := SomaHoras(cTurno, cTotalHoras, "A")
@@ -554,3 +566,23 @@ Static Function GetTolerancias(cFilFunc, cMatricula, nTolAbst, nTolHoEx)
 	SPA->(RestArea(aAreaSPA))
 	RestArea(aArea)
 Return
+
+Static Function GetAfastamentos(cFilFunc, aAfasta, cTurno, cSqTurno)
+	Local nCont := 0
+	Local aAfastamentos := {}
+	Local dInicial := STOD("")
+	Local dFinal := STOD("")
+
+	For nCont := 1 To Len(aAfasta)
+		dInicial := aAfasta[nCont,1]
+		dFinal := aAfasta[nCont,2]
+
+		SR8->(DbSetOrder(5)) //R8_FILIAL + R8_NUMID
+		If SR8->(MsSeek(cFilFunc+aAfasta[nCont,4]))
+			While dInicial <= dFinal
+				Aadd(aAfastamentos, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"","** TESTE **","","",.T.,U_ConvertHora(0)})
+				dInicial := DaySum(dInicial, 1)
+			EndDo
+		EndIf
+	Next
+Return aAfastamentos
