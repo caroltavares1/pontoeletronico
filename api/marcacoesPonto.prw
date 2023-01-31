@@ -31,6 +31,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local aParams := Self:AQueryString
 	Local cFilFunc := ""
 	Local cMatricula := ""
+	Local cJornadaPrevista := ""
 	Local nPosFil := aScan(aParams,{|x| x[1] == "FILIAL"})
 	Local nPosMatri := aScan(aParams,{|x| x[1] == "MATRICULA"})
 	Local nPosDtIni := aScan(aParams,{|x| x[1] == "DTINICIAL"})
@@ -105,17 +106,18 @@ WSMETHOD GET WSSERVICE marcacoes
 		TSP8->(DbSkip())
 	EndDo
 
-	GetTurnos(@aTurnos, cFilFunc)
 	If nRegSP8 > 0 //Com o ultimo registro encontrado limita o resultado das buscas de fins de semana, feriados e abonos ate a data do ultimo registro
 		SP8->(DbGoto(nRegSP8))
 		cTurno := AllTrim(SP8->P8_TURNO)
 		cSqTurno := AllTrim(SP8->P8_SEMANA)
+		GetTurnos(@aTurnos, cFilFunc, cTurno, cSqTurno)
 
 		If Empty(cSqTurno) //Se a sequencia do turno estiver vazia
 			SRA->(DbSetOrder(1)) //RA_FILIAL + RA_MAT + RA_NOME
 			If SRA->(MsSeek(cFilFunc+cMatricula))
 				cTurno := AllTrim(SRA->RA_TNOTRAB)
 				cSqTurno := AllTrim(SRA->RA_SEQTURN)
+				GetTurnos(@aTurnos, cFilFunc, cTurno, cSqTurno)
 			EndIf
 		EndIf
 
@@ -128,6 +130,7 @@ WSMETHOD GET WSSERVICE marcacoes
 			If SRA->(MsSeek(cFilFunc+cMatricula))
 				cTurno := AllTrim(SRA->RA_TNOTRAB)
 				cSqTurno := AllTrim(SRA->RA_SEQTURN)
+				GetTurnos(@aTurnos, cFilFunc, cTurno, cSqTurno)
 			EndIf
 		EndIf
 	EndIf
@@ -231,7 +234,7 @@ WSMETHOD GET WSSERVICE marcacoes
 				aDados[nPos]['4S'] := aMarcacoes[nCont][13]
 			EndIf
 
-			cTurno := GetTurno(aTurnos, "T", STOD(STRTRAN(aMarcacoes[nCont][1],"-","")))
+			cJornadaPrevista := GetTurno(aTurnos, "T", STOD(STRTRAN(aMarcacoes[nCont][1],"-","")))
 			aDados[nPos]['diaAbonado'] := aMarcacoes[nCont][14]
 			aDados[nPos]['adicNoturno'] := aMarcacoes[nCont][15]
 			nCont++
@@ -245,8 +248,9 @@ WSMETHOD GET WSSERVICE marcacoes
 		cTotalHoras := SomaHoras(cTotalHoras, cHoras4T, "S") //Soma quarto turno
 
 		aDados[nPos]['jornada'] := cTotalHoras
-		aDados[nPos]['horasExtras'] := SomaHoras(cTurno, cTotalHoras, "E")
-		aDados[nPos]['abstencao'] := SomaHoras(cTurno, cTotalHoras, "A")
+		aDados[nPos]['horasExtras'] := SomaHoras(cJornadaPrevista, cTotalHoras, "E")
+		aDados[nPos]['abstencao'] := SomaHoras(cJornadaPrevista, cTotalHoras, "A")
+		aDados[nPos]['jornadaPrevista'] := cJornadaPrevista
 
 	EndDo
 	TSP8->(DbCloseArea())
@@ -318,8 +322,9 @@ Static Function GetAbono(aAbonos, cDataAbono, cHorasAbonadas, cMotivoAbono)
 	EndIf
 Return
 
-Static Function GetTurnos(aTurnos, cFilFunc)
-	Local cTurno := cSqTurno := ""
+Static Function GetTurnos(aTurnos, cFilFunc, cTurno, cSqTurno)
+	Local cTurnoTmp := cSqTurnoTmp := ""
+	Local cQry := ""
 
 	BEGINSQL ALIAS 'TSPJ'
 		SELECT
@@ -328,18 +333,20 @@ Static Function GetTurnos(aTurnos, cFilFunc)
 		WHERE
 			SPJ.%NotDel%
 			AND SPJ.PJ_FILIAL = %exp:LEFT(cFilFunc,2)%
-			AND SPJ.PJ_TURNO = %exp:SP8->P8_TURNO%
-			AND SPJ.PJ_SEMANA = %exp:SP8->P8_SEMANA%
+			AND SPJ.PJ_TURNO = %exp:cTurno%
+			AND SPJ.PJ_SEMANA = %exp:cSqTurno%
 	ENDSQL
 
+	cQry := GetLastQuery()[2]
+
 	While !TSPJ->(Eof())
-		cTurno := U_ConvertHora(TSPJ->PJ_HRTOTAL - TSPJ->PJ_HRSINT1)
-		cSqTurno := TSPJ->PJ_SEMANA
-		Aadd(aTurnos, {TSPJ->PJ_DIA, cTurno, cSqTurno})
+		cTurnoTmp := U_ConvertHora(TSPJ->PJ_HRTOTAL - TSPJ->PJ_HRSINT1)
+		cSqTurnoTmp := TSPJ->PJ_SEMANA
+		Aadd(aTurnos, {TSPJ->PJ_DIA, cTurnoTmp, cSqTurnoTmp})
 		TSPJ->(DbSkip())
 	EndDo
 	TSPJ->(DbCloseArea())
-Return
+Return cQry
 
 Static Function GetTurno(aTurno, cTipo, dDataTurno)
 	Local nDia := DOW(dDataTurno)
