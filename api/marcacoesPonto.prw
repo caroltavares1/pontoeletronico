@@ -108,17 +108,32 @@ WSMETHOD GET WSSERVICE marcacoes
 	GetTurnos(@aTurnos, cFilFunc)
 	If nRegSP8 > 0 //Com o ultimo registro encontrado limita o resultado das buscas de fins de semana, feriados e abonos ate a data do ultimo registro
 		SP8->(DbGoto(nRegSP8))
-		cSqTurno := GetTurno(aTurnos, "S", SP8->P8_DATA)
-		aFinsSem := GetFinalSemana(cDataIni, DTOS(SP8->P8_DATA), cFilFunc, cMatricula, AllTrim(SP8->P8_TURNO), cSqTurno)
-		aFeriados := GetFeriados(cDataIni, DTOS(SP8->P8_DATA), cFilFunc, AllTrim(SP8->P8_TURNO), cSqTurno)
-		aAbonos := GetAbonos(cDataIni, cDataFin, cFilFunc, cMatricula, AllTrim(SP8->P8_TURNO), cSqTurno)
+		cTurno := AllTrim(SP8->P8_TURNO)
+		cSqTurno := AllTrim(SP8->P8_SEMANA)
+
+		If Empty(cSqTurno) //Se a sequencia do turno estiver vazia
+			SRA->(DbSetOrder(1)) //RA_FILIAL + RA_MAT + RA_NOME
+			If SRA->(MsSeek(cFilFunc+cMatricula))
+				cTurno := AllTrim(SRA->RA_TNOTRAB)
+				cSqTurno := AllTrim(SRA->RA_SEQTURN)
+			EndIf
+		EndIf
+
+		aFinsSem := GetFinalSemana(cDataIni, DTOS(SP8->P8_DATA), cFilFunc, cMatricula, cTurno, cSqTurno)
+		aFeriados := GetFeriados(cDataIni, DTOS(SP8->P8_DATA), cFilFunc, cTurno, cSqTurno)
+		aAbonos := GetAbonos(cDataIni, cDataFin, cFilFunc, cMatricula, cTurno, cSqTurno)
+	Else
+		If Empty(cSqTurno) //Se a sequencia do turno estiver vazia
+			SRA->(DbSetOrder(1)) //RA_FILIAL + RA_MAT + RA_NOME
+			If SRA->(MsSeek(cFilFunc+cMatricula))
+				cTurno := AllTrim(SRA->RA_TNOTRAB)
+				cSqTurno := AllTrim(SRA->RA_SEQTURN)
+			EndIf
+		EndIf
 	EndIf
 
 	fAfastaPer( @aAfasta , STOD(cDataIni) , STOD(cDataFin) , ALLTRIM(cFilFunc) , cMatricula)
-	If Empty(cSqTurno)
-		cSqTurno := GetTurno(aTurnos, "S", STOD(cDataIni))
-	EndIf 
-	aAfastamentos := GetAfastamentos(cFilFunc, aAfasta, GetTurno(aTurnos, "T", STOD(cDataIni)), cSqTurno)
+	aAfastamentos := GetAfastamentos(cFilFunc, aAfasta, cTurno, cSqTurno)
 
 	TSP8->(DBGOTOP()) //Volta para o topo da tabela temporaria
 	While !TSP8->(Eof())
@@ -133,7 +148,11 @@ WSMETHOD GET WSSERVICE marcacoes
 		Aadd(aLinha, AllTrim(TSP8->P8_CC)) //5-centrocusto
 		Aadd(aLinha, AllTrim(TSP8->P8_CC)) //6-ordemClassificacao
 		Aadd(aLinha, AllTrim(TSP8->P8_MOTIVRG)) //7-motivoRegistro
-		Aadd(aLinha, AllTrim(TSP8->P8_TURNO)) //8-turno
+		If !Empty(TSP8->P8_TURNO)
+			Aadd(aLinha, Alltrim(TSP8->P8_TURNO)) //8-turno
+		Else
+			Aadd(aLinha, cTurno) //8-turno
+		EndIf
 		Aadd(aLinha, cSqTurno) //9-seqTurno
 		Aadd(aLinha, cHorasAbonadas) //10-abono
 		Aadd(aLinha, cMotivoAbono) //11-observacoes
@@ -568,21 +587,34 @@ Static Function GetTolerancias(cFilFunc, cMatricula, nTolAbst, nTolHoEx)
 Return
 
 Static Function GetAfastamentos(cFilFunc, aAfasta, cTurno, cSqTurno)
+	Local aArea := GetArea()
+	Local aAreaRCM := RCM->(GetArea())
 	Local nCont := 0
 	Local aAfastamentos := {}
 	Local dInicial := STOD("")
 	Local dFinal := STOD("")
+	Local cTpAfast := ""
+	Local cObservacoes := ""
 
 	For nCont := 1 To Len(aAfasta)
 		dInicial := aAfasta[nCont,1]
 		dFinal := aAfasta[nCont,2]
+		cTpAfast := Alltrim(aAfasta[nCont,3])
+
+		RCM->(DbSetOrder(1))
+		If RCM->(MsSeek(LEFT(cFilFunc,2)+"  "+cTpAfast))
+			cObservacoes := AllTrim(RCM->RCM_DESCRI)
+		EndIf
 
 		SR8->(DbSetOrder(5)) //R8_FILIAL + R8_NUMID
 		If SR8->(MsSeek(cFilFunc+aAfasta[nCont,4]))
 			While dInicial <= dFinal
-				Aadd(aAfastamentos, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"","** TESTE **","","",.T.,U_ConvertHora(0)})
+				Aadd(aAfastamentos, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"",cObservacoes,"","",.T.,U_ConvertHora(0)})
 				dInicial := DaySum(dInicial, 1)
 			EndDo
 		EndIf
 	Next
+
+	RCM->(RestArea(aAreaRCM))
+	RestArea(aArea)
 Return aAfastamentos
