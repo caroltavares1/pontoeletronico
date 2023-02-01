@@ -294,9 +294,10 @@ Static Function GetAbono(aAbonos, cDataAbono, cHorasAbonadas, cMotivoAbono)
 Return
 
 Static Function GetJornada(cFilFunc, cMatricula, cDataMovim)
-	Local aRet := {"00:00","",""}
+	Local aRet := {"","",""}
 	Local cTurno := ""
 	Local cSqTurno := ""
+	Local lEhFeriado := .F.
 
 	BEGINSQL ALIAS 'TSPF'
 		SELECT TOP 1
@@ -314,12 +315,21 @@ Static Function GetJornada(cFilFunc, cMatricula, cDataMovim)
 		cTurno := ALLTRIM(TSPF->PF_TURNOPA)
 		cSqTurno := ALLTRIM(TSPF->PF_SEQUEPA)
 		cDia := cValToChar(DOW(STOD(cDataMovim)))
-		SPJ->(DbSetOrder(1)) //PJ_FILIAL + PJ_TURNO + PJ_SEMANA + PJ_DIA
-		If SPJ->(MsSeek(Left(cFilFunc,2)+"  "+cTurno+cSqTurno+cDia))
+		
+		lEhFeriado := fEhFeriado(cDataMovim, cFilFunc)
+		If lEhFeriado
 			aRet := {}
-			Aadd(aRet, U_ConvertHora(SPJ->PJ_HRTOTAL - SPJ->PJ_HRSINT1)) //1 - Jornada Prevista
+			Aadd(aRet, U_ConvertHora(0)) //1 - Jornada Prevista
 			Aadd(aRet, cTurno) //2 - Codigo do Turno
 			Aadd(aRet, cSqTurno) //3 - Cod. Sequencia do Turno
+		Else
+			SPJ->(DbSetOrder(1)) //PJ_FILIAL + PJ_TURNO + PJ_SEMANA + PJ_DIA
+			If SPJ->(MsSeek(Left(cFilFunc,2)+"  "+cTurno+cSqTurno+cDia))
+				aRet := {}
+				Aadd(aRet, U_ConvertHora(SPJ->PJ_HRTOTAL - SPJ->PJ_HRSINT1)) //1 - Jornada Prevista
+				Aadd(aRet, cTurno) //2 - Codigo do Turno
+				Aadd(aRet, cSqTurno) //3 - Cod. Sequencia do Turno
+			EndIf
 		EndIf
 	EndIf
 	TSPF->(DbCloseArea())
@@ -626,3 +636,23 @@ Static Function GetAfastamentos(cFilFunc, aAfasta, cMatricula)
 	RCM->(RestArea(aAreaRCM))
 	RestArea(aArea)
 Return aAfastamentos
+
+Static Function fEhFeriado(cDataMovim, cFilFunc)
+	Local lRet := .F.
+	
+	BEGINSQL ALIAS 'TSP3A'
+		SELECT
+			SP3.P3_DATA AS 'DATA', SP3.P3_DESC AS 'DESC', SP3.P3_FIXO AS 'FIXO', SP3.P3_MESDIA
+		FROM %Table:SP3% AS SP3
+		WHERE
+			SP3.%NotDel%
+			AND (SP3.P3_DATA = %exp:cDataMovim% OR SP3.P3_MESDIA = %exp:RIGHT(cDataMovim,4)%)
+			AND SP3.P3_FILIAL = %exp:cFilFunc%
+	ENDSQL
+
+	If !TSP3A->(Eof())
+		lRet := .T.
+	EndIf
+	TSP3A->(DbCloseArea())
+
+Return lRet
