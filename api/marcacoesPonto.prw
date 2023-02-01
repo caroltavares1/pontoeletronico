@@ -109,7 +109,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	aAbonos := GetAbonos(cDataIni, cDataFin, cFilFunc, cMatricula)
 
 	fAfastaPer( @aAfasta , STOD(cDataIni) , STOD(cDataFin) , ALLTRIM(cFilFunc) , cMatricula)
-	aAfastamentos := GetAfastamentos(cFilFunc, aAfasta)
+	aAfastamentos := GetAfastamentos(cFilFunc, aAfasta, cMatricula)
 
 	TSP8->(DBGOTOP()) //Volta para o topo da tabela temporaria
 	While !TSP8->(Eof())
@@ -133,7 +133,7 @@ WSMETHOD GET WSSERVICE marcacoes
 		Aadd(aLinha, U_ConvertHora(TSP8->P8_HORA)) //13-marcacao
 		Aadd(aLinha, .F.) //14-diaAbonado
 		Aadd(aLinha, U_ConvertHora(0)) //15-Adicional Noturno
-		Aadd(aLinha, aJornada) //16-Jornada Prevista
+		Aadd(aLinha, aJornada[1]) //16-Jornada Prevista
 
 		aMarcacoes[nPos] := aLinha
 		aLinha := {}
@@ -320,9 +320,6 @@ Static Function GetJornada(cFilFunc, cMatricula, cDataMovim)
 			Aadd(aRet, U_ConvertHora(SPJ->PJ_HRTOTAL - SPJ->PJ_HRSINT1)) //1 - Jornada Prevista
 			Aadd(aRet, cTurno) //2 - Codigo do Turno
 			Aadd(aRet, cSqTurno) //3 - Cod. Sequencia do Turno
-			Aadd(aRet, TSPF->PF_FILIAL) //3 - Cod. Sequencia do Turno
-			Aadd(aRet, cDataMovim) //3 - Cod. Sequencia do Turno
-			Aadd(aRet, Left(cFilFunc,2)+"  "+cTurno+cSqTurno+cDia) //3 - Cod. Sequencia do Turno
 		EndIf
 	EndIf
 	TSPF->(DbCloseArea())
@@ -589,7 +586,7 @@ Static Function GetTolerancias(cFilFunc, cMatricula, nTolAbst, nTolHoEx)
 	RestArea(aArea)
 Return
 
-Static Function GetAfastamentos(cFilFunc, aAfasta)
+Static Function GetAfastamentos(cFilFunc, aAfasta, cMatricula)
 	Local aArea := GetArea()
 	Local aAreaRCM := RCM->(GetArea())
 	Local nCont := 0
