@@ -315,7 +315,7 @@ Static Function GetJornada(cFilFunc, cMatricula, cDataMovim)
 		cTurno := ALLTRIM(TSPF->PF_TURNOPA)
 		cSqTurno := ALLTRIM(TSPF->PF_SEQUEPA)
 		cDia := cValToChar(DOW(STOD(cDataMovim)))
-		
+
 		lEhFeriado := fEhFeriado(cDataMovim, cFilFunc)
 		If lEhFeriado
 			aRet := {}
@@ -467,14 +467,14 @@ Static Function GetFinalSemana(cDataIni, cDataFin, cFilFunc, cMatricula)
 	While dInicial <= dFinal
 		SP3->(DbSetOrder(1))
 		If !SP3->(MsSeek(cFilFunc+DTOS(dInicial)))
+			aJornada := GetJornada(cFilFunc, cMatricula, DTOS(dInicial))
+			cJornadaPrevista := aJornada[1]
+			cTurno := aJornada[2]
+			cSqTurno := aJornada[3]
 			If DOW(dInicial) == 7
 				If SPJ->(MsSeek(Left(cFilFunc,2)+"  "+cTurno+cSqTurno+"7"))
 					SP8->(DbSetOrder(2))
 					If !SP8->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial))) .AND. SPJ->PJ_TPDIA == 'C'
-						aJornada := GetJornada(cFilFunc, cMatricula, DTOS(dInicial))
-						cJornadaPrevista := aJornada[1]
-						cTurno := aJornada[2]
-						cSqTurno := aJornada[3]
 						Aadd(aDias, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"","** Compensado **","","",.F.,U_ConvertHora(0),cJornadaPrevista})
 					EndIf
 				EndIf
@@ -639,7 +639,7 @@ Return aAfastamentos
 
 Static Function fEhFeriado(cDataMovim, cFilFunc)
 	Local lRet := .F.
-	
+
 	BEGINSQL ALIAS 'TSP3A'
 		SELECT
 			SP3.P3_DATA AS 'DATA', SP3.P3_DESC AS 'DESC', SP3.P3_FIXO AS 'FIXO', SP3.P3_MESDIA
