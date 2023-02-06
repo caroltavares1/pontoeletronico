@@ -331,6 +331,16 @@ Static Function GetJornada(cFilFunc, cMatricula, cDataMovim)
 				Aadd(aRet, cSqTurno) //3 - Cod. Sequencia do Turno
 			EndIf
 		EndIf
+	Else
+		SRA->(DbSetOrder(1))
+		If SRA->(MsSeek(cFilFunc+cMatricula))
+			cTurno := ALLTRIM(SRA->RA_TNOTRAB)
+			cSqTurno := ALLTRIM(SRA->RA_SEQTURN)
+			aRet := {}
+			Aadd(aRet, U_ConvertHora(0)) //1 - Jornada Prevista
+			Aadd(aRet, cTurno) //2 - Codigo do Turno
+			Aadd(aRet, cSqTurno) //3 - Cod. Sequencia do Turno
+		EndIf
 	EndIf
 	TSPF->(DbCloseArea())
 Return aRet
