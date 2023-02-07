@@ -42,7 +42,6 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local cHorasAbonadas := cMotivoAbono := ""
 	Local cHoras1T := cHoras2T := cHoras3T := cHoras4T := cTotalHoras := ""
 	Local nCont := 0
-	Local nRegSP8 := 0
 	Local aJornada := {}
 	Local nMinHrNot := nFimHnot := nIniHNot := 0
 	Private nTolAbst := 0
@@ -98,14 +97,6 @@ WSMETHOD GET WSSERVICE marcacoes
 	EndIf
 
 	GetResumo(@aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
-	GetTolerancias(cFilFunc, cMatricula, @nTolAbst, @nTolHoEx)
-
-	While !TSP8->(Eof()) //Varre o resultado da query para pegar o recno do ultimo registro
-		If TSP8->R_E_C_N_O_ > nRegSP8
-			nRegSP8 := TSP8->R_E_C_N_O_
-		EndIf
-		TSP8->(DbSkip())
-	EndDo
 
 	aFinsSem := GetFinalSemana(cDataIni, cDataFin, cFilFunc, cMatricula)
 	aFeriados := GetFeriados(cDataIni, cDataFin, cFilFunc, cMatricula)
@@ -180,6 +171,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	aSort(aMarcacoes, , , {|x, y| x[1] < y[1]})
 	While nCont <= Len(aMarcacoes)
 		Aadd(aDados, JsonObject():new())
+		GetTolerancias(cFilFunc, cMatricula, @nTolAbst, @nTolHoEx, STRTRAN(aMarcacoes[nCont][1],"-",""))
 		nPos := Len(aDados)
 		aDados[nPos]['data' ] := aMarcacoes[nCont][1]
 		aDados[nPos]['filial' ] := aMarcacoes[nCont][2]
@@ -618,20 +610,42 @@ Static Function GetAbonos(cDataIni, cDataFim, cFilFunc, cMatricula)
 
 Return aRet
 
-Static Function GetTolerancias(cFilFunc, cMatricula, nTolAbst, nTolHoEx)
+Static Function GetTolerancias(cFilFunc, cMatricula, nTolAbst, nTolHoEx, cDataMovim)
 	Local aArea := GetArea()
 	Local aAreaSPA := SPA->(GetArea())
 	Local aAreaSRA := SRA->(GetArea())
 
-	SRA->(DbSetOrder(1))
-	If SRA->(MsSeek(cFilFunc+cMatricula))
+
+	BEGINSQL ALIAS 'TSPFA'
+		SELECT TOP 1
+			SPF.PF_TURNOPA, SPF.PF_SEQUEPA, SPF.PF_FILIAL, SPF.PF_REGRAPA
+		FROM %Table:SPF% AS SPF
+		WHERE
+			SPF.%NotDel%
+			AND SPF.PF_FILIAL = %exp:cFilFunc%
+			AND SPF.PF_MAT = %exp:cMatricula%
+			AND SPF.PF_DATA <= %exp:cDataMovim%
+			ORDER BY SPF.PF_DATA DESC
+	ENDSQL
+
+	If !TSPFA->(Eof())
 		SPA->(DbSetOrder(1))
-		If SPA->(MsSeek(xFilial("SPA")+SRA->RA_REGRA))
+		If SPA->(MsSeek(xFilial("SPA")+TSPFA->PF_REGRAPA))
 			nTolAbst := SPA->PA_TOLFALT
 			nTolHoEx := SPA->PA_TOLHEPE
 		EndIf
+	Else
+		SRA->(DbSetOrder(1))
+		If SRA->(MsSeek(cFilFunc+cMatricula))
+			SPA->(DbSetOrder(1))
+			If SPA->(MsSeek(xFilial("SPA")+SRA->RA_REGRA))
+				nTolAbst := SPA->PA_TOLFALT
+				nTolHoEx := SPA->PA_TOLHEPE
+			EndIf
+		EndIf
 	EndIf
 
+	TSPFA->(DbCloseArea())
 	SRA->(RestArea(aAreaSRA))
 	SPA->(RestArea(aAreaSPA))
 	RestArea(aArea)
