@@ -139,14 +139,18 @@ WSMETHOD GET WSSERVICE marcacoes
 		Aadd(aLinha, aJornada[1]) //16-Jornada Prevista
 
 		SR6->(DbSetOrder(1)) //R6_FILIAL + R6_TURNO
-		If SR6->(MsSeek(Left(cFilFunc,2)+"  "+TSP8->P8_TURNO))
+		If SR6->(MsSeek(Left(cFilFunc,2)+"  "+TSP8->P8_TURNO)) //producao
+		// If SR6->(MsSeek(Left(cFilFunc,2)+""+TSP8->P8_TURNO)) //Teste
 			nIniHNot := SR6->R6_INIHNOT
 			nFimHnot := SR6->R6_FIMHNOT
 			nMinHrNot := SR6->R6_MINHNOT
 		EndIf
 
 		If (TSP8->P8_HORA > nIniHNot .OR. TSP8->P8_HORA < nFimHnot) .AND. nIniHNot > 0
-			aAdd(aDiasAdNot, {ConvertData(AllTrim(TSP8->P8_DATA)), CalculaAdcNot(TSP8->P8_HORA, nIniHNot, nFimHnot, nMinHrNot)})
+			aAdicionalNoturno := CalculaAdcNot(TSP8->P8_HORA, nIniHNot, nFimHnot, nMinHrNot)
+			If Len(aAdicionalNoturno) > 0
+				aAdd(aDiasAdNot, {ConvertData(AllTrim(TSP8->P8_DATA)), aAdicionalNoturno[1], aAdicionalNoturno[2]})
+			EndIf
 		EndIf
 
 		aMarcacoes[nPos] := aLinha
@@ -237,6 +241,10 @@ WSMETHOD GET WSSERVICE marcacoes
 		cTotalHoras := SomaHoras(cHoras1T, cHoras2T, "S")
 		cTotalHoras := SomaHoras(cTotalHoras, cHoras3T, "S") //Soma terceiro turno
 		cTotalHoras := SomaHoras(cTotalHoras, cHoras4T, "S") //Soma quarto turno
+
+		If nPosAdNot > 0
+			cTotalHoras := SomaHoras(cTotalHoras, aDiasAdNot[nPosAdNot,3], "S")
+		EndIf
 
 		aDados[nPos]['jornada'] := cTotalHoras
 		aDados[nPos]['horasExtras'] := SomaHoras(cJornadaPrevista, cTotalHoras, "E")
@@ -690,14 +698,18 @@ Return lRet
 
 
 Static Function CalculaAdcNot(nHora, nIniNot, nFimNot, nMinNot)
-	Local cAdicionalNoturno := ""
+	Local aAdicionalNoturno := {}
 	Local nHoraM := U_HTOM(U_ConVertHora(nHora)) //transforma hora em minutos
 	Local nIniNotM := U_HTOM(U_ConVertHora(nIniNot)) //transforma hora em minutos
-	Local nResto := nHoraM - nIniNotM
+	Local nCalculado := nHoraM - nIniNotM
+	Local nReal := U_MTOH(nCalculado)
+	Local nDiff := 0
 
-	nResto := Round(nResto / nMinNot * 60,0) //Calcula novo valor baseado no adicional noturno
-	nResto := U_MTOH(nResto) //transforma minutos em horas
+	nCalculado := Round(nCalculado / nMinNot * 60,0) //Calcula novo valor baseado no adicional noturno
+	nCalculado := U_MTOH(nCalculado) //transforma minutos em horas
 
-	cAdicionalNoturno := U_ConVertHora(nResto)
+	nDiff := nCalculado - nReal
+	aAdd(aAdicionalNoturno, U_ConVertHora(nCalculado))
+	aAdd(aAdicionalNoturno, U_ConVertHora(nDiff))
 
-Return cAdicionalNoturno
+Return aAdicionalNoturno
