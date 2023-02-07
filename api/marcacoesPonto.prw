@@ -454,7 +454,7 @@ Static Function GetResumo(aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
 
 	BEGINSQL ALIAS 'TSPC'
 		SELECT DISTINCT
-			SPC.PC_DATA, SPC.PC_PD, SPC.PC_QUANTC, SPC.PC_QUANTI
+			SPC.PC_DATA, SPC.PC_PD, SPC.PC_QUANTC, SPC.PC_QUANTI, SPC.PC_QTABONO
 		FROM %Table:SPC% AS SPC
 		WHERE
 			SPC.%NotDel%
@@ -465,7 +465,7 @@ Static Function GetResumo(aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
 	ENDSQL
 
 	While !TSPC->(Eof())
-		Aadd(aDados, {TSPC->PC_PD, U_HTOM(U_ConVertHora(TSPC->PC_QUANTC)), U_HTOM(U_ConvertHora(TSPC->PC_QUANTI))})
+		Aadd(aDados, {TSPC->PC_PD, U_HTOM(U_ConVertHora(TSPC->PC_QUANTC - TSPC->PC_QTABONO)), U_HTOM(U_ConvertHora(TSPC->PC_QUANTI))})
 		TSPC->(DbSkip())
 	EndDo
 
