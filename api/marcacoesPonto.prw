@@ -44,6 +44,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local nCont := 0
 	Local aJornada := {}
 	Local nMinHrNot := nFimHnot := nIniHNot := 0
+	Local cAlias := GetNextAlias()
 	Private nTolAbst := 0
 	Private nTolHoEx := 0
 
@@ -67,10 +68,11 @@ WSMETHOD GET WSSERVICE marcacoes
 			nMes := MONTH(Date())-1
 		EndIf
 
-		BEGINSQL ALIAS 'TSP8'
+		BEGINSQL ALIAS cAlias
 		SELECT
-			SP8.P8_DATA, SP8.P8_TPMARCA, SP8.P8_FILIAL, SP8.P8_MAT,
-			SP8.P8_CC, SP8.P8_MOTIVRG, SP8.P8_TURNO, SP8.P8_HORA, SP8.P8_SEMANA, SP8.R_E_C_N_O_
+			SP8.P8_DATA AS 'DATA', SP8.P8_TPMARCA AS 'TPMARCA', SP8.P8_FILIAL AS 'FILIAL', SP8.P8_MAT AS 'MAT',
+			SP8.P8_CC AS 'CC', SP8.P8_MOTIVRG AS 'MOTIVRG', SP8.P8_TURNO AS 'TURNO', SP8.P8_HORA AS 'HORA', 
+			SP8.P8_SEMANA AS 'SEMANA', SP8.R_E_C_N_O_ AS 'REG'
 		FROM %Table:SP8% AS SP8
 		WHERE
 			SP8.%NotDel%
@@ -81,10 +83,11 @@ WSMETHOD GET WSSERVICE marcacoes
 			ORDER BY SP8.P8_DATA
 		ENDSQL
 	Else
-		BEGINSQL ALIAS 'TSP8'
+		BEGINSQL ALIAS cAlias
 		SELECT
-			SP8.P8_DATA, SP8.P8_TPMARCA, SP8.P8_FILIAL, SP8.P8_MAT,
-			SP8.P8_CC, SP8.P8_MOTIVRG, SP8.P8_TURNO, SP8.P8_HORA, SP8.P8_SEMANA, SP8.R_E_C_N_O_
+			SP8.P8_DATA AS 'DATA', SP8.P8_TPMARCA AS 'TPMARCA', SP8.P8_FILIAL AS 'FILIAL', SP8.P8_MAT AS 'MAT',
+			SP8.P8_CC AS 'CC', SP8.P8_MOTIVRG AS 'MOTIVRG', SP8.P8_TURNO AS 'TURNO', SP8.P8_HORA AS 'HORA', 
+			SP8.P8_SEMANA AS 'SEMANA', SP8.R_E_C_N_O_ AS 'REG'
 		FROM %Table:SP8% AS SP8
 		WHERE
 			SP8.%NotDel%
@@ -105,48 +108,48 @@ WSMETHOD GET WSSERVICE marcacoes
 	fAfastaPer( @aAfasta , STOD(cDataIni) , STOD(cDataFin) , ALLTRIM(cFilFunc) , cMatricula)
 	aAfastamentos := GetAfastamentos(cFilFunc, aAfasta, cMatricula)
 
-	TSP8->(DBGOTOP()) //Volta para o topo da tabela temporaria
-	While !TSP8->(Eof())
+	(cAlias)->(DBGOTOP()) //Volta para o topo da tabela temporaria
+	While !(cAlias)->(Eof())
 		Aadd(aMarcacoes, {})
 		nPos := Len(aMarcacoes)
 		cHorasAbonadas := cMotivoAbono := ""
-		GetAbono(aAbonos, TSP8->P8_DATA, @cHorasAbonadas, @cMotivoAbono)
-		aJornada := GetJornada(cFilFunc, cMatricula, TSP8->P8_DATA)
-		Aadd(aLinha, ConvertData(AllTrim(TSP8->P8_DATA))) //1-data
-		Aadd(aLinha, AllTrim(TSP8->P8_FILIAL)) //2-filial
-		Aadd(aLinha, AllTrim(TSP8->P8_MAT)) //3-matricula
-		Aadd(aLinha, Alltrim(DiaSemana(STOD(TSP8->P8_DATA)))) //4-dia
-		Aadd(aLinha, AllTrim(TSP8->P8_CC)) //5-centrocusto
-		Aadd(aLinha, AllTrim(TSP8->P8_CC)) //6-ordemClassificacao
-		Aadd(aLinha, AllTrim(TSP8->P8_MOTIVRG)) //7-motivoRegistro
+		GetAbono(aAbonos, (cAlias)->DATA, @cHorasAbonadas, @cMotivoAbono)
+		aJornada := GetJornada(cFilFunc, cMatricula, (cAlias)->DATA)
+		Aadd(aLinha, ConvertData(AllTrim((cAlias)->DATA))) //1-data
+		Aadd(aLinha, AllTrim((cAlias)->FILIAL)) //2-filial
+		Aadd(aLinha, AllTrim((cAlias)->MAT)) //3-matricula
+		Aadd(aLinha, Alltrim(DiaSemana(STOD((cAlias)->DATA)))) //4-dia
+		Aadd(aLinha, AllTrim((cAlias)->CC)) //5-centrocusto
+		Aadd(aLinha, AllTrim((cAlias)->CC)) //6-ordemClassificacao
+		Aadd(aLinha, AllTrim((cAlias)->MOTIVRG)) //7-motivoRegistro
 		Aadd(aLinha, aJornada[2]) //8-turno
 		Aadd(aLinha, aJornada[3]) //9-seqTurno
 		Aadd(aLinha, cHorasAbonadas) //10-abono
 		Aadd(aLinha, cMotivoAbono) //11-observacoes
-		Aadd(aLinha, AllTrim(TSP8->P8_TPMARCA)) //12-tipoMarca
-		Aadd(aLinha, U_ConvertHora(TSP8->P8_HORA)) //13-marcacao
+		Aadd(aLinha, AllTrim((cAlias)->TPMARCA)) //12-tipoMarca
+		Aadd(aLinha, U_ConvertHora((cAlias)->HORA)) //13-marcacao
 		Aadd(aLinha, .F.) //14-diaAbonado
 		Aadd(aLinha, U_ConvertHora(0)) //15-Adicional Noturno
 		Aadd(aLinha, aJornada[1]) //16-Jornada Prevista
 
 		SR6->(DbSetOrder(1)) //R6_FILIAL + R6_TURNO
-		If SR6->(MsSeek(Left(cFilFunc,2)+"  "+TSP8->P8_TURNO)) //producao
-			// If SR6->(MsSeek(Left(cFilFunc,2)+""+TSP8->P8_TURNO)) //Teste
+		If SR6->(MsSeek(Left(cFilFunc,2)+"  "+(cAlias)->TURNO)) //producao
+			// If SR6->(MsSeek(Left(cFilFunc,2)+""+(cAlias)->TURNO)) //Teste
 			nIniHNot := SR6->R6_INIHNOT
 			nFimHnot := SR6->R6_FIMHNOT
 			nMinHrNot := SR6->R6_MINHNOT
 		EndIf
 
-		If (TSP8->P8_HORA > nIniHNot .OR. TSP8->P8_HORA < nFimHnot) .AND. nIniHNot > 0
-			aAdicionalNoturno := CalculaAdcNot(TSP8->P8_HORA, nIniHNot, nFimHnot, nMinHrNot)
+		If ((cAlias)->HORA > nIniHNot .OR. (cAlias)->HORA < nFimHnot) .AND. nIniHNot > 0
+			aAdicionalNoturno := CalculaAdcNot((cAlias)->HORA, nIniHNot, nFimHnot, nMinHrNot)
 			If Len(aAdicionalNoturno) > 0
-				aAdd(aDiasAdNot, {ConvertData(AllTrim(TSP8->P8_DATA)), aAdicionalNoturno[1], aAdicionalNoturno[2]})
+				aAdd(aDiasAdNot, {ConvertData(AllTrim((cAlias)->DATA)), aAdicionalNoturno[1], aAdicionalNoturno[2]})
 			EndIf
 		EndIf
 
 		aMarcacoes[nPos] := aLinha
 		aLinha := {}
-		TSP8->(DbSkip())
+		(cAlias)->(DbSkip())
 	EndDo
 
 	For nCont := 1 To Len(aFinsSem)
@@ -244,7 +247,7 @@ WSMETHOD GET WSSERVICE marcacoes
 		aDados[nPos]['jornadaPrevista'] := cJornadaPrevista
 
 	EndDo
-	TSP8->(DbCloseArea())
+	(cAlias)->(DbCloseArea())
 
 	If Len(aDados) == 0
 		cResponse['erro'] := 204
