@@ -27,6 +27,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local aAbonos := {}
 	Local aAfasta := {}
 	Local aAfastamentos := {}
+	Local aDiasAdNot := {}
 	Local aParams := Self:AQueryString
 	Local cFilFunc := ""
 	Local cMatricula := ""
@@ -35,13 +36,15 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local nPosMatri := aScan(aParams,{|x| x[1] == "MATRICULA"})
 	Local nPosDtIni := aScan(aParams,{|x| x[1] == "DTINICIAL"})
 	Local nPosDtFin := aScan(aParams,{|x| x[1] == "DTFINAL"})
+	Local nPosAdNot := 0
 	Local dDatAux := CTOD("")
 	Local nMes := 0
 	Local cHorasAbonadas := cMotivoAbono := ""
 	Local cHoras1T := cHoras2T := cHoras3T := cHoras4T := cTotalHoras := ""
 	Local nCont := 0
 	Local nRegSP8 := 0
-	Local aJornada := 0
+	Local aJornada := {}
+	Local nMinHrNot := nFimHnot := nIniHNot := 0
 	Private nTolAbst := 0
 	Private nTolHoEx := 0
 
@@ -135,6 +138,17 @@ WSMETHOD GET WSSERVICE marcacoes
 		Aadd(aLinha, U_ConvertHora(0)) //15-Adicional Noturno
 		Aadd(aLinha, aJornada[1]) //16-Jornada Prevista
 
+		SR6->(DbSetOrder(1)) //R6_FILIAL + R6_TURNO
+		If SR6->(MsSeek(Left(cFilFunc,2)+"  "+TSP8->P8_TURNO))
+			nIniHNot := SR6->R6_INIHNOT
+			nFimHnot := SR6->R6_FIMHNOT
+			nMinHrNot := SR6->R6_MINHNOT
+		EndIf
+
+		If (TSP8->P8_HORA > nIniHNot .OR. TSP8->P8_HORA < nFimHnot) .AND. nIniHNot > 0
+			aAdd(aDiasAdNot, {ConvertData(AllTrim(TSP8->P8_DATA)), CalculaAdcNot(TSP8->P8_HORA, nIniHNot, nFimHnot, nMinHrNot)})
+		EndIf
+
 		aMarcacoes[nPos] := aLinha
 		aLinha := {}
 		TSP8->(DbSkip())
@@ -205,9 +219,15 @@ WSMETHOD GET WSSERVICE marcacoes
 				aDados[nPos]['4S'] := aMarcacoes[nCont][13]
 			EndIf
 
+			nPosAdNot := aScan(aDiasAdNot,{|x| x[1] == aMarcacoes[nCont][1]})
+
 			cJornadaPrevista := aMarcacoes[nCont][16]
 			aDados[nPos]['diaAbonado'] := aMarcacoes[nCont][14]
-			aDados[nPos]['adicNoturno'] := aMarcacoes[nCont][15]
+			If nPosAdNot > 0
+				aDados[nPos]['adicNoturno'] := aDiasAdNot[nPosAdNot,2]
+			Else
+				aDados[nPos]['adicNoturno'] := aMarcacoes[nCont][15]
+			EndIf
 			nCont++
 		EndDo
 		cHoras1T := SomaHoras(aDados[nPos]['1E'], aDados[nPos]['1S'])
@@ -233,6 +253,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	Else
 		cResponse['marcacoes'] := aDados
 		cResponse['resumo'] := aResumo
+		cResponse['noturnas'] := aDiasAdNot
 		cResponse['hasContent'] := .T.
 	EndIf
 
@@ -666,3 +687,17 @@ Static Function fEhFeriado(cDataMovim, cFilFunc)
 	TSP3A->(DbCloseArea())
 
 Return lRet
+
+
+Static Function CalculaAdcNot(nHora, nIniNot, nFimNot, nMinNot)
+	Local cAdicionalNoturno := ""
+	Local nHoraM := U_HTOM(U_ConVertHora(nHora)) //transforma hora em minutos
+	Local nIniNotM := U_HTOM(U_ConVertHora(nIniNot)) //transforma hora em minutos
+	Local nResto := nHoraM - nIniNotM
+
+	nResto := Round(nResto / nMinNot * 60,0) //Calcula novo valor baseado no adicional noturno
+	nResto := U_MTOH(nResto) //transforma minutos em horas
+
+	cAdicionalNoturno := U_ConVertHora(nResto)
+
+Return cAdicionalNoturno
