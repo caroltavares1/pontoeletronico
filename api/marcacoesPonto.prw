@@ -140,7 +140,7 @@ WSMETHOD GET WSSERVICE marcacoes
 
 		SR6->(DbSetOrder(1)) //R6_FILIAL + R6_TURNO
 		If SR6->(MsSeek(Left(cFilFunc,2)+"  "+TSP8->P8_TURNO)) //producao
-		// If SR6->(MsSeek(Left(cFilFunc,2)+""+TSP8->P8_TURNO)) //Teste
+			// If SR6->(MsSeek(Left(cFilFunc,2)+""+TSP8->P8_TURNO)) //Teste
 			nIniHNot := SR6->R6_INIHNOT
 			nFimHnot := SR6->R6_FIMHNOT
 			nMinHrNot := SR6->R6_MINHNOT
@@ -454,7 +454,7 @@ Static Function GetResumo(aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
 
 	BEGINSQL ALIAS 'TSPC'
 		SELECT DISTINCT
-			SPC.PC_DATA, SPC.PC_PD, SPC.PC_QUANTC, SPC.PC_QUANTI
+			SPC.PC_DATA, SPC.PC_PD, SPC.PC_QUANTC, SPC.PC_QUANTI, SPC.PC_QTABONO
 		FROM %Table:SPC% AS SPC
 		WHERE
 			SPC.%NotDel%
@@ -465,7 +465,9 @@ Static Function GetResumo(aResumo, cFilFunc, cMatricula, cDataIni, cDataFin)
 	ENDSQL
 
 	While !TSPC->(Eof())
-		Aadd(aDados, {TSPC->PC_PD, U_HTOM(U_ConVertHora(TSPC->PC_QUANTC)), U_HTOM(U_ConvertHora(TSPC->PC_QUANTI))})
+		If (TSPC->PC_QUANTC - TSPC->PC_QTABONO) > 0
+			Aadd(aDados, {TSPC->PC_PD, U_HTOM(U_ConVertHora(TSPC->PC_QUANTC - TSPC->PC_QTABONO)), U_HTOM(U_ConvertHora(TSPC->PC_QUANTI))})
+		EndIf
 		TSPC->(DbSkip())
 	EndDo
 
