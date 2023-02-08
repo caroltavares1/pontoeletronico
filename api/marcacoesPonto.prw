@@ -61,6 +61,8 @@ WSMETHOD GET WSSERVICE marcacoes
 		Return lRet
 	EndIf
 
+	AnalisarPeriodo(cFilFunc, cMatricula, cDataIni, cDataFin)
+
 	If cDataIni == '19000101'
 		If MONTH(Date()) == 1
 			nMes := 12
@@ -732,3 +734,84 @@ Static Function CalculaAdcNot(nHora, nIniNot, nFimNot, nMinNot)
 	aAdd(aAdicionalNoturno, U_ConVertHora(nDiff))
 
 Return aAdicionalNoturno
+
+Static Function AnalisarPeriodo(cFilFunc, cMatricula, cDataIni, cDataFin)
+	Local cAlias := GetNextAlias()
+	Local aMeses := {}
+	Local nPosMes := 0
+	Local nCont := 0
+	Local nAnoMesIni := 0
+	Local nAnoMesFim := 0
+	Local dDia := STOD("")
+
+	If cDataIni == '19000101'
+		If MONTH(Date()) == 1
+			nMes := 12
+		Else
+			nMes := MONTH(Date())-1
+		EndIf
+
+		BEGINSQL ALIAS cAlias
+		SELECT
+			SPG.PG_DATA AS 'DATA', SPG.PG_TPMARCA AS 'TPMARCA', SPG.PG_FILIAL AS 'FILIAL', SPG.PG_MAT AS 'MAT',
+			SPG.PG_CC AS 'CC', SPG.PG_MOTIVRG AS 'MOTIVRG', SPG.PG_TURNO AS 'TURNO', SPG.PG_HORA AS 'HORA', 
+			SPG.PG_SEMANA AS 'SEMANA', SPG.R_E_C_N_O_ AS 'REG', 
+			MONTH(SPG.PG_DATA) AS 'MES', YEAR(SPG.PG_DATA) AS 'ANO'
+		FROM %Table:SPG% AS SPG
+		WHERE
+			SPG.%NotDel%
+			AND SPG.PG_FILIAL = %exp:cFilFunc%
+			AND SPG.PG_MAT = %exp:cMatricula%
+			AND MONTH(SPG.PG_DATA) = %exp:nMes%
+			AND SPG.PG_TPMCREP != 'D'
+			ORDER BY SPG.PG_DATA
+		ENDSQL
+	Else
+		BEGINSQL ALIAS cAlias
+		SELECT
+			SPG.PG_DATA AS 'DATA', SPG.PG_TPMARCA AS 'TPMARCA', SPG.PG_FILIAL AS 'FILIAL', SPG.PG_MAT AS 'MAT',
+			SPG.PG_CC AS 'CC', SPG.PG_MOTIVRG AS 'MOTIVRG', SPG.PG_TURNO AS 'TURNO', SPG.PG_HORA AS 'HORA', 
+			SPG.PG_SEMANA AS 'SEMANA', SPG.R_E_C_N_O_ AS 'REG', 
+			MONTH(SPG.PG_DATA) AS 'MES', YEAR(SPG.PG_DATA) AS 'ANO'
+		FROM %Table:SPG% AS SPG
+		WHERE
+			SPG.%NotDel%
+			AND SPG.PG_FILIAL = %exp:cFilFunc%
+			AND SPG.PG_MAT = %exp:cMatricula%
+			AND SPG.PG_DATA BETWEEN %exp:cDataIni% AND %exp:cDataFin%
+			AND SPG.PG_TPMCREP != 'D'
+			ORDER BY SPG.PG_DATA
+		ENDSQL
+	EndIf
+
+	While !(cAlias)->(Eof())
+		nAnoMes :=  Val(StrZero((cAlias)->ANO,4) + StrZero((cAlias)->MES,2))
+		If Len(aMeses) == 0
+			dDia := STOD((cAlias)->(DATA))
+			aAdd(aMeses, {nAnoMes, .T., Firstdate(dDia), Lastdate(dDia)}) //Numero do Mes e Flag de periodo fechado
+		Else
+			nPosMes := aScan(aMeses,{|x| x[1] == nAnoMes})
+			dDia := STOD((cAlias)->(DATA))
+			If Empty(nPosMes)
+				aAdd(aMeses, {nAnoMes, .T., Firstdate(dDia), Lastdate(dDia)})
+			EndIf
+		EndIf
+		(cAlias)->(DbSkip())
+	EndDo
+	(cAlias)->(DbCloseArea())
+
+	nAnoMesIni := Val(Left(cDataIni,6))
+	nAnoMesFim := Val(Left(cDataFin,6))
+
+	For nCont := nAnoMesIni to nAnoMesFim
+		nPosMes := aScan(aMeses,{|x| x[1] == nCont })
+		If Empty(nPosMes)
+			dDia := STOD(cValToChar(nCont)+"01")
+			aAdd(aMeses, {nCont, .F., Firstdate(dDia), Lastdate(dDia)})
+		EndIf
+		If Right(StrZero(nCont,6),2) == '12'
+			nCont := nCont + 89
+		EndIf
+	Next nCont
+
+Return
