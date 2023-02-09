@@ -112,10 +112,11 @@ export class ListComponent implements OnInit {
         next: (v: any) => {
           if (v.hasContent == true) {
             setTimeout(() => {
-              let turno = v.marcacoes[0].turno
-              let seq = v.marcacoes[0].seqTurno
-              this.items = v.marcacoes
-              this.itemsResumo = v.resumo
+              console.log(v)
+              let turno = v.ponto[0].marcacoes[0].turno
+              let seq = v.ponto[0].marcacoes[0].seqTurno
+              this.items = v.ponto[0].marcacoes
+              this.itemsResumo = v.ponto[0].resumo
               //this.items = .sort( (a:any,b:any) => a.data - b.data );
               this.loading = false
               this.getHorarios(turno, seq)
