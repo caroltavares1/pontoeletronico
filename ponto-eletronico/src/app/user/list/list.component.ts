@@ -1,8 +1,8 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { PoDialogService, PoPageAction, PoTableColumn } from '@po-ui/ng-components';
 import { PoPageDynamicSearchFilters, PoPageDynamicSearchLiterals } from '@po-ui/ng-templates';
-import { PontosService } from '../../services/pontos.service';
 import { ExportToPDFService } from '../../services/exportToPDF.service';
+import { PontosService } from '../../services/pontos.service';
 
 @Component({
   selector: 'app-list',

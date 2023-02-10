@@ -43,10 +43,10 @@ WSMETHOD GET WSSERVICE turnos
 		Aadd(aDados, JsonObject():new())
 		nPos := Len(aDados)
 		aDados[nPos]['dia' ] := DiaExtenso(TSPJ->PJ_DIA)
-		aDados[nPos]['1E'] := ConvertHora(TSPJ->PJ_ENTRA1)
-		aDados[nPos]['1S'] := ConvertHora(TSPJ->PJ_SAIDA1)
-		aDados[nPos]['2E'] := ConvertHora(TSPJ->PJ_ENTRA2)
-		aDados[nPos]['2S'] := ConvertHora(TSPJ->PJ_SAIDA2)
+		aDados[nPos]['1E'] := U_ConvertHora(TSPJ->PJ_ENTRA1)
+		aDados[nPos]['1S'] := U_ConvertHora(TSPJ->PJ_SAIDA1)
+		aDados[nPos]['2E'] := U_ConvertHora(TSPJ->PJ_ENTRA2)
+		aDados[nPos]['2S'] := U_ConvertHora(TSPJ->PJ_SAIDA2)
 		aDados[nPos]['turno'] := ALLTRIM(TSPJ->PJ_TURNO) + " - " + aDados[nPos]['1E'] + " " +aDados[nPos]['1S'] + " / " +;
 		aDados[nPos]['2E'] + " " + aDados[nPos]['2S']
 		TSPJ->(DbSkip())
@@ -64,36 +64,6 @@ WSMETHOD GET WSSERVICE turnos
 	Self:SetContentType('application/json')
 	Self:SetResponse(EncodeUTF8(cResponse:toJson()))
 Return lRet
-
-Static Function ConvertHora(nHora)
-	Local cHora := CValToChar(nHora)
-
-	If Len(cHora) == 1
-		cHora := "0"+cHora+".00"
-	EndIf
-
-	If Len(cHora) == 2
-		cHora := cHora+".00"
-	EndIf
-
-	If Len(cHora) == 3
-		cHora := "0"+cHora+"0"
-	EndIf
-
-	If Len(cHora) == 4
-		If SubStr(cHora, 2, 1) == "."
-			cHora := "0"+cHora
-		Else
-			cHora := cHora+"0"
-		EndIf
-	EndIf
-
-	If Len(cHora) == 5
-		cHora := STRTRAN(cHora,".",":") + ":00"
-	Else
-		cHora := "00:00:00"
-	EndIf
-Return cHora
 
 Static Function DiaExtenso(nDia)
 	Local cDia
