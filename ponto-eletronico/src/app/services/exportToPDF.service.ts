@@ -26,8 +26,8 @@ export class ExportToPDFService {
   resumoCol = ['Código', 'Descrição', 'Total de Horas']
   resumoProp = ['codEvento', 'descEvento', 'totalHoras']
 
-  s = ''
-  e = ''
+  start = ''
+  end = ''
 
   cabecalho = {}
 
@@ -41,77 +41,53 @@ export class ExportToPDFService {
     return this.cabecalho
   }
 
-  public openPDF(items: any[], bh: any[], turno: any[], resumos: any[], start: string, end: string, consideraBH: boolean): void {
+  public openPDF(items: any[], bh: any[], turno: any[], start: string, end: string, consideraBH: boolean): void {
     let header: any = {}
     header = this.getHeader()
-    this.s = start
-    this.e = end
 
-    let marcacoes = structuredClone(items) //Cria uma copia por valor e não por referência
+    let pontos = structuredClone(items) //Cria uma copia por valor e não por referência
+    this.start = start
+    this.end = end
 
     let horas = structuredClone(bh)
 
     let turnos = structuredClone(turno)
 
-    let resumo = structuredClone(resumos)
+    let month = Number((start.slice(5, 7))) - 1
+
+    //let resumo = structuredClone(resumos)
 
     var dd = {
       pageMargins: [40, 120, 40, 60],
       pageSize: 'A4',
       pageOrientation: "landscape",
-      /*       header:
-            {
-              stack: [
-                { text: `Espelho do Ponto ${this.s} - ${this.e}`, margin: [260, 5, 0, 5] },
-                {
-                  columns: [
-                    { text: `Empresa: ${header.empresa}`, margin: [15, 2, 5, 1] },
-                    { text: `CNPJ: ${header.cnpj}`, margin: [15, 2, 5, 1] },
-                  ]
-                },
-                {
-                  columns: [
-                    { text: `Endereço: ${header.endereco}`, margin: [15, 2, 5, 5] },
-                    { text: `Emissão: ${header.emissao}`, margin: [15, 2, 5, 5] },
-                  ]
-                },
-                { canvas: [{ type: 'line', x1: 15, y1: 0, x2: 732, y2: 0, lineWidth: 1 }] },
-                {
-                  columns: [
-                    { text: `Matrícula: ${header.matricula}`, margin: [15, 5, 5, 5] },
-                    { text: `Nome: ${header.nome}`, margin: [15, 5, 5, 5] },
-                    { text: `Admissão: ${header.admissao}`, margin: [15, 5, 5, 5] },
-                  ]
-                },
-                {
-                  columns: [
-                    { text: `Função: ${header.funcao}`, margin: [15, 2, 5, 1] },
-                    { text: `C.C: ${header.cc}`, margin: [15, 2, 5, 1] },
-                    { text: `CPF: ${header.cpf}`, margin: [15, 2, 5, 1] },
-                  ]
-                },
-                {
-                  columns: [
-                    { text: `Categoria: ${header.categoria}`, margin: [15, 2, 5, 5] },
-                    { text: `Situação: ${header.situacao}`, margin: [15, 2, 5, 5] },
-                    { text: `Departamento: ${header.departamento}`, margin: [15, 2, 5, 5] },
-                  ]
-      
-                },
-                { canvas: [{ type: 'line', x1: 15, y1: 0, x2: 732, y2: 0, lineWidth: 1, }] },
-              ],
-              margin: [40, 5, 2, 2], fontSize: 8
-            }, */
-      header: function (currentPage: any, pageCount: any, pageSize: any): any {
+      header: (currentPage: any, pageCount: any, currentNode: any, pageSize: any) => {
         // you can apply any logic and return any valid pdfmake element
-        let s = start
-        if ((pageCount / 2) < currentPage) {
-          s = '2023-02-05'
+        let s, e
+        let year = Number(start.slice(0, 4))
+        s = new Date(year, month, 1).toISOString().slice(0, 10)
+        e = new Date(year, month + 1, 0).toISOString().slice(0, 10)
+
+        if (pageCount % 2 > 0) {
+          s = start
+          e = end
+        } else {
+          if (currentPage <= 2) {
+            if (currentPage === 2) {
+              month++
+            }
+            s = start
+          } else if (currentPage >= (pageCount - 1)) {
+            e = end
+          } else if (currentPage % 2 === 0) {
+            month++
+          }
         }
-        console.log(currentPage, pageCount, pageSize)
+        //console.log(currentPage, pageCount)
+        console.log(currentNode, pageSize)
         return {
           stack: [
-            { text: `Espelho do Ponto ${s} - ${end}`, margin: [260, 5, 0, 5] },
+            { text: `Espelho do Ponto ${s} - ${e}`, margin: [260, 5, 0, 5] },
             {
               columns: [
                 { text: `Empresa: ${header.empresa}`, margin: [15, 2, 5, 1] },
@@ -159,25 +135,26 @@ export class ExportToPDFService {
         },
 
       ],
-      content: this.content(marcacoes, horas, turnos, resumo, consideraBH),
+      content: this.content(pontos, horas, turnos, consideraBH),
+
       pageBreakBefore: function (
         currentNode: any,
-        followingNodesOnPage: any,
-        nodesOnNextPage: any,
-        previousNodesOnPage: any) {
+        followingNodesOnPage: any) {
         //Break para não separar a tabela e o texto acima dela
-        return (currentNode.id === 'BREAK' || currentNode.id === 'BREAK2') && followingNodesOnPage.length === 29;
+
+        return (String(currentNode.id).startsWith('BR')) && followingNodesOnPage.length === 29;
       }
 
     }
     pdfMake.createPdf(dd).download("espelho-ponto.pdf");
   }
 
-  public content(marcacoes: any[], horas: any[], turnos: any[], resumo: any[], consideraBH: boolean) {
-    let i = 0
-    let contentList = []
-    while (i < 2) {
-      contentList.push(this.table(marcacoes, this.columns, this.propM))
+  public content(pontos: any[], horas: any[], turnos: any[], /* resumo: any[], */ consideraBH: boolean) {
+
+    let contentList: any[] = []
+    pontos.forEach((ponto) => {
+      let i = pontos.indexOf(ponto)
+      contentList.push(this.table(ponto.marcacoes, this.columns, this.propM))
       contentList.push({ canvas: [{ type: 'line', x1: 15, y1: 15, x2: 732, y2: 15, lineWidth: 1, }] })
       contentList.push((consideraBH) ? ({ text: 'Banco de Horas', margin: [15, 5, 5, 0], fontSize: 10, id: 'BREAK' + String(i) }) : { text: '', margin: [15, 5, 5, 0] })
       contentList.push((consideraBH) ? this.tableBH(horas, this.horasCol, this.horasProp) : { text: '', margin: [15, 5, 5, 0] })
@@ -186,13 +163,14 @@ export class ExportToPDFService {
       contentList.push(this.tableTurno(turnos, this.turnosCol, this.turnosProp))
       contentList.push({ canvas: [{ type: 'line', x1: 15, y1: 15, x2: 732, y2: 15, lineWidth: 1, }] })
       contentList.push({ text: '', margin: [15, 10, 5, 0] })
-      contentList.push(this.tableResumo(resumo, this.resumoCol, this.resumoProp))
+      contentList.push(this.tableResumo(ponto.resumo, this.resumoCol, this.resumoProp))
       contentList.push({ text: '', pageBreak: 'after' })
+      this.start = ponto.marcacoes[0].data
+      this.end = ponto.marcacoes[ponto.marcacoes.length - 1].data
+      console.log(this.start, this.end)
 
-      this.s = '2023-02-05'
 
-      i++
-    }
+    })
     contentList.pop()
 
     return contentList

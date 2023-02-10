@@ -16,6 +16,7 @@ export class ListComponent implements OnInit {
   itemsHorarios: Array<any> = []
   itemsBH: Array<any> = []
   itemsResumo: Array<any> = []
+  pontos: Array<any> = []
   loading = true
   loadingB = true
   start = ''
@@ -112,12 +113,15 @@ export class ListComponent implements OnInit {
         next: (v: any) => {
           if (v.hasContent == true) {
             setTimeout(() => {
-              console.log(v)
-              let turno = v.ponto[0].marcacoes[0].turno
-              let seq = v.ponto[0].marcacoes[0].seqTurno
-              this.items = v.ponto[0].marcacoes
-              this.itemsResumo = v.ponto[0].resumo
-              //this.items = .sort( (a:any,b:any) => a.data - b.data );
+              let indice = 0
+              if (v.ponto.length !== undefined) {
+                indice = v.ponto.length - 1
+              }
+              let turno = v.ponto[indice].marcacoes[0].turno
+              let seq = v.ponto[indice].marcacoes[0].seqTurno
+              this.items = v.ponto[indice].marcacoes
+              this.itemsResumo = v.ponto[indice].resumo
+              this.pontos = v.ponto
               this.loading = false
               this.getHorarios(turno, seq)
             }, 500);
@@ -257,10 +261,11 @@ export class ListComponent implements OnInit {
 
   public openPDF() {
     this.pdf.openPDF(
-      this.items,
+      this.pontos,
+      //this.items,
       this.itemsBH,
       this.itemsHorarios,
-      this.itemsResumo,
+      //this.itemsResumo,
       this.start,
       this.end,
       this.consideraBH)
