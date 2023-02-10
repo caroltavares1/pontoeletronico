@@ -26,9 +26,6 @@ export class ExportToPDFService {
   resumoCol = ['Código', 'Descrição', 'Total de Horas']
   resumoProp = ['codEvento', 'descEvento', 'totalHoras']
 
-  start = ''
-  end = ''
-
   cabecalho = {}
 
   constructor() { }
@@ -46,22 +43,16 @@ export class ExportToPDFService {
     header = this.getHeader()
 
     let pontos = structuredClone(items) //Cria uma copia por valor e não por referência
-    this.start = start
-    this.end = end
-
     let horas = structuredClone(bh)
-
     let turnos = structuredClone(turno)
 
-    let month = Number((start.slice(5, 7))) - 1
-
-    //let resumo = structuredClone(resumos)
+    let month = Number((start.slice(5, 7))) - 1 //Será usado na header
 
     var dd = {
       pageMargins: [40, 120, 40, 60],
       pageSize: 'A4',
       pageOrientation: "landscape",
-      header: (currentPage: any, pageCount: any, currentNode: any, pageSize: any) => {
+      header: (currentPage: any, pageCount: any) => {
         // you can apply any logic and return any valid pdfmake element
         let s, e
         let year = Number(start.slice(0, 4))
@@ -83,8 +74,7 @@ export class ExportToPDFService {
             month++
           }
         }
-        //console.log(currentPage, pageCount)
-        console.log(currentNode, pageSize)
+
         return {
           stack: [
             { text: `Espelho do Ponto ${s} - ${e}`, margin: [260, 5, 0, 5] },
@@ -141,7 +131,6 @@ export class ExportToPDFService {
         currentNode: any,
         followingNodesOnPage: any) {
         //Break para não separar a tabela e o texto acima dela
-
         return (String(currentNode.id).startsWith('BR')) && followingNodesOnPage.length === 29;
       }
 
@@ -165,11 +154,6 @@ export class ExportToPDFService {
       contentList.push({ text: '', margin: [15, 10, 5, 0] })
       contentList.push(this.tableResumo(ponto.resumo, this.resumoCol, this.resumoProp))
       contentList.push({ text: '', pageBreak: 'after' })
-      this.start = ponto.marcacoes[0].data
-      this.end = ponto.marcacoes[ponto.marcacoes.length - 1].data
-      console.log(this.start, this.end)
-
-
     })
     contentList.pop()
 
