@@ -42,8 +42,7 @@ WSMETHOD GET WSSERVICE bh
 	If Len(aMeses) > 0
 		For nContMeses := 1 to Len(aMeses)
 			aDados := {}
-			nSaldoAnterior := 0
-			nSaldoAtual := 0
+			nSaldoAnterior := nSaldoAtual := nSaldoAtual := nSomaDebitos := nSomaCreditos:= 0
 			cDtInicial := aMeses[nContMeses, 3]
 			cDtFinal := aMeses[nContMeses, 4]
 
