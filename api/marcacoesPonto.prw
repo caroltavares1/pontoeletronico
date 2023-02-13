@@ -265,6 +265,7 @@ WSMETHOD GET WSSERVICE marcacoes
 			nPosPonto := Len(aPonto)
 			aPonto[nPosPonto]['resumo'] := aResumo
 			aPonto[nPosPonto]['marcacoes'] := aDados
+			aPonto[nPosPonto]['anoMes'] := aMeses[nContMeses,1]
 		Next
 	EndIf
 
