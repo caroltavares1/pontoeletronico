@@ -868,4 +868,5 @@ Static Function AnalisarPeriodo(cFilFunc, cMatricula, cDataIni, cDataFin, aMeses
 			EndIf
 		Next nCont
 	Endif
+	aSort(aMeses,,,{|x,y| x[1] < y[1]})
 Return
