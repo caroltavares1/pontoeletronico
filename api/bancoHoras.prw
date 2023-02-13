@@ -23,7 +23,10 @@ WSMETHOD GET WSSERVICE bh
 	Local nSomaCreditos := nSomaDebitos := 0
 	Local nSaldoAnterior := 0
 	Local nSaldoAtual := 0
+	Local nContMeses := 0
 	Local aDados := {}
+	Local aMeses := {}
+	Local aBH := {}
 	Local lSaldoNeg := .F.
 	Local lCalcBH := .F.
 
@@ -34,55 +37,71 @@ WSMETHOD GET WSSERVICE bh
 		cDtFinal := aParams[nPosDtFin,2]
 	EndIf
 
-	BEGINSQL ALIAS 'TSPI'
-		SELECT DISTINCT
-			SPI.PI_QUANT, SP9.P9_TIPOCOD, SPI.PI_DATA
-		FROM %Table:SPI% AS SPI
-		INNER JOIN %Table:SP9% AS SP9 ON SPI.PI_PD = SP9.P9_CODIGO
-		WHERE
-			SPI.%NotDel% AND SP9.%NotDel%
-			AND SPI.PI_FILIAL = %exp:cFilAtuacao%
-			AND SPI.PI_MAT = %exp:cMatricula%
-			AND SPI.PI_DATA BETWEEN %exp:cDtInicial% AND %exp:cDtFinal%
-	ENDSQL
+	AnalisarPeriodo(cFilAtuacao, cMatricula, cDtInicial, cDtFinal, @aMeses)
 
-	While !TSPI->(Eof())
-		If Val(TSPI->P9_TIPOCOD) == 1
-			nSomaCreditos += U_HTOM(U_ConvertHora(TSPI->PI_QUANT))
-		EndIf
-		If Val(TSPI->P9_TIPOCOD) == 2
-			nSomaDebitos += U_HTOM(U_ConvertHora(TSPI->PI_QUANT))
-		EndIf
-		TSPI->(DbSkip())
-	EndDo
+	If Len(aMeses) > 0
+		For nContMeses := 1 to Len(aMeses)
+			aDados := {}
+			nSaldoAnterior := 0
+			nSaldoAtual := 0
+			cDtInicial := aMeses[nContMeses, 3]
+			cDtFinal := aMeses[nContMeses, 4]
 
-	lCalcBH := CalculaBH(cFilAtuacao, cMatricula)
-	GetSaldoAnterior(@nSaldoAnterior, cFilAtuacao, cMatricula, cDtInicial, @lSaldoNeg)
+			BEGINSQL ALIAS 'TSPI'
+				SELECT DISTINCT
+					SPI.PI_QUANT, SP9.P9_TIPOCOD, SPI.PI_DATA
+				FROM %Table:SPI% AS SPI
+				INNER JOIN %Table:SP9% AS SP9 ON SPI.PI_PD = SP9.P9_CODIGO
+				WHERE
+				SPI.%NotDel% AND SP9.%NotDel%
+				AND SPI.PI_FILIAL = %exp:cFilAtuacao%
+				AND SPI.PI_MAT = %exp:cMatricula%
+				AND SPI.PI_DATA BETWEEN %exp:cDtInicial% AND %exp:cDtFinal%
+			ENDSQL
 
-	Aadd(aDados, JsonObject():new())
-	nPos := Len(aDados)
-	nSaldoAnterior := U_HTOM(U_ConvertHora(nSaldoAnterior))
-	
-	If lSaldoNeg //Se o saldo de horas anterior for negativo, entao ele é tratado como debito
-		nSaldoAtual := nSomaCreditos - nSaldoAnterior - nSomaDebitos
-		nSaldoAnterior *= -1 //Uma vez efetuado os calculos o valor é definido como negativo novamente
-	Else
-		nSaldoAtual := nSaldoAnterior + nSomaCreditos - nSomaDebitos
+			While !TSPI->(Eof())
+				If Val(TSPI->P9_TIPOCOD) == 1
+					nSomaCreditos += U_HTOM(U_ConvertHora(TSPI->PI_QUANT))
+				EndIf
+				If Val(TSPI->P9_TIPOCOD) == 2
+					nSomaDebitos += U_HTOM(U_ConvertHora(TSPI->PI_QUANT))
+				EndIf
+				TSPI->(DbSkip())
+			EndDo
+
+			lCalcBH := CalculaBH(cFilAtuacao, cMatricula)
+			GetSaldoAnterior(@nSaldoAnterior, cFilAtuacao, cMatricula, cDtInicial, @lSaldoNeg)
+
+			Aadd(aDados, JsonObject():new())
+			nPos := Len(aDados)
+			nSaldoAnterior := U_HTOM(U_ConvertHora(nSaldoAnterior))
+
+			If lSaldoNeg //Se o saldo de horas anterior for negativo, entao ele é tratado como debito
+				nSaldoAtual := nSomaCreditos - nSaldoAnterior - nSomaDebitos
+				nSaldoAnterior *= -1 //Uma vez efetuado os calculos o valor é definido como negativo novamente
+			Else
+				nSaldoAtual := nSaldoAnterior + nSomaCreditos - nSomaDebitos
+			EndIf
+			aDados[nPos]['saldoAnterior'] := U_ConvertHora(U_MTOH(nSaldoAnterior))
+			aDados[nPos]['totalDebitos'] := U_ConvertHora(U_MTOH(nSomaDebitos))
+			aDados[nPos]['totalCreditos'] := U_ConvertHora(U_MTOH(nSomaCreditos))
+			aDados[nPos]['saldoAtual'] := U_ConvertHora(U_MTOH(nSaldoAtual))
+			aDados[nPos]['consideraBH'] := lCalcBH
+			aDados[nPos]['anoMes'] := aMeses[nContMeses,1]
+
+			TSPI->(DbCloseArea())
+			Aadd(aBH, JsonObject():new())
+			nPosBh := Len(aBH)
+			aBH[nPosBh]['bh'] := aDados
+		Next
 	EndIf
-	aDados[nPos]['saldoAnterior'] := U_ConvertHora(U_MTOH(nSaldoAnterior))
-	aDados[nPos]['totalDebitos'] := U_ConvertHora(U_MTOH(nSomaDebitos))
-	aDados[nPos]['totalCreditos'] := U_ConvertHora(U_MTOH(nSomaCreditos))
-	aDados[nPos]['saldoAtual'] := U_ConvertHora(U_MTOH(nSaldoAtual))
-	aDados[nPos]['consideraBH'] := lCalcBH
 
-	TSPI->(DbCloseArea())
-
-	If Len(aDados) == 0
+	If Len(aBH) == 0
 		cResponse['code'] := 204
 		cResponse['message'] := 'Banco de Horas não encontrado para esse funcionario'
 		lRet := .F.
 	Else
-		cResponse['bh'] := aDados
+		cResponse['bancoHoras'] := aBH
 	EndIf
 
 	Self:SetContentType('application/json')
@@ -131,7 +150,7 @@ Static Function GetSaldoAnterior(nSaldoAnterior, cFilAtuacao, cMatricula, cDtIni
 			AND SPI.PI_DATA < %exp:cDtInicial% 
 	ENDSQL
 
-	While !TMP->(Eof()) //soma todos os debitos e creditos 
+	While !TMP->(Eof()) //soma todos os debitos e creditos
 		If Val(TMP->P9_TIPOCOD) == 1
 			nSomaCreditos += U_HTOM(U_ConvertHora(TMP->PI_QUANT))
 		EndIf
@@ -163,12 +182,50 @@ Static Function CalculaBH(cFilAtuacao, cMatricula)
 			AND SRA.RA_MAT = %exp:cMatricula%
 	ENDSQL
 
-	While !TSRA->(Eof())	
+	While !TSRA->(Eof())
 		If TSRA->RA_ACUMBH == 'S' .AND. TSRA->RA_BHFOL == 'S'
 			lCalculaBancoHoras := .T.
 		EndIf
 		TSRA->(DbSkip())
 	EndDo
-	
+
 	TSRA->(DbCloseArea())
 Return lCalculaBancoHoras
+
+Static Function AnalisarPeriodo(cFilFunc, cMatricula, cDataIni, cDataFin, aMeses)
+	Local cAlias := GetNextAlias()
+	Local nPosMes := 0
+	Local dDia := STOD("")
+	Local nAnoMes := 0
+
+	BEGINSQL ALIAS cAlias
+		SELECT DISTINCT
+			SPI.PI_DATA AS 'DATA', YEAR(SPI.PI_DATA) AS 'ANO',
+			MONTH(SPI.PI_DATA) AS 'MES'
+		FROM %Table:SPI% AS SPI
+		INNER JOIN %Table:SP9% AS SP9 ON SPI.PI_PD = SP9.P9_CODIGO
+		WHERE
+			SPI.%NotDel% AND SP9.%NotDel%
+			AND SPI.PI_FILIAL = %exp:cFilFunc%
+			AND SPI.PI_MAT = %exp:cMatricula%
+			AND SPI.PI_DATA BETWEEN %exp:cDataIni% AND %exp:cDataFin%
+	ENDSQL
+
+	While !(cAlias)->(Eof())
+		nAnoMes :=  Val(StrZero((cAlias)->ANO,4) + StrZero((cAlias)->MES,2))
+		If Len(aMeses) == 0
+			dDia := STOD((cAlias)->(DATA))
+			aAdd(aMeses, {nAnoMes, .T., Firstdate(dDia), Lastdate(dDia)}) //Numero do Mes e Flag de periodo fechado
+		Else
+			nPosMes := aScan(aMeses,{|x| x[1] == nAnoMes})
+			dDia := STOD((cAlias)->(DATA))
+			If Empty(nPosMes)
+				aAdd(aMeses, {nAnoMes, .T., Firstdate(dDia), Lastdate(dDia)})
+			EndIf
+		EndIf
+		(cAlias)->(DbSkip())
+	EndDo
+	(cAlias)->(DbCloseArea())
+
+	aSort(aMeses,,,{|x,y| x[1] < y[1]})
+Return

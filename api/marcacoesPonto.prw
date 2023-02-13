@@ -265,6 +265,7 @@ WSMETHOD GET WSSERVICE marcacoes
 			nPosPonto := Len(aPonto)
 			aPonto[nPosPonto]['resumo'] := aResumo
 			aPonto[nPosPonto]['marcacoes'] := aDados
+			aPonto[nPosPonto]['anoMes'] := aMeses[nContMeses,1]
 		Next
 	EndIf
 
@@ -868,4 +869,5 @@ Static Function AnalisarPeriodo(cFilFunc, cMatricula, cDataIni, cDataFin, aMeses
 			EndIf
 		Next nCont
 	Endif
+	aSort(aMeses,,,{|x,y| x[1] < y[1]})
 Return
