@@ -17,6 +17,7 @@ export class ListComponent implements OnInit {
   itemsBH: Array<any> = []
   itemsResumo: Array<any> = []
   pontos: Array<any> = []
+  bancoHoras: Array<any> = []
   loading = true
   loadingB = true
   start = ''
@@ -155,9 +156,12 @@ export class ListComponent implements OnInit {
     this.pontosService.getBancoHoras(dtini, dtfin)
       .subscribe({
         next: (v: any) => {
-          if (v.bh != undefined) {
-            this.consideraBH = v.bh[0].consideraBH
-            this.itemsBH = v.bh
+          if (v.bancoHoras != undefined) {
+            let indice = v.bancoHoras.length - 1
+            this.consideraBH = v.bancoHoras[indice].bh[0].consideraBH
+            console.log(this.consideraBH)
+            this.itemsBH = v.bancoHoras[indice].bh
+            this.bancoHoras = v.bancoHoras
             this.loadingB = false
           } else {
             this.loadingB = false
@@ -263,7 +267,7 @@ export class ListComponent implements OnInit {
     this.pdf.openPDF(
       this.pontos,
       //this.items,
-      this.itemsBH,
+      this.bancoHoras,
       this.itemsHorarios,
       //this.itemsResumo,
       this.start,
