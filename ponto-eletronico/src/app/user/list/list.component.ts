@@ -159,7 +159,6 @@ export class ListComponent implements OnInit {
           if (v.bancoHoras != undefined) {
             let indice = v.bancoHoras.length - 1
             this.consideraBH = v.bancoHoras[indice].bh[0].consideraBH
-            console.log(this.consideraBH)
             this.itemsBH = v.bancoHoras[indice].bh
             this.bancoHoras = v.bancoHoras
             this.loadingB = false

@@ -143,7 +143,6 @@ export class ExportToPDFService {
     let contentList: any[] = []
     pontos.forEach((ponto) => {
       let i = pontos.indexOf(ponto)
-      console.log(horas[i].bh)
       contentList.push(this.table(ponto.marcacoes, this.columns, this.propM))
       contentList.push({ canvas: [{ type: 'line', x1: 15, y1: 15, x2: 732, y2: 15, lineWidth: 1, }] })
       contentList.push((consideraBH) ? ({ text: 'Banco de Horas', margin: [15, 5, 5, 0], fontSize: 10, id: 'BREAK' + String(i) }) : { text: '', margin: [15, 5, 5, 0] })
