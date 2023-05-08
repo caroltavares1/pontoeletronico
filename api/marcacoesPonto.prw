@@ -26,6 +26,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local aFeriados := {}
 	Local aAbonos := {}
 	Local aAfasta := {}
+	Local aAusencias := {}
 	Local aAfastamentos := {}
 	Local aDiasAdNot := {}
 	Local aMeses := {}
@@ -119,6 +120,7 @@ WSMETHOD GET WSSERVICE marcacoes
 			aFinsSem := GetFinalSemana(cDataIni, cDataFin, cFilFunc, cMatricula)
 			aFeriados := GetFeriados(cDataIni, cDataFin, cFilFunc, cMatricula)
 			aAbonos := GetAbonos(cDataIni, cDataFin, cFilFunc, cMatricula)
+			aAusencias := GetDiasAusentes(cDataIni, cDataFin, cFilFunc, cMatricula)
 
 			fAfastaPer( @aAfasta , cDataIni , cDataFin , ALLTRIM(cFilFunc) , cMatricula)
 			aAfastamentos := GetAfastamentos(cFilFunc, aAfasta, cMatricula)
@@ -177,6 +179,10 @@ WSMETHOD GET WSSERVICE marcacoes
 
 			For nCont := 1 To Len(aAfastamentos)
 				Aadd(aMarcacoes, aAfastamentos[nCont])
+			Next
+
+			For nCont := 1 To Len(aAusencias)
+				Aadd(aMarcacoes, aAusencias[nCont])
 			Next
 
 			For nCont := 1 To Len(aAbonos)
@@ -871,3 +877,71 @@ Static Function AnalisarPeriodo(cFilFunc, cMatricula, cDataIni, cDataFin, aMeses
 	Endif
 	aSort(aMeses,,,{|x,y| x[1] < y[1]})
 Return
+
+Static Function GetDiasAusentes(cDataIni, cDataFin, cFilFunc, cMatricula)
+	Local aAusencias := {}
+	Local dInicial := cDataIni
+	Local dFinal := cDataFin
+	Local aArea := GetArea()
+	Local aAreaSP8 := SP8->(GetArea())
+	Local cJornadaPrevista := ""
+	Local aJornada := {}
+	Local cTurno := ""
+	Local cSqTurno := ""
+	Local lNaoExiste := .F.
+
+	While dInicial <= dFinal
+		If DOW(dInicial) != 1 .AND. DOW(dInicial) != 7
+			lNaoExiste := NaoExiste(dInicial, cFilFunc, cMatricula)
+			If dInicial < Date()
+				If lNaoExiste
+					aJornada := GetJornada(cFilFunc, cMatricula, DTOS(dInicial))
+					cJornadaPrevista := aJornada[1]
+					cTurno := aJornada[2]
+					cSqTurno := aJornada[3]
+					Aadd(aAusencias, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"","","","",.T.,U_ConvertHora(0),cJornadaPrevista})
+				EndIf
+			Else
+				If lNaoExiste
+					Aadd(aAusencias, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"","","","",.T.,U_ConvertHora(0),U_ConvertHora(0)})
+				EndIf
+			EndIf
+		EndIf
+		dInicial := DaySum(dInicial, 1)
+	EndDo
+
+	SP8->(RestArea(aAreaSP8))
+	RestArea(aArea)
+Return aAusencias
+
+Static Function NaoExiste(dInicial, cFilFunc, cMatricula)
+	Local lNaoExiste := .F.
+	Local aArea := GetArea()
+	Local aAreaSPG := SPG->(GetArea()) //Movimentos de Marcacoes - Apos Fechamento
+	Local aAreaSP8 := SP8->(GetArea()) //Movimentos de Marcacoes - Antes do Fechamento
+	Local aAreaSP3 := SP3->(GetArea()) //Feriados
+	Local aAreaSR8 := SR8->(GetArea()) //Controle de Ausencias
+	
+	SPG->(DbSetOrder(2)) //PG_FILIAL + PG_MAT + DTOS(PG_DATA) + STR(PG_HORA,5,2)
+	If !SPG->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial)))
+		SP8->(DbSetOrder(2)) //P8_FILIAL + P8_MAT + DTOS(P8_DATA) + STR(P8_HORA,5,2)
+		If !SP8->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial)))
+			SP3->(DbSetOrder(1)) //P3_FILIAL + Dtos(P3_DATA)
+			If !SP3->(MsSeek(cFilFunc+DTOS(dInicial)))
+				SP3->(DbSetOrder(2)) //P3_FILIAL + P3_MESDIA + P3_FIXO
+				If !SP3->(MsSeek(cFilFunc+RIGHT(DTOS(dInicial),4)+"S"))
+					SR8->(DbSetOrder(1)) //R8_FILIAL + R8_MAT + DTOS(R8_DATAINI) + R8_TIPO
+					If !SR8->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial)))
+						lNaoExiste := .T.
+					EndIf
+				EndIf
+			EndIf
+		EndIf
+	EndIf
+
+	SR8->(RestArea(aAreaSR8))
+	SP3->(RestArea(aAreaSP3))
+	SP8->(RestArea(aAreaSP8))
+	SPG->(RestArea(aAreaSPG))
+	RestArea(aArea)
+Return lNaoExiste
