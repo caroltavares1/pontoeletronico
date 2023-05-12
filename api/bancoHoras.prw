@@ -136,8 +136,23 @@ Return cDia
 
 Static Function GetSaldoAnterior(nSaldoAnterior, cFilAtuacao, cMatricula, cDtInicial, lSaldoNeg)
 	Local nSomaCreditos := nSomaDebitos := 0
+	Local cDtFech := GetUltimoFech(cFilAtuacao, cMatricula, cDtInicial)
 
-	BEGINSQL ALIAS 'TMP' //Lista todos os registros anteriores a data inicial informada
+	If cDtInicial > cDtFech
+		BEGINSQL ALIAS 'TMP' //Lista todos os registros anteriores a data inicial informada
+		SELECT DISTINCT
+			SPI.PI_QUANT, SP9.P9_TIPOCOD, SPI.PI_DATA
+		FROM %Table:SPI% AS SPI
+		INNER JOIN %Table:SP9% AS SP9 ON SPI.PI_PD = SP9.P9_CODIGO
+		WHERE
+			SPI.%NotDel% AND SP9.%NotDel%
+			AND SPI.PI_FILIAL = %exp:cFilAtuacao%
+			AND SPI.PI_MAT = %exp:cMatricula%
+			AND SPI.PI_DATA < %exp:cDtInicial%
+			AND SPI.PI_DATA > %exp:cDtFech% 
+		ENDSQL
+	Else
+		BEGINSQL ALIAS 'TMP' //Lista todos os registros anteriores a data inicial informada
 		SELECT DISTINCT
 			SPI.PI_QUANT, SP9.P9_TIPOCOD, SPI.PI_DATA
 		FROM %Table:SPI% AS SPI
@@ -147,7 +162,8 @@ Static Function GetSaldoAnterior(nSaldoAnterior, cFilAtuacao, cMatricula, cDtIni
 			AND SPI.PI_FILIAL = %exp:cFilAtuacao%
 			AND SPI.PI_MAT = %exp:cMatricula%
 			AND SPI.PI_DATA < %exp:cDtInicial% 
-	ENDSQL
+		ENDSQL
+	EndIf
 
 	While !TMP->(Eof()) //soma todos os debitos e creditos
 		If Val(TMP->P9_TIPOCOD) == 1
@@ -160,6 +176,7 @@ Static Function GetSaldoAnterior(nSaldoAnterior, cFilAtuacao, cMatricula, cDtIni
 	EndDo
 
 	nSaldoAnterior := U_MTOH(nSomaCreditos - nSomaDebitos)
+
 	If nSaldoAnterior < 0
 		lSaldoNeg := .T.
 		nSaldoAnterior *= -1 //Caso o saldo resulte num valor negativo, nesse ponto é transformado em positivo
@@ -167,6 +184,30 @@ Static Function GetSaldoAnterior(nSaldoAnterior, cFilAtuacao, cMatricula, cDtIni
 
 	TMP->(DbCloseArea())
 Return
+
+Static Function GetUltimoFech(cFilAtuacao, cMatricula, cDtInicial)
+	Local cAlias := GetNextAlias()
+	Local dRet := ""
+
+	BEGINSQL ALIAS cAlias //Lista todos os registros anteriores a data inicial informada
+		SELECT TOP 1
+			SPI.PI_DTBAIX 'DT'
+		FROM %Table:SPI% AS SPI
+		WHERE
+			SPI.%NotDel%
+			AND SPI.PI_FILIAL = %exp:cFilAtuacao%
+			AND SPI.PI_MAT = %exp:cMatricula%
+            AND SPI.PI_STATUS = 'B'
+            AND SPI.PI_DTBAIX != ''
+            ORDER BY SPI.PI_DTBAIX DESC
+	ENDSQL
+
+	If !(cAlias)->(Eof())
+		dRet := STOD((cAlias)->DT)
+	Else
+		dRet := cDtInicial
+	EndIf
+Return dRet
 
 Static Function CalculaBH(cFilAtuacao, cMatricula)
 	Local lCalculaBancoHoras := .F.
