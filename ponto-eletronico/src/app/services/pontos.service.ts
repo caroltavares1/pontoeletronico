@@ -11,6 +11,7 @@ const httpOptions = {
     {
       'Content-Type': 'application/json',
       'Authorization': auth,
+      'Access-Control-Allow-Origin':'*'
     }
   ),
   params: {}
