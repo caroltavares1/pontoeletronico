@@ -2,7 +2,7 @@
 #INCLUDE 'RESTFUL.CH'
 
 WSRESTFUL marcacoes DESCRIPTION 'Consulta de marcacoes do relogio de ponto'
-	Self:SetHeader('Access-Control-Allow-Credentials' , "true")
+	// Self:SetHeader('Access-Control-Allow-Credentials' , "true") - Saulo Maciel - 08/05/2023
 
 	//Criação dos Metodos
 	WSMETHOD GET DESCRIPTION 'Listar todas as marcacoes de uma matricula' WSSYNTAX '/marcacoes' PATH '/'

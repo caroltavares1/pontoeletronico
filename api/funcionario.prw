@@ -2,7 +2,7 @@
 #INCLUDE 'RESTFUL.CH'
 
 WSRESTFUL funcionarios DESCRIPTION 'Manipulação de funcionarios'
-	Self:SetHeader('Access-Control-Allow-Credentials' , "true")
+	// Self:SetHeader('Access-Control-Allow-Credentials' , "true") - Saulo Maciel - 08/05/2023
 
 	//Criação dos Metodos
 	WSMETHOD GET DESCRIPTION 'Buscar funcionario pela matricula' WSSYNTAX '/funcionarios/' ;

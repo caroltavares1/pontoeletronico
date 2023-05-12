@@ -2,7 +2,7 @@
 #INCLUDE 'RESTFUL.CH'
 
 WSRESTFUL bh DESCRIPTION 'Consulta do Banco de Horas'
-	Self:SetHeader('Access-Control-Allow-Credentials' , "true")
+	// Self:SetHeader('Access-Control-Allow-Credentials' , "true") - Saulo Maciel - 08/05/2023
 
 	//Criação dos Metodos
 	WSMETHOD GET DESCRIPTION 'Buscar banco de horas pelo funcionario' WSSYNTAX '/bh/' PATH '/bh/'

@@ -2,7 +2,7 @@
 #INCLUDE 'RESTFUL.CH'
 
 WSRESTFUL filiais DESCRIPTION 'Manipulacao de Clientes'
-	Self:SetHeader('Access-Control-Allow-Credentials' , "true")
+	// Self:SetHeader('Access-Control-Allow-Credentials' , "true") - Saulo Maciel - 08/05/2023
 
 	//Criação dos Metodos
 	WSMETHOD GET DESCRIPTION 'Pegar dados de uma filial' WSSYNTAX '/filiais' PATH '/'

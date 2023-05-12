@@ -2,7 +2,7 @@
 #INCLUDE 'RESTFUL.CH'
 
 WSRESTFUL participantes DESCRIPTION 'Manipulacao de Clientes'
-	Self:SetHeader('Access-Control-Allow-Credentials' , "true")
+	// Self:SetHeader('Access-Control-Allow-Credentials' , "true") - Saulo Maciel - 08/05/2023
 
 	WSDATA cpf AS Character
 

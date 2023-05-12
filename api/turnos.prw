@@ -2,7 +2,7 @@
 #INCLUDE 'RESTFUL.CH'
 
 WSRESTFUL turnos DESCRIPTION 'Manipulação de turnos'
-	Self:SetHeader('Access-Control-Allow-Credentials' , "true")
+	// Self:SetHeader('Access-Control-Allow-Credentials' , "true") - Saulo Maciel - 08/05/2023
 
 	//Criação dos Metodos
 	WSMETHOD GET DESCRIPTION 'Buscar turnos pelo funcionario' WSSYNTAX '/turnos/' ;
