@@ -169,25 +169,26 @@ WSMETHOD GET WSSERVICE marcacoes
 				(cAlias)->(DbSkip())
 			EndDo
 			(cAlias)->(DbCloseArea())
-			For nCont := 1 To Len(aFinsSem)
-				Aadd(aMarcacoes, aFinsSem[nCont])
+
+			For nCont := 1 To Len(aAfastamentos) //Saulo Maciel - 30/05/2023 -  Usa rotina para validar a inclusao de registros para as marcacoes
+				IncMarcacoes(@aMarcacoes, aAfastamentos[nCont])
 			Next
 
-			For nCont := 1 To Len(aFeriados)
-				Aadd(aMarcacoes, aFeriados[nCont])
+			For nCont := 1 To Len(aFinsSem) //Saulo Maciel - 30/05/2023 -  Usa rotina para validar a inclusao de registros para as marcacoes
+				IncMarcacoes(@aMarcacoes, aFinsSem[nCont])
 			Next
 
-			For nCont := 1 To Len(aAfastamentos)
-				Aadd(aMarcacoes, aAfastamentos[nCont])
+			For nCont := 1 To Len(aFeriados) //Saulo Maciel - 30/05/2023 -  Usa rotina para validar a inclusao de registros para as marcacoes
+				IncMarcacoes(@aMarcacoes, aFeriados[nCont])
 			Next
 
-			For nCont := 1 To Len(aAusencias)
-				Aadd(aMarcacoes, aAusencias[nCont])
+			For nCont := 1 To Len(aAusencias) //Saulo Maciel - 30/05/2023 -  Usa rotina para validar a inclusao de registros para as marcacoes
+				IncMarcacoes(@aMarcacoes, aAusencias[nCont])
 			Next
 
-			For nCont := 1 To Len(aAbonos)
+			For nCont := 1 To Len(aAbonos) //Saulo Maciel - 30/05/2023 -  Usa rotina para validar a inclusao de registros para as marcacoes
 				If Len(aAbonos[nCont]) > 7
-					Aadd(aMarcacoes, aAbonos[nCont])
+					IncMarcacoes(@aMarcacoes, aAbonos[nCont])
 				EndIf
 			Next
 
@@ -717,7 +718,7 @@ Static Function GetTolerancias(cFilFunc, cMatricula, nTolAbst, nTolHoEx, cDataMo
 	RestArea(aArea)
 Return
 
-Static Function GetAfastamentos(cFilFunc, aAfasta, cMatricula)
+Static Function GetAfastamentos(cFilFunc, aAfasta, cMatricula) //Ferias, Atestados Medicos e Outros
 	Local aArea := GetArea()
 	Local aAreaRCM := RCM->(GetArea())
 	Local nCont := 0
@@ -730,6 +731,7 @@ Static Function GetAfastamentos(cFilFunc, aAfasta, cMatricula)
 	Local cTurno := ""
 	Local cSqTurno := ""
 	Local aJornada := {}
+	Local cTipo := ""
 
 	For nCont := 1 To Len(aAfasta)
 		dInicial := aAfasta[nCont,1]
@@ -739,6 +741,7 @@ Static Function GetAfastamentos(cFilFunc, aAfasta, cMatricula)
 		RCM->(DbSetOrder(1))
 		If RCM->(MsSeek(LEFT(cFilFunc,2)+"  "+cTpAfast))
 			cObservacoes := AllTrim(RCM->RCM_DESCRI)
+			cTipo := RCM->RCM_TIPOAF
 		EndIf
 
 		SR8->(DbSetOrder(5)) //R8_FILIAL + R8_NUMID
@@ -748,7 +751,11 @@ Static Function GetAfastamentos(cFilFunc, aAfasta, cMatricula)
 				cJornadaPrevista := aJornada[1]
 				cTurno := aJornada[2]
 				cSqTurno := aJornada[3]
-				Aadd(aAfastamentos, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"",cObservacoes,"","",.T.,U_ConvertHora(0),cJornadaPrevista})
+				If cTipo == "4"
+					Aadd(aAfastamentos, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"",cObservacoes,"","",.F.,U_ConvertHora(0),cJornadaPrevista})
+				Else
+					Aadd(aAfastamentos, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"",cObservacoes,"","",.T.,U_ConvertHora(0),cJornadaPrevista})
+				EndIf
 				dInicial := DaySum(dInicial, 1)
 			EndDo
 		EndIf
@@ -921,7 +928,7 @@ Static Function NaoExiste(dInicial, cFilFunc, cMatricula)
 	Local aAreaSP8 := SP8->(GetArea()) //Movimentos de Marcacoes - Antes do Fechamento
 	Local aAreaSP3 := SP3->(GetArea()) //Feriados
 	Local aAreaSR8 := SR8->(GetArea()) //Controle de Ausencias
-	
+
 	SPG->(DbSetOrder(2)) //PG_FILIAL + PG_MAT + DTOS(PG_DATA) + STR(PG_HORA,5,2)
 	If !SPG->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial)))
 		SP8->(DbSetOrder(2)) //P8_FILIAL + P8_MAT + DTOS(P8_DATA) + STR(P8_HORA,5,2)
@@ -945,3 +952,23 @@ Static Function NaoExiste(dInicial, cFilFunc, cMatricula)
 	SPG->(RestArea(aAreaSPG))
 	RestArea(aArea)
 Return lNaoExiste
+
+
+/*/{Protheus.doc} nomeFunction
+	Rotina que faz validação da existencia de registros na mesma data
+	antes de incluir um novo elemento no array aMarcacoes
+	@type  Function
+	@author Master TI, Saulo Maciel
+	@since 30/05/2023
+	@version version
+	@param 	aMarcacoes, array, Array contendo todas as marcações do ponto
+			aNovoReg, array, Array com o conteudo a ser adicionado as marcacoes
+	/*/
+Static Function IncMarcacoes(aMarcacoes, aNovoReg)
+	Local nPos := 0
+	nPos := aScan(aMarcacoes,{|x| x[1] == aNovoReg[1]})
+
+	If nPos == 0
+		Aadd(aMarcacoes, aNovoReg)
+	EndIf
+Return
