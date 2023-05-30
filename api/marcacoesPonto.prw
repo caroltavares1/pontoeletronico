@@ -171,7 +171,7 @@ WSMETHOD GET WSSERVICE marcacoes
 			(cAlias)->(DbCloseArea())
 
 			For nCont := 1 To Len(aAfastamentos) //Saulo Maciel - 30/05/2023 -  Usa rotina para validar a inclusao de registros para as marcacoes
-				IncMarcacoes(@aMarcacoes, aAfastamentos[nCont])
+				IncMarcacoes(@aMarcacoes, aAfastamentos[nCont], "AF")
 			Next
 
 			For nCont := 1 To Len(aFinsSem) //Saulo Maciel - 30/05/2023 -  Usa rotina para validar a inclusao de registros para as marcacoes
@@ -751,11 +751,7 @@ Static Function GetAfastamentos(cFilFunc, aAfasta, cMatricula) //Ferias, Atestad
 				cJornadaPrevista := aJornada[1]
 				cTurno := aJornada[2]
 				cSqTurno := aJornada[3]
-				If cTipo == "4"
-					Aadd(aAfastamentos, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"",cObservacoes,"","",.F.,U_ConvertHora(0),cJornadaPrevista})
-				Else
-					Aadd(aAfastamentos, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"",cObservacoes,"","",.T.,U_ConvertHora(0),cJornadaPrevista})
-				EndIf
+				Aadd(aAfastamentos, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"",cObservacoes,"","",.F.,U_ConvertHora(0),cJornadaPrevista})
 				dInicial := DaySum(dInicial, 1)
 			EndDo
 		EndIf
@@ -964,11 +960,19 @@ Return lNaoExiste
 	@param 	aMarcacoes, array, Array contendo todas as marcações do ponto
 			aNovoReg, array, Array com o conteudo a ser adicionado as marcacoes
 	/*/
-Static Function IncMarcacoes(aMarcacoes, aNovoReg)
+Static Function IncMarcacoes(aMarcacoes, aNovoReg, cTipo)
 	Local nPos := 0
-	nPos := aScan(aMarcacoes,{|x| x[1] == aNovoReg[1]})
+	DEFAULT cTipo := ""
 
+	nPos := aScan(aMarcacoes,{|x| x[1] == aNovoReg[1]})
 	If nPos == 0
 		Aadd(aMarcacoes, aNovoReg)
+	EndIf
+
+	If nPos > 0 //Ja existe registro
+		If cTipo == "AF" //Afastamento
+			aMarcacoes[nPos, 11] := aNovoReg[11]
+			aMarcacoes[nPos, 14] := aNovoReg[14]
+		EndIf
 	EndIf
 Return
