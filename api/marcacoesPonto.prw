@@ -18,6 +18,35 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local aAreaSPA := SPA->(GetArea())
 	Local cResponse := JsonObject():New()
 	Local lRet := .T.
+	Local aPonto := {}
+	Private nTolAbst := 0
+	Private nTolHoEx := 0
+	Private lPerFech := Nil
+
+	aPonto := U_GetMarcacoes()
+
+	If Len(aPonto) == 0
+		cResponse['erro'] := 204
+		cResponse['message'] := "Nenhuma marcação de ponto encontrada"
+		lRet := .F.
+	Else
+		cResponse['ponto'] := aPonto
+		cResponse['hasContent'] := .T.
+	EndIf
+
+	Self:SetContentType('application/json')
+	Self:SetResponse(EncodeUTF8(cResponse:toJson()))
+
+	SPA->(RestArea(aAreaSPA))
+	SP8->(RestArea(aAreaSP8))
+	RestArea(aArea)
+Return lRet
+
+User Function GetMarcacoes()
+	Local aArea := GetArea()
+	Local aAreaSP8 := SP8->(GetArea())
+	Local aAreaSPA := SPA->(GetArea())
+	Local lRet := .T.
 	Local aDados := {}
 	Local aResumo := {}
 	Local aLinha := {}
@@ -31,14 +60,14 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local aDiasAdNot := {}
 	Local aMeses := {}
 	Local aPonto := {}
-	Local aParams := Self:AQueryString
+	Local aParams := {}
 	Local cFilFunc := ""
 	Local cMatricula := ""
 	Local cJornadaPrevista := ""
-	Local nPosFil := aScan(aParams,{|x| x[1] == "FILIAL"})
-	Local nPosMatri := aScan(aParams,{|x| x[1] == "MATRICULA"})
-	Local nPosDtIni := aScan(aParams,{|x| x[1] == "DTINICIAL"})
-	Local nPosDtFin := aScan(aParams,{|x| x[1] == "DTFINAL"})
+	Local nPosFil := 0
+	Local nPosMatri := 0
+	Local nPosDtIni := 0
+	Local nPosDtFin := 0
 	Local nPosAdNot := 0
 	Local dDatAux := CTOD("")
 	Local cHorasAbonadas := cMotivoAbono := ""
@@ -48,6 +77,17 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local aJornada := {}
 	Local nMinHrNot := nFimHnot := nIniHNot := 0
 	Local cAlias := ""
+	
+	If GetRemoteType() == 1
+		aParams := {{"FILIAL","1201"},{"MATRICULA","000032"},{"DTINICIAL","20230701"},{"DTFINAL","20230731"}}
+	Else
+		aParams := Self:AQueryString
+	EndIf
+	nPosFil := aScan(aParams,{|x| x[1] == "FILIAL"})
+	nPosMatri := aScan(aParams,{|x| x[1] == "MATRICULA"})
+	nPosDtIni := aScan(aParams,{|x| x[1] == "DTINICIAL"})
+	nPosDtFin := aScan(aParams,{|x| x[1] == "DTFINAL"})
+	
 	Private nTolAbst := 0
 	Private nTolHoEx := 0
 	Private lPerFech := Nil
@@ -188,7 +228,7 @@ WSMETHOD GET WSSERVICE marcacoes
 
 			For nCont := 1 To Len(aAbonos) //Saulo Maciel - 30/05/2023 -  Usa rotina para validar a inclusao de registros para as marcacoes
 				If Len(aAbonos[nCont]) > 7
-					IncMarcacoes(@aMarcacoes, aAbonos[nCont])
+					IncMarcacoes(@aMarcacoes, aAbonos[nCont], "AB")
 				EndIf
 			Next
 
@@ -276,22 +316,10 @@ WSMETHOD GET WSSERVICE marcacoes
 		Next
 	EndIf
 
-	If Len(aPonto) == 0
-		cResponse['erro'] := 204
-		cResponse['message'] := "Nenhuma marcação de ponto encontrada"
-		lRet := .F.
-	Else
-		cResponse['ponto'] := aPonto
-		cResponse['hasContent'] := .T.
-	EndIf
-
-	Self:SetContentType('application/json')
-	Self:SetResponse(EncodeUTF8(cResponse:toJson()))
-
 	SPA->(RestArea(aAreaSPA))
 	SP8->(RestArea(aAreaSP8))
 	RestArea(aArea)
-Return lRet
+Return aPonto
 
 User Function ConvertHora(nHora)
 	Local cHora := CValToChar(nHora)
@@ -971,6 +999,10 @@ Static Function IncMarcacoes(aMarcacoes, aNovoReg, cTipo)
 
 	If nPos > 0 //Ja existe registro
 		If cTipo == "AF" //Afastamento
+			aMarcacoes[nPos, 11] := aNovoReg[11]
+			aMarcacoes[nPos, 14] := aNovoReg[14]
+		EndIf
+		If cTipo == "AB" //Abono
 			aMarcacoes[nPos, 11] := aNovoReg[11]
 			aMarcacoes[nPos, 14] := aNovoReg[14]
 		EndIf
