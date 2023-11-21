@@ -22,6 +22,10 @@ export class HomeComponent implements OnInit {
   public readonly menus: Array<PoMenuItem> = [
     { label: 'Dados do Funcionário', link: '/user/info', icon: "po-icon-user", shortLabel: 'Info' },
     { label: 'Ponto', link: '/user/list', icon: "po-icon-calendar-ok", shortLabel: 'Ponto' },
+    { label: 'Demonstrativo', icon: "po-icon po-icon-menu-open", shortLabel: 'Demonstrativo', subItems:[
+      {label : 'Ferias', link: '/demonstrativo/ferias'},
+      {label : 'Pagamento', link: '/demonstrativo/pagamento'}
+    ]},
     { label: 'Alterar Senha', link: '/user/edit', icon: "po-icon-edit", shortLabel: 'Senha' }
   ];
 
