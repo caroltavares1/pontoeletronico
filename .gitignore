@@ -2,3 +2,4 @@
 ponto-eletronico/.vscode/
 *.sql
 api/zArrToTxt.prw
+console_error.log
