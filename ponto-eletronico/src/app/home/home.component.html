@@ -1,15 +1,12 @@
 <div class="po-wrapper">
-  <po-toolbar p-title="Ponto Eletrônico"
-  p-actions-icon="po-icon-more-vert"
-  [p-actions]="actions">
+  <po-toolbar
+    p-title="Ponto Eletrônico"
+    p-actions-icon="po-icon-more-vert"
+    [p-actions]="actions"
+  >
   </po-toolbar>
 
-  <po-menu
-    [p-filter]="false"
-    [p-collapsed]="true"
-    [p-menus]="menus">
-  </po-menu>
+  <po-menu [p-filter]="false" [p-collapsed]="true" [p-menus]="menus"> </po-menu>
 
   <router-outlet></router-outlet>
-
 </div>
