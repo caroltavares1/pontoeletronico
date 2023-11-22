@@ -2,19 +2,16 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 
 import {
-  PoCheckboxGroupOption,
-  PoMultiselectOption,
+  PoCheckboxGroupOption
 } from '@po-ui/ng-components';
 
 import {
   PoDialogService,
-  PoModalAction,
-  PoModalComponent,
   PoNotificationService,
   PoPageAction,
   PoPageFilter,
   PoPageListComponent,
-  PoTableColumn,
+  PoTableColumn
 } from '@po-ui/ng-components';
 import { FeriasService } from 'src/app/services/ferias.service';
 
@@ -24,16 +21,12 @@ import { FeriasService } from 'src/app/services/ferias.service';
   styleUrls: ['./ferias.component.css'],
 })
 export class FeriasComponent implements OnInit {
-  @ViewChild('advancedFilterModal', { static: true })
-  advancedFilterModal!: PoModalComponent;
   @ViewChild('poPageList', { static: true }) poPageList!: PoPageListComponent;
 
   disclaimerGroup: any;
-  hiringProcesses!: Array<object>;
-  hiringProcessesColumns!: Array<PoTableColumn>;
-  hiringProcessesFiltered!: Array<object>;
-  jobDescription: Array<string> = [];
-  jobDescriptionOptions!: Array<PoMultiselectOption>;
+  processoFerias!: Array<object>;
+  processoFeriasColumns!: Array<PoTableColumn>;
+  processoFeriasFiltered!: Array<object>;
   labelFilter: string = '';
   status: Array<string> = [];
   statusOptions!: Array<PoCheckboxGroupOption>;
@@ -46,19 +39,8 @@ export class FeriasComponent implements OnInit {
     },
   ];
 
-  public readonly advancedFilterPrimaryAction: PoModalAction = {
-    action: () => {
-      this.poPageList.clearInputSearch();
-      this.advancedFilterModal.close();
-      const filters = [...this.jobDescription, ...this.status];
-      this.filterAction(filters);
-    },
-    label: 'Apply filters',
-  };
-
   public readonly filterSettings: PoPageFilter = {
     action: this.filterAction.bind(this),
-    advancedAction: this.advancedFilterActionModal.bind(this),
     placeholder: 'Procurar',
   };
 
@@ -79,20 +61,15 @@ export class FeriasComponent implements OnInit {
       remove: this.onClearDisclaimer.bind(this),
     };
 
-    this.hiringProcesses = this.feriasService.getItems();
-    this.hiringProcessesColumns = this.feriasService.getColumns();
-    this.jobDescriptionOptions = this.feriasService.getJobs();
+    this.processoFerias = this.feriasService.getItems();
+    this.processoFeriasColumns = this.feriasService.getColumns();
     this.statusOptions = this.feriasService.getHireStatus();
 
-    this.hiringProcessesFiltered = [...this.hiringProcesses];
-  }
-
-  advancedFilterActionModal() {
-    this.advancedFilterModal.open();
+    this.processoFeriasFiltered = [...this.processoFerias];
   }
 
   disableHireButton() {
-    return !this.hiringProcesses.find(
+    return !this.processoFerias.find(
       (candidate: any) => candidate['$selected']
     );
   }
@@ -100,7 +77,7 @@ export class FeriasComponent implements OnInit {
   filter() {
     const filters = this.disclaimers.map((disclaimer: any) => disclaimer.value);
     filters.length
-      ? this.hiringProcessesFilter(filters)
+      ? this.processoFeriasFilter(filters)
       : this.resetFilterHiringProcess();
   }
 
@@ -112,7 +89,7 @@ export class FeriasComponent implements OnInit {
   }
 
   hireCandidate() {
-    const selectedCandidate: any = this.hiringProcesses.find(
+    const selectedCandidate: any = this.processoFerias.find(
       (candidate: any) => candidate['$selected']
     );
 
@@ -138,8 +115,8 @@ export class FeriasComponent implements OnInit {
     }
   }
 
-  hiringProcessesFilter(filters: any) {
-    this.hiringProcessesFiltered = this.hiringProcesses.filter((item: any) =>
+  processoFeriasFilter(filters: any) {
+    this.processoFeriasFiltered = this.processoFerias.filter((item: any) =>
       Object.keys(item).some(
         (key) =>
           !(item[key] instanceof Object) &&
@@ -179,13 +156,13 @@ export class FeriasComponent implements OnInit {
   }
 
   resetFilterHiringProcess() {
-    this.hiringProcessesFiltered = [...this.hiringProcesses];
+    this.processoFeriasFiltered = [...this.processoFerias];
     this.status = [];
-    this.jobDescription = [];
+    // this.jobDescription = [];
   }
 
   private beforeRedirect(itemBreadcrumbLabel: any) {
-    if (this.hiringProcesses.some((candidate: any) => candidate['$selected'])) {
+    if (this.processoFerias.some((candidate: any) => candidate['$selected'])) {
       this.poDialog.confirm({
         title: `Confirm redirect to ${itemBreadcrumbLabel}`,
         message: `There is data selected. Are you sure you want to quit?`,
