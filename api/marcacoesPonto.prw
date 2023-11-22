@@ -18,6 +18,38 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local aAreaSPA := SPA->(GetArea())
 	Local cResponse := JsonObject():New()
 	Local lRet := .T.
+	Local aPonto := {}
+	
+	Private aParams := {}
+	Private nTolAbst := 0
+	Private nTolHoEx := 0
+	Private lPerFech := Nil
+	aParams := Self:AQueryString
+
+	aPonto := U_GetMarcacoes(aParams)
+
+	If Len(aPonto) == 0
+		cResponse['erro'] := 204
+		cResponse['message'] := "Nenhuma marcação de ponto encontrada"
+		lRet := .F.
+	Else
+		cResponse['ponto'] := aPonto
+		cResponse['hasContent'] := .T.
+	EndIf
+
+	Self:SetContentType('application/json')
+	Self:SetResponse(EncodeUTF8(cResponse:toJson()))
+
+	SPA->(RestArea(aAreaSPA))
+	SP8->(RestArea(aAreaSP8))
+	RestArea(aArea)
+Return lRet
+
+User Function GetMarcacoes(aParams)
+	Local aArea := GetArea()
+	Local aAreaSP8 := SP8->(GetArea())
+	Local aAreaSPA := SPA->(GetArea())
+	Local lRet := .T.
 	Local aDados := {}
 	Local aResumo := {}
 	Local aLinha := {}
@@ -31,14 +63,13 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local aDiasAdNot := {}
 	Local aMeses := {}
 	Local aPonto := {}
-	Local aParams := Self:AQueryString
 	Local cFilFunc := ""
 	Local cMatricula := ""
 	Local cJornadaPrevista := ""
-	Local nPosFil := aScan(aParams,{|x| x[1] == "FILIAL"})
-	Local nPosMatri := aScan(aParams,{|x| x[1] == "MATRICULA"})
-	Local nPosDtIni := aScan(aParams,{|x| x[1] == "DTINICIAL"})
-	Local nPosDtFin := aScan(aParams,{|x| x[1] == "DTFINAL"})
+	Local nPosFil := 0
+	Local nPosMatri := 0
+	Local nPosDtIni := 0
+	Local nPosDtFin := 0
 	Local nPosAdNot := 0
 	Local dDatAux := CTOD("")
 	Local cHorasAbonadas := cMotivoAbono := ""
@@ -48,6 +79,12 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local aJornada := {}
 	Local nMinHrNot := nFimHnot := nIniHNot := 0
 	Local cAlias := ""
+	
+	nPosFil := aScan(aParams,{|x| x[1] == "FILIAL"})
+	nPosMatri := aScan(aParams,{|x| x[1] == "MATRICULA"})
+	nPosDtIni := aScan(aParams,{|x| x[1] == "DTINICIAL"})
+	nPosDtFin := aScan(aParams,{|x| x[1] == "DTFINAL"})
+	
 	Private nTolAbst := 0
 	Private nTolHoEx := 0
 	Private lPerFech := Nil
@@ -169,25 +206,26 @@ WSMETHOD GET WSSERVICE marcacoes
 				(cAlias)->(DbSkip())
 			EndDo
 			(cAlias)->(DbCloseArea())
-			For nCont := 1 To Len(aFinsSem)
-				Aadd(aMarcacoes, aFinsSem[nCont])
+
+			For nCont := 1 To Len(aAfastamentos) //Saulo Maciel - 30/05/2023 -  Usa rotina para validar a inclusao de registros para as marcacoes
+				IncMarcacoes(@aMarcacoes, aAfastamentos[nCont], "AF")
 			Next
 
-			For nCont := 1 To Len(aFeriados)
-				Aadd(aMarcacoes, aFeriados[nCont])
+			For nCont := 1 To Len(aFinsSem) //Saulo Maciel - 30/05/2023 -  Usa rotina para validar a inclusao de registros para as marcacoes
+				IncMarcacoes(@aMarcacoes, aFinsSem[nCont])
 			Next
 
-			For nCont := 1 To Len(aAfastamentos)
-				Aadd(aMarcacoes, aAfastamentos[nCont])
+			For nCont := 1 To Len(aFeriados) //Saulo Maciel - 30/05/2023 -  Usa rotina para validar a inclusao de registros para as marcacoes
+				IncMarcacoes(@aMarcacoes, aFeriados[nCont])
 			Next
 
-			For nCont := 1 To Len(aAusencias)
-				Aadd(aMarcacoes, aAusencias[nCont])
+			For nCont := 1 To Len(aAusencias) //Saulo Maciel - 30/05/2023 -  Usa rotina para validar a inclusao de registros para as marcacoes
+				IncMarcacoes(@aMarcacoes, aAusencias[nCont])
 			Next
 
-			For nCont := 1 To Len(aAbonos)
+			For nCont := 1 To Len(aAbonos) //Saulo Maciel - 30/05/2023 -  Usa rotina para validar a inclusao de registros para as marcacoes
 				If Len(aAbonos[nCont]) > 7
-					Aadd(aMarcacoes, aAbonos[nCont])
+					IncMarcacoes(@aMarcacoes, aAbonos[nCont], "AB")
 				EndIf
 			Next
 
@@ -275,22 +313,10 @@ WSMETHOD GET WSSERVICE marcacoes
 		Next
 	EndIf
 
-	If Len(aPonto) == 0
-		cResponse['erro'] := 204
-		cResponse['message'] := "Nenhuma marcação de ponto encontrada"
-		lRet := .F.
-	Else
-		cResponse['ponto'] := aPonto
-		cResponse['hasContent'] := .T.
-	EndIf
-
-	Self:SetContentType('application/json')
-	Self:SetResponse(EncodeUTF8(cResponse:toJson()))
-
 	SPA->(RestArea(aAreaSPA))
 	SP8->(RestArea(aAreaSP8))
 	RestArea(aArea)
-Return lRet
+Return aPonto
 
 User Function ConvertHora(nHora)
 	Local cHora := CValToChar(nHora)
@@ -717,7 +743,7 @@ Static Function GetTolerancias(cFilFunc, cMatricula, nTolAbst, nTolHoEx, cDataMo
 	RestArea(aArea)
 Return
 
-Static Function GetAfastamentos(cFilFunc, aAfasta, cMatricula)
+Static Function GetAfastamentos(cFilFunc, aAfasta, cMatricula) //Ferias, Atestados Medicos e Outros
 	Local aArea := GetArea()
 	Local aAreaRCM := RCM->(GetArea())
 	Local nCont := 0
@@ -730,6 +756,7 @@ Static Function GetAfastamentos(cFilFunc, aAfasta, cMatricula)
 	Local cTurno := ""
 	Local cSqTurno := ""
 	Local aJornada := {}
+	Local cTipo := ""
 
 	For nCont := 1 To Len(aAfasta)
 		dInicial := aAfasta[nCont,1]
@@ -739,6 +766,7 @@ Static Function GetAfastamentos(cFilFunc, aAfasta, cMatricula)
 		RCM->(DbSetOrder(1))
 		If RCM->(MsSeek(LEFT(cFilFunc,2)+"  "+cTpAfast))
 			cObservacoes := AllTrim(RCM->RCM_DESCRI)
+			cTipo := RCM->RCM_TIPOAF
 		EndIf
 
 		SR8->(DbSetOrder(5)) //R8_FILIAL + R8_NUMID
@@ -748,7 +776,7 @@ Static Function GetAfastamentos(cFilFunc, aAfasta, cMatricula)
 				cJornadaPrevista := aJornada[1]
 				cTurno := aJornada[2]
 				cSqTurno := aJornada[3]
-				Aadd(aAfastamentos, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"",cObservacoes,"","",.T.,U_ConvertHora(0),cJornadaPrevista})
+				Aadd(aAfastamentos, {ConvertData(DTOS(dInicial)),"","",ALLTRIM(DiaSemana(dInicial)),"","","",cTurno,cSqTurno,"",cObservacoes,"","",.F.,U_ConvertHora(0),cJornadaPrevista})
 				dInicial := DaySum(dInicial, 1)
 			EndDo
 		EndIf
@@ -921,7 +949,7 @@ Static Function NaoExiste(dInicial, cFilFunc, cMatricula)
 	Local aAreaSP8 := SP8->(GetArea()) //Movimentos de Marcacoes - Antes do Fechamento
 	Local aAreaSP3 := SP3->(GetArea()) //Feriados
 	Local aAreaSR8 := SR8->(GetArea()) //Controle de Ausencias
-	
+
 	SPG->(DbSetOrder(2)) //PG_FILIAL + PG_MAT + DTOS(PG_DATA) + STR(PG_HORA,5,2)
 	If !SPG->(MsSeek(cFilFunc+cMatricula+DTOS(dInicial)))
 		SP8->(DbSetOrder(2)) //P8_FILIAL + P8_MAT + DTOS(P8_DATA) + STR(P8_HORA,5,2)
@@ -945,3 +973,36 @@ Static Function NaoExiste(dInicial, cFilFunc, cMatricula)
 	SPG->(RestArea(aAreaSPG))
 	RestArea(aArea)
 Return lNaoExiste
+
+
+/*/{Protheus.doc} nomeFunction
+	Rotina que faz validação da existencia de registros na mesma data
+	antes de incluir um novo elemento no array aMarcacoes
+	@type  Function
+	@author Master TI, Saulo Maciel
+	@since 30/05/2023
+	@version version
+	@param 	aMarcacoes, array, Array contendo todas as marcações do ponto
+			aNovoReg, array, Array com o conteudo a ser adicionado as marcacoes
+	/*/
+Static Function IncMarcacoes(aMarcacoes, aNovoReg, cTipo)
+	Local nPos := 0
+	DEFAULT cTipo := ""
+
+	nPos := aScan(aMarcacoes,{|x| x[1] == aNovoReg[1]})
+	If nPos == 0
+		Aadd(aMarcacoes, aNovoReg)
+	EndIf
+
+	If nPos > 0 //Ja existe registro
+		If cTipo == "AF" //Afastamento
+			aMarcacoes[nPos, 11] := aNovoReg[11]
+			aMarcacoes[nPos, 14] := aNovoReg[14]
+		EndIf
+		If cTipo == "AB" //Abono
+			aMarcacoes[nPos, 11] := aNovoReg[11]
+			aMarcacoes[nPos, 10] := aNovoReg[10]
+			aMarcacoes[nPos, 14] := aNovoReg[14]
+		EndIf
+	EndIf
+Return

@@ -9,12 +9,10 @@ export const routes: Routes = [
   {
     path: '', component: HomeComponent, canActivate: [AuthGuard],
     children: [
-      { path: "user", loadChildren: () => import("./user/user.module").then(m => m.UserModule) }
+      { path: "user", loadChildren: () => import("./user/user.module").then(m => m.UserModule) },
+      { path: "demonstrativo", loadChildren: () => import("./demonstrativo/demonstrativo.module").then(m => m.DemonstrativoModule) }
     ]
-  },
-  //{ path: 'create', component: FormComponent },
-
-
+  }
 ]
 
 @NgModule({
