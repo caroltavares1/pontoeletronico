@@ -19,11 +19,14 @@ WSMETHOD GET WSSERVICE marcacoes
 	Local cResponse := JsonObject():New()
 	Local lRet := .T.
 	Local aPonto := {}
+	
+	Private aParams := {}
 	Private nTolAbst := 0
 	Private nTolHoEx := 0
 	Private lPerFech := Nil
+	aParams := Self:AQueryString
 
-	aPonto := U_GetMarcacoes()
+	aPonto := U_GetMarcacoes(aParams)
 
 	If Len(aPonto) == 0
 		cResponse['erro'] := 204
@@ -42,7 +45,7 @@ WSMETHOD GET WSSERVICE marcacoes
 	RestArea(aArea)
 Return lRet
 
-User Function GetMarcacoes()
+User Function GetMarcacoes(aParams)
 	Local aArea := GetArea()
 	Local aAreaSP8 := SP8->(GetArea())
 	Local aAreaSPA := SPA->(GetArea())
@@ -60,7 +63,6 @@ User Function GetMarcacoes()
 	Local aDiasAdNot := {}
 	Local aMeses := {}
 	Local aPonto := {}
-	Local aParams := {}
 	Local cFilFunc := ""
 	Local cMatricula := ""
 	Local cJornadaPrevista := ""
@@ -78,11 +80,6 @@ User Function GetMarcacoes()
 	Local nMinHrNot := nFimHnot := nIniHNot := 0
 	Local cAlias := ""
 	
-	If GetRemoteType() == 1
-		aParams := {{"FILIAL","1201"},{"MATRICULA","000032"},{"DTINICIAL","20230701"},{"DTFINAL","20230731"}}
-	Else
-		aParams := Self:AQueryString
-	EndIf
 	nPosFil := aScan(aParams,{|x| x[1] == "FILIAL"})
 	nPosMatri := aScan(aParams,{|x| x[1] == "MATRICULA"})
 	nPosDtIni := aScan(aParams,{|x| x[1] == "DTINICIAL"})
@@ -1004,6 +1001,7 @@ Static Function IncMarcacoes(aMarcacoes, aNovoReg, cTipo)
 		EndIf
 		If cTipo == "AB" //Abono
 			aMarcacoes[nPos, 11] := aNovoReg[11]
+			aMarcacoes[nPos, 10] := aNovoReg[10]
 			aMarcacoes[nPos, 14] := aNovoReg[14]
 		EndIf
 	EndIf
