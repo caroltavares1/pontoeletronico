@@ -1,5 +1,6 @@
 .vscode/
 ponto-eletronico/.vscode/
 *.sql
+*.txt
 api/zArrToTxt.prw
 console_error.log

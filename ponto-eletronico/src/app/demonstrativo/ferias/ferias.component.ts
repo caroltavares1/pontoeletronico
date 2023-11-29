@@ -1,9 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 
-import {
-  PoCheckboxGroupOption
-} from '@po-ui/ng-components';
+import { PoCheckboxGroupOption } from '@po-ui/ng-components';
 
 import {
   PoDialogService,
@@ -11,9 +9,10 @@ import {
   PoPageAction,
   PoPageFilter,
   PoPageListComponent,
-  PoTableColumn
+  PoTableColumn,
 } from '@po-ui/ng-components';
 import { FeriasService } from 'src/app/services/ferias.service';
+import { Matricula } from './matriculas.model';
 
 @Component({
   selector: 'app-ferias',
@@ -30,6 +29,8 @@ export class FeriasComponent implements OnInit {
   labelFilter: string = '';
   status: Array<string> = [];
   statusOptions!: Array<PoCheckboxGroupOption>;
+  matriculas! : Matricula []
+  options : any = []
 
   public readonly actions: Array<PoPageAction> = [
     {
@@ -38,6 +39,12 @@ export class FeriasComponent implements OnInit {
       disabled: this.disableHireButton.bind(this),
     },
   ];
+
+  setOptions(){
+    this.matriculas.forEach( el =>{
+      this.options.push({ value : 'Filial: '+el.filial+'/'+'Matricula: '+el.matricula+' - Nome: '+el.nome})
+    })
+  }
 
   public readonly filterSettings: PoPageFilter = {
     action: this.filterAction.bind(this),
@@ -53,6 +60,7 @@ export class FeriasComponent implements OnInit {
     private router: Router
   ) {}
 
+
   ngOnInit() {
     this.disclaimerGroup = {
       title: 'Filters',
@@ -66,6 +74,8 @@ export class FeriasComponent implements OnInit {
     this.statusOptions = this.feriasService.getHireStatus();
 
     this.processoFeriasFiltered = [...this.processoFerias];
+    this.getMatriculas()
+    this.setOptions()
   }
 
   disableHireButton() {
@@ -161,15 +171,15 @@ export class FeriasComponent implements OnInit {
     // this.jobDescription = [];
   }
 
-  private beforeRedirect(itemBreadcrumbLabel: any) {
-    if (this.processoFerias.some((candidate: any) => candidate['$selected'])) {
-      this.poDialog.confirm({
-        title: `Confirm redirect to ${itemBreadcrumbLabel}`,
-        message: `There is data selected. Are you sure you want to quit?`,
-        confirm: () => this.router.navigate(['/']),
-      });
-    } else {
-      this.router.navigate(['/']);
+  getMatriculas() {
+    let cpf = '00976379473';
+    this.feriasService.getMatriculas(cpf).subscribe((mat) => {
+      localStorage.setItem('matriculas', JSON.stringify(mat.matriculas));
+    });
+    let dados = localStorage.getItem('matriculas')
+
+    if (dados != undefined && dados != null){
+      this.matriculas = JSON.parse(dados)
     }
   }
 }
