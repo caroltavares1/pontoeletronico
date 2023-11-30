@@ -1,10 +1,11 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
+import { NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
-import { PoModalAction, PoModalComponent, PoNotificationService, PoToasterOrientation } from '@po-ui/ng-components';
+import { PoModalComponent, PoNotificationService } from '@po-ui/ng-components';
 import { PoPageLoginLiterals } from '@po-ui/ng-templates';
 import { AuthService } from '../auth/auth.service';
+import { FeriasService } from '../services/ferias.service';
 import { UserService } from '../services/user.service';
-import { NgForm } from '@angular/forms';
 
 @Component({
   selector: 'app-login',
@@ -44,6 +45,7 @@ export class LoginComponent implements OnInit {
     private auth: AuthService,
     private userService: UserService,
     private poNotification: PoNotificationService,
+    private feriasService : FeriasService
   ) { }
 
   checkLogin(formData: any) {
@@ -71,6 +73,7 @@ export class LoginComponent implements OnInit {
           this.loading = false
         },
         complete: () => {
+          this.getMatriculas(formData.login)
         }
       })
 
@@ -107,6 +110,12 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
+  }
+
+  getMatriculas(cpf : string) {
+    this.feriasService.getMatriculas(cpf).subscribe((mat) => {
+      localStorage.setItem('matriculas', JSON.stringify(mat.matriculas));
+    });
   }
 
 }

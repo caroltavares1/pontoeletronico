@@ -29,7 +29,7 @@ export class FeriasComponent implements OnInit {
   labelFilter: string = '';
   status: Array<string> = [];
   statusOptions!: Array<PoCheckboxGroupOption>;
-  matriculas! : Matricula []
+  matriculas : Matricula [] = []
   options : any = []
 
   public readonly actions: Array<PoPageAction> = [
@@ -41,9 +41,11 @@ export class FeriasComponent implements OnInit {
   ];
 
   setOptions(){
-    this.matriculas.forEach( el =>{
-      this.options.push({ value : 'Filial: '+el.filial+'/'+'Matricula: '+el.matricula+' - Nome: '+el.nome})
-    })
+    if(this.matriculas.length > 0){
+      this.matriculas.forEach( el =>{
+        this.options.push({ value : 'Filial: '+el.filial+'/'+'Matricula: '+el.matricula+' - Nome: '+el.nome})
+      })
+    }
   }
 
   public readonly filterSettings: PoPageFilter = {
@@ -171,13 +173,8 @@ export class FeriasComponent implements OnInit {
     // this.jobDescription = [];
   }
 
-  getMatriculas() {
-    let cpf = '00976379473';
-    this.feriasService.getMatriculas(cpf).subscribe((mat) => {
-      localStorage.setItem('matriculas', JSON.stringify(mat.matriculas));
-    });
+  getMatriculas() {   
     let dados = localStorage.getItem('matriculas')
-
     if (dados != undefined && dados != null){
       this.matriculas = JSON.parse(dados)
     }
