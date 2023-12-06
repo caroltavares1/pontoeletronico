@@ -125,7 +125,6 @@ export class FeriasComponent implements OnInit {
       this.pdf.setHeader(periodoSelecionado)
       this.cabecalho = periodoSelecionado
       this.pdf.openPDF(this.cabecalho)
-      debugger
     }
   }
 
