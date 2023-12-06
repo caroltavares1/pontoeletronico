@@ -13,6 +13,7 @@ import { FeriasService } from 'src/app/services/ferias.service';
 import { UserService } from 'src/app/services/user.service';
 import { Ferias } from './ferias.model';
 import { Matricula } from './matriculas.model';
+import { FeriasPDFService } from 'src/app/services/feriasPDF.service';
 
 @Component({
   selector: 'app-ferias',
@@ -33,6 +34,7 @@ export class FeriasComponent implements OnInit {
   options: any = [];
   matriculaSelecionada!: Matricula;
   filial: any;
+  cabecalho : any 
 
   public readonly actions: Array<PoPageAction> = [
     {
@@ -70,7 +72,8 @@ export class FeriasComponent implements OnInit {
   constructor(
     private feriasService: FeriasService,
     private poNotification: PoNotificationService,
-    private userService: UserService
+    private userService: UserService,
+    private pdf: FeriasPDFService
   ) {}
 
   ngOnInit() {
@@ -119,6 +122,10 @@ export class FeriasComponent implements OnInit {
 
     if (periodoSelecionado != undefined) {
       console.log(periodoSelecionado);
+      this.pdf.setHeader(periodoSelecionado)
+      this.cabecalho = periodoSelecionado
+      this.pdf.openPDF(this.cabecalho)
+      debugger
     }
   }
 
