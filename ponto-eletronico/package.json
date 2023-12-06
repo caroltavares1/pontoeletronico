@@ -21,6 +21,7 @@
     "@po-ui/ng-components": "^14.11.0",
     "@po-ui/ng-templates": "^14.11.0",
     "@totvs/po-theme": "^14.11.0",
+    "@types/uuid": "^9.0.7",
     "html-to-pdfmake": "^2.4.11",
     "jspdf": "^2.5.1",
     "pdfmake": "^0.2.7",
