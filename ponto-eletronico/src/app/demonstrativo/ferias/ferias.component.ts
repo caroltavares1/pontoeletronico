@@ -3,11 +3,11 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { PoCheckboxGroupOption } from '@po-ui/ng-components';
 
 import {
-    PoNotificationService,
-    PoPageAction,
-    PoPageFilter,
-    PoPageListComponent,
-    PoTableColumn,
+  PoNotificationService,
+  PoPageAction,
+  PoPageFilter,
+  PoPageListComponent,
+  PoTableColumn,
 } from '@po-ui/ng-components';
 import { FeriasService } from 'src/app/services/ferias.service';
 import { UserService } from 'src/app/services/user.service';
@@ -46,7 +46,7 @@ export class FeriasComponent implements OnInit {
     if (this.matriculas.length > 0) {
       this.matriculas.forEach((el) => {
         this.options.push({
-          value: el.filial + '/' + el.matricula,
+          value: el,
           label:
             'Filial: ' +
             el.filial +
@@ -175,16 +175,15 @@ export class FeriasComponent implements OnInit {
   }
 
   onSelect(matricula: any) {
-    const value = matricula.value as string;
-    const chave = value.split('/');
-    if (chave.length == 2) {
+    const value = matricula.value
+    if (value != null) {
       this.filial = this.userService
-        .getFilialById(chave[0])
+        .getFilialById(value.filial)
         .subscribe((resp) => {
           this.filial = resp;
         });
 
-      this.feriasService.getPrevFerias(chave[0], chave[1]).subscribe((data) => {
+      this.feriasService.getPrevFerias(value.filial, value.matricula).subscribe((data) => {
         if (data.hasContent) {
           let lista = data.programacaoFerias as [];
           lista.forEach((el: Ferias) => {
@@ -201,7 +200,8 @@ export class FeriasComponent implements OnInit {
                 this.convertData(el.fimFerias, '/', true),
               diasAbono: this.calcDias(el.iniFerias, el.fimFerias),
               empresa: this.filial,
-              ferias:el 
+              ferias:el,
+              matricula: matricula.value, 
             });
           });
           this.processoFeriasFiltered = [...this.processoFerias];
