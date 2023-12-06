@@ -1,17 +1,16 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { Router } from '@angular/router';
 
 import { PoCheckboxGroupOption } from '@po-ui/ng-components';
 
 import {
-  PoDialogService,
-  PoNotificationService,
-  PoPageAction,
-  PoPageFilter,
-  PoPageListComponent,
-  PoTableColumn,
+    PoNotificationService,
+    PoPageAction,
+    PoPageFilter,
+    PoPageListComponent,
+    PoTableColumn,
 } from '@po-ui/ng-components';
 import { FeriasService } from 'src/app/services/ferias.service';
+import { UserService } from 'src/app/services/user.service';
 import { Ferias } from './ferias.model';
 import { Matricula } from './matriculas.model';
 
@@ -24,7 +23,7 @@ export class FeriasComponent implements OnInit {
   @ViewChild('poPageList', { static: true }) poPageList!: PoPageListComponent;
 
   disclaimerGroup: any;
-  processoFerias: Array<object> = []
+  processoFerias: Array<object> = [];
   processoFeriasColumns!: Array<PoTableColumn>;
   processoFeriasFiltered!: Array<object>;
   labelFilter: string = '';
@@ -33,11 +32,12 @@ export class FeriasComponent implements OnInit {
   matriculas: Matricula[] = [];
   options: any = [];
   matriculaSelecionada!: Matricula;
+  filial: any;
 
   public readonly actions: Array<PoPageAction> = [
     {
       label: 'Prévia',
-      action: this.hireCandidate.bind(this),
+      action: this.imprimirRecibo.bind(this),
       disabled: this.disableHireButton.bind(this),
     },
   ];
@@ -70,8 +70,7 @@ export class FeriasComponent implements OnInit {
   constructor(
     private feriasService: FeriasService,
     private poNotification: PoNotificationService,
-    private poDialog: PoDialogService,
-    private router: Router
+    private userService: UserService
   ) {}
 
   ngOnInit() {
@@ -86,12 +85,17 @@ export class FeriasComponent implements OnInit {
     this.processoFeriasFiltered = [...this.processoFerias];
     this.getMatriculas();
     this.setOptions();
+    this.getFilial();
+  }
+
+  getFilial() {
+    this.filial = this.userService.getFilial().subscribe((resp) => {
+      this.filial = resp;
+    });
   }
 
   disableHireButton() {
-    return !this.processoFerias.find(
-      (candidate: any) => candidate['$selected']
-    );
+    return !this.processoFerias.find((recibo: any) => recibo['$selected']);
   }
 
   filter() {
@@ -108,30 +112,13 @@ export class FeriasComponent implements OnInit {
     this.filter();
   }
 
-  hireCandidate() {
-    const selectedCandidate: any = this.processoFerias.find(
-      (candidate: any) => candidate['$selected']
+  imprimirRecibo() {
+    const periodoSelecionado: any = this.processoFerias.find(
+      (recibo: any) => recibo['$selected']
     );
 
-    console.log(selectedCandidate);
-
-    if (selectedCandidate != undefined) {
-      switch (selectedCandidate['hireStatus']) {
-        case 'progress':
-          selectedCandidate['hireStatus'] = 'hired';
-          this.poNotification.success('Hired candidate!');
-          break;
-
-        case 'hired':
-          this.poNotification.warning('This candidate has already been hired.');
-          break;
-
-        case 'canceled':
-          this.poNotification.error(
-            'This candidate has already been disqualified.'
-          );
-          break;
-      }
+    if (periodoSelecionado != undefined) {
+      console.log(periodoSelecionado);
     }
   }
 
@@ -178,7 +165,6 @@ export class FeriasComponent implements OnInit {
   resetFilterHiringProcess() {
     this.processoFeriasFiltered = [...this.processoFerias];
     this.status = [];
-    // this.jobDescription = [];
   }
 
   getMatriculas() {
@@ -191,8 +177,13 @@ export class FeriasComponent implements OnInit {
   onSelect(matricula: any) {
     const value = matricula.value as string;
     const chave = value.split('/');
-
     if (chave.length == 2) {
+      this.filial = this.userService
+        .getFilialById(chave[0])
+        .subscribe((resp) => {
+          this.filial = resp;
+        });
+
       this.feriasService.getPrevFerias(chave[0], chave[1]).subscribe((data) => {
         if (data.hasContent) {
           let lista = data.programacaoFerias as [];
@@ -209,6 +200,8 @@ export class FeriasComponent implements OnInit {
                 ' A ' +
                 this.convertData(el.fimFerias, '/', true),
               diasAbono: this.calcDias(el.iniFerias, el.fimFerias),
+              empresa: this.filial,
+              ferias:el 
             });
           });
           this.processoFeriasFiltered = [...this.processoFerias];
@@ -223,18 +216,28 @@ export class FeriasComponent implements OnInit {
   convertData(data: string, separador: string, inverte: boolean) {
     let ret: string = '';
     if (inverte) {
-      ret = data.substring(6, 8)+separador+data.substring(4, 6)+separador+data.substring(0, 4);
-    }else{
-      ret = data.substring(0, 4)+separador+data.substring(4, 6)+separador+data.substring(6, 8);
+      ret =
+        data.substring(6, 8) +
+        separador +
+        data.substring(4, 6) +
+        separador +
+        data.substring(0, 4);
+    } else {
+      ret =
+        data.substring(0, 4) +
+        separador +
+        data.substring(4, 6) +
+        separador +
+        data.substring(6, 8);
     }
     return ret;
   }
 
   calcDias(data1: string, data2: string) {
-    const inicial = new Date(this.convertData(data1, "-", false))
-    const final = new Date(this.convertData(data2, "-", false))
-    const diffMs = final.getTime() - inicial.getTime()
-    const diff = Math.round(diffMs / ( 24 * 60 * 60 * 1000))
-    return diff + 1 
+    const inicial = new Date(this.convertData(data1, '-', false));
+    const final = new Date(this.convertData(data2, '-', false));
+    const diffMs = final.getTime() - inicial.getTime();
+    const diff = Math.round(diffMs / (24 * 60 * 60 * 1000));
+    return diff + 1;
   }
 }
