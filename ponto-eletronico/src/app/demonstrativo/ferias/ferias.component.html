@@ -6,10 +6,17 @@
       selecionado.
     </p>
 
-    <br>
+    <br />
 
-    <po-combo name="matricula" p-label="Matricula" [p-options]="options"></po-combo>
-    
+    <po-combo
+      name="matricula"
+      p-label="Matricula"
+      [p-options]="options"
+      p-placeholder="Escolha uma matricula"
+      [p-emit-object-value]="true"
+      (p-change)="onSelect($event)"
+    ></po-combo>
+
     <po-page-list
       #poPageList
       [p-actions]="actions"

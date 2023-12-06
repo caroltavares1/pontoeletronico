@@ -12,6 +12,7 @@ import {
   PoTableColumn,
 } from '@po-ui/ng-components';
 import { FeriasService } from 'src/app/services/ferias.service';
+import { Ferias } from './ferias.model';
 import { Matricula } from './matriculas.model';
 
 @Component({
@@ -23,14 +24,15 @@ export class FeriasComponent implements OnInit {
   @ViewChild('poPageList', { static: true }) poPageList!: PoPageListComponent;
 
   disclaimerGroup: any;
-  processoFerias!: Array<object>;
+  processoFerias: Array<object> = []
   processoFeriasColumns!: Array<PoTableColumn>;
   processoFeriasFiltered!: Array<object>;
   labelFilter: string = '';
   status: Array<string> = [];
   statusOptions!: Array<PoCheckboxGroupOption>;
-  matriculas : Matricula [] = []
-  options : any = []
+  matriculas: Matricula[] = [];
+  options: any = [];
+  matriculaSelecionada!: Matricula;
 
   public readonly actions: Array<PoPageAction> = [
     {
@@ -40,11 +42,21 @@ export class FeriasComponent implements OnInit {
     },
   ];
 
-  setOptions(){
-    if(this.matriculas.length > 0){
-      this.matriculas.forEach( el =>{
-        this.options.push({ value : 'Filial: '+el.filial+'/'+'Matricula: '+el.matricula+' - Nome: '+el.nome})
-      })
+  setOptions() {
+    if (this.matriculas.length > 0) {
+      this.matriculas.forEach((el) => {
+        this.options.push({
+          value: el.filial + '/' + el.matricula,
+          label:
+            'Filial: ' +
+            el.filial +
+            '/' +
+            'Matricula: ' +
+            el.matricula +
+            ' - Nome: ' +
+            el.nome,
+        });
+      });
     }
   }
 
@@ -62,7 +74,6 @@ export class FeriasComponent implements OnInit {
     private router: Router
   ) {}
 
-
   ngOnInit() {
     this.disclaimerGroup = {
       title: 'Filters',
@@ -70,14 +81,11 @@ export class FeriasComponent implements OnInit {
       change: this.onChangeDisclaimer.bind(this),
       remove: this.onClearDisclaimer.bind(this),
     };
-
-    this.processoFerias = this.feriasService.getItems();
     this.processoFeriasColumns = this.feriasService.getColumns();
     this.statusOptions = this.feriasService.getHireStatus();
-
     this.processoFeriasFiltered = [...this.processoFerias];
-    this.getMatriculas()
-    this.setOptions()
+    this.getMatriculas();
+    this.setOptions();
   }
 
   disableHireButton() {
@@ -173,10 +181,60 @@ export class FeriasComponent implements OnInit {
     // this.jobDescription = [];
   }
 
-  getMatriculas() {   
-    let dados = localStorage.getItem('matriculas')
-    if (dados != undefined && dados != null){
-      this.matriculas = JSON.parse(dados)
+  getMatriculas() {
+    let dados = localStorage.getItem('matriculas');
+    if (dados != undefined && dados != null) {
+      this.matriculas = JSON.parse(dados);
     }
+  }
+
+  onSelect(matricula: any) {
+    const value = matricula.value as string;
+    const chave = value.split('/');
+
+    if (chave.length == 2) {
+      this.feriasService.getPrevFerias(chave[0], chave[1]).subscribe((data) => {
+        if (data.hasContent) {
+          let lista = data.programacaoFerias as [];
+          lista.forEach((el: Ferias) => {
+            this.processoFerias.push({
+              periodoAquisitivo:
+                'DE ' +
+                this.convertData(el.iniPerAq, '/', true) +
+                ' A ' +
+                this.convertData(el.fimPerAq, '/', true),
+              periodoGozo:
+                'DE ' +
+                this.convertData(el.iniFerias, '/', true) +
+                ' A ' +
+                this.convertData(el.fimFerias, '/', true),
+              diasAbono: this.calcDias(el.iniFerias, el.fimFerias),
+            });
+          });
+          this.processoFeriasFiltered = [...this.processoFerias];
+        } else {
+          this.processoFerias = [];
+          this.processoFeriasFiltered = [...this.processoFerias];
+        }
+      });
+    }
+  }
+
+  convertData(data: string, separador: string, inverte: boolean) {
+    let ret: string = '';
+    if (inverte) {
+      ret = data.substring(6, 8)+separador+data.substring(4, 6)+separador+data.substring(0, 4);
+    }else{
+      ret = data.substring(0, 4)+separador+data.substring(4, 6)+separador+data.substring(6, 8);
+    }
+    return ret;
+  }
+
+  calcDias(data1: string, data2: string) {
+    const inicial = new Date(this.convertData(data1, "-", false))
+    const final = new Date(this.convertData(data2, "-", false))
+    const diffMs = final.getTime() - inicial.getTime()
+    const diff = Math.round(diffMs / ( 24 * 60 * 60 * 1000))
+    return diff + 1 
   }
 }

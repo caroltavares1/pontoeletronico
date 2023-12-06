@@ -4,7 +4,6 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { PoTableColumn } from '@po-ui/ng-components';
 import { Observable, map } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { Ferias } from '../demonstrativo/ferias/ferias.model';
 
 const auth = environment.authorization;
 
@@ -18,7 +17,7 @@ const httpOptions = {
 
 @Injectable()
 export class FeriasService {
-  ferias: Ferias[] = [];
+  ferias: any[] = [];
   apiURL = environment.apiURL;
 
   constructor(private http: HttpClient) {}
@@ -47,22 +46,6 @@ export class FeriasService {
     ];
   }
 
-  getItems() {
-    this.ferias.push({
-      periodoAquisitivo: 'DE 03/01/2022 A 02/01/2023',
-      periodoGozo: 'DE 20/03/2023 A 08/04/2023',
-      diasAbono: 10,
-    });
-
-    this.ferias.push({
-      periodoAquisitivo: 'DE 03/01/2021 A 02/01/2022',
-      periodoGozo: 'DE 07/03/2022 A 26/03/2022',
-      diasAbono: 10,
-    });
-
-    return this.ferias;
-  }
-
   getMatriculas(userCpf: string): Observable<any> {
     const options = httpOptions;
     options.params = {
@@ -74,5 +57,20 @@ export class FeriasService {
     return this.http
       .get<any>(url, options)
       .pipe(map((resposta: any) => resposta));
+  }
+
+  getPrevFerias(filial: string, matricula: string) : Observable<any>{
+    const options = httpOptions;
+    options.params = {
+      filial: filial,
+      matricula: matricula,
+    };
+
+    let url = this.apiURL + `/programacaoFerias/`;
+
+    let response = this.http
+      .get<any>(url, options)
+      .pipe(map((resposta: any) => resposta));
+    return response;
   }
 }
