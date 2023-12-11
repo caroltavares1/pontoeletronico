@@ -1,5 +1,11 @@
 <div class="padding position: relative">
-  <po-page-default p-title="Recibos de Férias">
+  <po-page-list
+    #poPageList
+    [p-actions]="actions"
+    [p-disclaimer-group]="disclaimerGroup"
+    [p-filter]="filterSettings"
+    p-title="Recibos de Férias"
+  >
     <p>
       Disponibiliza as férias calculadas para o funcionário, possibilitando que
       seja impresso, ou somente vizualizado, o recibo de pagamento do período
@@ -16,22 +22,14 @@
       [p-emit-object-value]="true"
       (p-change)="onSelect($event)"
     ></po-combo>
-
-    <po-page-list
-      #poPageList
-      [p-actions]="actions"
-      [p-disclaimer-group]="disclaimerGroup"
-      [p-filter]="filterSettings"
+    <po-table
+      [p-selectable]="true"
+      [p-single-select]="true"
+      [p-sort]="true"
+      [p-striped]="true"
+      [p-columns]="processoFeriasColumns"
+      [p-items]="processoFeriasFiltered"
     >
-      <po-table
-        [p-selectable]="true"
-        [p-single-select]="true"
-        [p-sort]="true"
-        [p-striped]="true"
-        [p-columns]="processoFeriasColumns"
-        [p-items]="processoFeriasFiltered"
-      >
-      </po-table>
-    </po-page-list>
-  </po-page-default>
+    </po-table>
+  </po-page-list>
 </div>
