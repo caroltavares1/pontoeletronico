@@ -34,7 +34,8 @@ export class FeriasComponent implements OnInit {
   options: any = [];
   matriculaSelecionada!: Matricula;
   filial: any;
-  cabecalho : any 
+  cabecalho: any;
+  funcionario: any;
 
   public readonly actions: Array<PoPageAction> = [
     {
@@ -121,10 +122,9 @@ export class FeriasComponent implements OnInit {
     );
 
     if (periodoSelecionado != undefined) {
-      console.log(periodoSelecionado);
-      this.pdf.setHeader(periodoSelecionado)
-      this.cabecalho = periodoSelecionado
-      this.pdf.openPDF(this.cabecalho)
+      this.pdf.setHeader(periodoSelecionado);
+      this.cabecalho = periodoSelecionado;
+      this.pdf.openPDF(this.cabecalho);
     }
   }
 
@@ -181,42 +181,55 @@ export class FeriasComponent implements OnInit {
   }
 
   onSelect(matricula: any) {
-    const value = matricula.value
+    const value = matricula.value;
     if (value != null) {
-      this.filial = this.userService
-        .getFilialById(value.filial)
-        .subscribe((resp) => {
-          this.filial = resp;
-        });
-
-      this.feriasService.getPrevFerias(value.filial, value.matricula).subscribe((data) => {
-        if (data.hasContent) {
-          let lista = data.programacaoFerias as [];
-          lista.forEach((el: Ferias) => {
-            this.processoFerias.push({
-              periodoAquisitivo:
-                'DE ' +
-                this.convertData(el.iniPerAq, '/', true) +
-                ' A ' +
-                this.convertData(el.fimPerAq, '/', true),
-              periodoGozo:
-                'DE ' +
-                this.convertData(el.iniFerias, '/', true) +
-                ' A ' +
-                this.convertData(el.fimFerias, '/', true),
-              diasAbono: this.calcDias(el.iniFerias, el.fimFerias),
-              empresa: this.filial,
-              ferias:el,
-              matricula: matricula.value, 
-            });
-          });
-          this.processoFeriasFiltered = [...this.processoFerias];
-        } else {
-          this.processoFerias = [];
-          this.processoFeriasFiltered = [...this.processoFerias];
-        }
+      this.userService.getFilialById(value.filial).subscribe((resp) => {
+        this.setFilial(resp);
       });
+
+      this.userService.getUser().subscribe((func) => {
+        this.setFuncionario(func.user);
+      });
+
+      this.feriasService
+        .getPrevFerias(value.filial, value.matricula)
+        .subscribe((data) => {
+          if (data.hasContent) {
+            let lista = data.programacaoFerias as [];
+            lista.forEach((el: Ferias) => {
+              this.processoFerias.push({
+                periodoAquisitivo:
+                  'DE ' +
+                  this.convertData(el.iniPerAq, '/', true) +
+                  ' A ' +
+                  this.convertData(el.fimPerAq, '/', true),
+                periodoGozo:
+                  'DE ' +
+                  this.convertData(el.iniFerias, '/', true) +
+                  ' A ' +
+                  this.convertData(el.fimFerias, '/', true),
+                diasAbono: this.calcDias(el.iniFerias, el.fimFerias),
+                empresa: this.filial,
+                ferias: el,
+                matricula: matricula.value,
+                funcionario: this.funcionario,
+              });
+            });
+            this.processoFeriasFiltered = [...this.processoFerias];
+          } else {
+            this.processoFerias = [];
+            this.processoFeriasFiltered = [...this.processoFerias];
+          }
+        });
     }
+  }
+
+  setFilial(filial: any) {
+    this.filial = filial;
+  }
+
+  setFuncionario(funcionario: any) {
+    this.funcionario = funcionario[0];
   }
 
   convertData(data: string, separador: string, inverte: boolean) {
