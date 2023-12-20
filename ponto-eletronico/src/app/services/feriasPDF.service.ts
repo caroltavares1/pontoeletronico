@@ -47,7 +47,7 @@ export class FeriasPDFService {
               style: 'tableExample',
               color: '#444',
               table: {
-                widths: ['*', 'auto', 'auto'],
+                widths: ['*', 'auto', '*'],
                 heights: [30],
                 headerRows: 3,
                 // keepWithHeaderRows: 1,
@@ -65,44 +65,34 @@ export class FeriasPDFService {
                   ],
                   [
                     {
-                      text: 'Razao Social',
-                      style: 'tableHeader',
-                      colSpan: 2,
-                      alignment: 'left',
-                      bold: true,
+                      text: [
+                        { text: 'Razao Social\n', style: 'tableHeader', alignment: 'left', bold: true},
+                        { text: `${empresa.nome}`},
+                      ],
+                      colSpan:2
                     },
                     {},
                     {
-                      text: 'CNPJ',
-                      style: 'tableHeader',
-                      alignment: 'left',
-                      bold: true,
+                      text: [
+                        { text: 'CNPJ\n', style: 'tableHeader', alignment: 'left', bold: true},
+                        { text: `${empresa.cgc}`},
+                      ]
                     },
-                  ],
-                  [
-                    { text: `${empresa.nome}`, colSpan: 2 },
-                    '',
-                    `${empresa.cgc}`,
                   ],
                   [
                     {
-                      text: 'Matricula',
-                      style: 'tableHeader',
-                      alignment: 'left',
-                      bold: true,
+                      text: [
+                        { text: 'Matricula\n', style: 'tableHeader', alignment: 'left', bold: true},
+                        { text: `${matricula.matricula}`},
+                      ]
                     },
                     {
-                      text: 'Nome do Funcionario',
-                      style: 'tableHeader',
-                      colSpan: 2,
-                      alignment: 'left',
-                      bold: true,
+                      text:[
+                        { text: 'Nome do Funcionario\n', style: 'tableHeader', alignment: 'left', bold: true},
+                        { text: `${matricula.nome}`},
+                      ],
+                      colSpan: 2
                     },
-                    {},
-                  ],
-                  [
-                    { text: `${matricula.matricula}` },
-                    { text: `${matricula.nome}`, colSpan: 2 },
                     {},
                   ],
                 ],
@@ -137,252 +127,131 @@ export class FeriasPDFService {
             [
               //Linha Funcao
               {
-                text: 'Função',
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
+                text:[
+                  { text: 'Função\n', style: 'tableHeader', alignment: 'left', bold: true},
+                  { text: `${mat.matricula}`,},
+                ]
               },
               {
-                text: 'Data de Admissão',
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
+                text:[
+                  { text: 'Data de Admissão\n', style: 'tableHeader', alignment: 'left', bold: true},
+                  { text: `${this.fixData(mat.admissao)}`},
+                ]
               },
               {
-                text: 'Carteira de Trabalho',
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
+                text:[
+                  { text: 'Carteira de Trabalho\n', style: 'tableHeader', alignment: 'left', bold: true},
+                  { text: `${99999}`},
+                ]
               },
               {
-                text: 'Serie',
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
+                text:[
+                  { text: 'Serie\n', style: 'tableHeader', alignment: 'left', bold: true},
+                  { text: `${99999}`},
+                ]
               },
               {
-                text: 'UF',
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
-              },
-            ],
-            [
-              //Linha Funcao
-              {
-                text: `${mat.matricula}`,
-                style: 'tableHeader',
-                alignment: 'left',
-              },
-              {
-                text: `${this.fixData(mat.admissao)}`,
-                style: 'tableHeader',
-                alignment: 'left',
-              },
-              {
-                text: `${99999}`,
-                style: 'tableHeader',
-                alignment: 'left',
-              },
-              {
-                text: `${99999}`,
-                style: 'tableHeader',
-                alignment: 'left',
-              },
-              {
-                text: `${'PE'}`,
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
+                text:[
+                  { text: 'UF\n', style: 'tableHeader', alignment: 'left', bold: true},
+                  { text: `${'PE'}`},
+                ]
               },
             ],
             [
               //Linha CPF
               {
-                text: 'CPF',
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
-                colSpan: 2,
+                text:[
+                  { text: 'CPF\n', style: 'tableHeader', alignment: 'left', bold: true},
+                  { text: `${func.cpf}`},
+                ],
+                colSpan: 2
               },
               {},
               {
-                text: 'Identidade',
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
-                colSpan: 2,
+                text:[
+                  { text: 'Identidade\n', style: 'tableHeader', alignment: 'left', bold: true},
+                  { text: `${'RG: 999999'}`},
+                ],
+                colSpan: 2
               },
               {},
               {
-                text: 'Carteira de Trabalho',
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
-              },
-            ],
-            [
-              //Linha CPF
-              {
-                text: `${func.cpf}`,
-                style: 'tableHeader',
-                alignment: 'left',
-                colSpan: 2,
-              },
-              {},
-              {
-                text: `${'RG: 999999'}`,
-                style: 'tableHeader',
-                alignment: 'left',
-                colSpan: 2,
-              },
-              {},
-              {
-                text: `${'IRRF'}`,
-                style: 'tableHeader',
-                alignment: 'left',
+                text:[
+                  { text: 'Carteira de Trabalho\n', style: 'tableHeader', alignment: 'left', bold: true},
+                  { text: `${'IRRF'}`},
+                ],
               },
             ],
             [
               //Linha Vencimento das Ferias
               {
-                text: 'Vencimento das Férias',
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
+                text:[
+                  { text: 'Vencimento das Férias\n', style: 'tableHeader', alignment: 'left', bold: true},
+                  { text: `${this.fixData(fer.fimPerAq)}`},
+                ],
               },
               {
-                text: 'Periodo de Gozo de Ferias',
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
-                colSpan: 3,
-              },
-              {},
-              {},
-              {
-                text: 'Abono Pecuniario',
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
-              },
-            ],
-            [
-              {
-                text: `${this.fixData(fer.fimPerAq)}`,
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
-              },
-              {
-                text: `${cabecalho.periodoGozo}`,
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
-                colSpan: 3,
+                text:[
+                  { text: 'Periodo de Gozo de Ferias\n', style: 'tableHeader', alignment: 'left', bold: true},
+                  { text: `${cabecalho.periodoGozo}`},
+                ],
+                colSpan: 3
               },
               {},
               {},
               {
-                text: `${cabecalho.diasAbono}`,
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
+                text:[
+                  { text: 'Abono Pecuniario\n', style: 'tableHeader', alignment: 'left', bold: true},
+                  { text: `${cabecalho.diasAbono}`},
+                ],
               },
             ],
             [
               //Linha Salario Fixo
               {
-                text: 'Sal. Fixo',
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
-                colSpan: 2,
+                text:[
+                  { text: 'Sal. Fixo\n', style: 'tableHeader', alignment: 'left', bold: true},
+                  { text: `${'9.999,99'}`},
+                ],
+                colSpan: 2
               },
               {},
               {
-                text: 'Banco',
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
+                text:[
+                  { text: 'Banco\n', style: 'tableHeader', alignment: 'left', bold: true},
+                  { text: `${'999'}`},
+                ]
               },
               {
-                text: 'Agencia',
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
+                text:[
+                  { text: 'Agencia\n', style: 'tableHeader', alignment: 'left', bold: true},
+                  { text: `${'99999'}`},
+                ]
               },
               {
-                text: 'Conta',
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
-              },
-            ],
-            [
-              //Linha Salario Fixo
-              {
-                text: `${'9.999,99'}`,
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
-                colSpan: 2,
-              },
-              {},
-              {
-                text: `${'999'}`,
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
-              },
-              {
-                text: `${'99999'}`,
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
-              },
-              {
-                text: `${'999999999'}`,
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
+                text:[
+                  { text: 'Conta\n', style: 'tableHeader', alignment: 'left', bold: true},
+                  { text: `${'999999999'}`},
+                ]
               },
             ],
             [
               //Linha Periodo Aquisitivo
               {
-                text: 'Periodo Aquisitivo',
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
-                colSpan: 3,
+                text:[
+                  { text: 'Periodo Aquisitivo\n', style: 'tableHeader', alignment: 'left', bold: true},
+                  { text: `${cabecalho.periodoAquisitivo}`},
+                ],
+                colSpan: 3
               },
               {},
               {},
               {
-                text: 'Data Pagto',
-                style: 'tableHeader',
-                alignment: 'left',
-                bold: true,
-                colSpan: 2,
-              },
-              {},
-            ],
-            [
-              //Linha Periodo Aquisitivo
-              {
-                text: `${cabecalho.periodoAquisitivo}`,
-                style: 'tableHeader',
-                alignment: 'left',
-                colSpan: 3,
-              },
-              {},
-              {},
-              {
-                text: `${'DD/MM/AAAA'}`,
-                style: 'tableHeader',
-                alignment: 'left',
-                colSpan: 2,
+                text:[
+                  { text: 'Data Pagto\n', style: 'tableHeader', alignment: 'left', bold: true},
+                  { text: `${'DD/MM/AAAA'}`},
+                ],
+                colSpan: 2
               },
               {},
             ],
@@ -484,13 +353,13 @@ export class FeriasPDFService {
 
         layout: {
           fillColor: function (rowIndex: any, node: any) {
-            if (rowIndex === 10) {
-              let lista: [] = node.table.body;
-              lista.filter((el: any) => {
-                el.style === 'itens'
-              });
-            }
-            return rowIndex === 10 ? '#CCCCCC' : null;
+            // if (rowIndex === 10) { 
+            //   let lista: [] = node.table.body;
+            //   lista.filter((el: any) => {
+            //     el.style === 'itens'
+            //   });
+            // }
+            return rowIndex === 5 ? '#CCCCCC' : null; //Aqui eu defini manualmente a linha que deve ficar cinza, porque nao consegui localizar de forma dinamica a linha do cabeçalho dos itens
           },
 
           tableHeader: {
