@@ -26,7 +26,6 @@ export class FeriasPDFService {
     let end = cabecalho.ferias.fimFerias;
     let empresa = cabecalho.empresa;
     let matricula = cabecalho.matricula;
-    let logoPath = "https://www.shineray.com.br/wp-content/uploads/2023/04/logo_shineray_final.png"
     
     console.log(cabecalho);
 
@@ -54,7 +53,7 @@ export class FeriasPDFService {
                 // keepWithHeaderRows: 1,
                 body: [
                   [
-                    {image: logoPath, width: 45,height: 45, border: [true, true, false, false]},
+                    {image: 'logo', width: 70,height: 45, border: [true, true, false, false]},
                     {
                       text: 'Recibo de Ferias',
                       style: 'tableHeader',
@@ -111,6 +110,10 @@ export class FeriasPDFService {
       },
 
       content: this.content(cabecalho),
+
+      images:{
+        logo: 'http://localhost:4200/assets/images/grupoBCI.jpg',
+      }
     };
 
     let name = 'ferias_' + uuid.v4() + '.pdf';
