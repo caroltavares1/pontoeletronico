@@ -10,10 +10,10 @@ import {
   PoTableColumn,
 } from '@po-ui/ng-components';
 import { FeriasService } from 'src/app/services/ferias.service';
+import { FeriasPDFService } from 'src/app/services/feriasPDF.service';
 import { UserService } from 'src/app/services/user.service';
 import { Ferias } from './ferias.model';
 import { Matricula } from './matriculas.model';
-import { FeriasPDFService } from 'src/app/services/feriasPDF.service';
 
 @Component({
   selector: 'app-ferias',
@@ -56,8 +56,8 @@ export class FeriasComponent implements OnInit {
             '/' +
             'Matricula: ' +
             el.matricula +
-            ' - Nome: ' +
-            el.nome,
+            ' - Empresa: ' +
+            el.razao,
         });
       });
     }
