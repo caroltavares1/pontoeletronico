@@ -4,4 +4,5 @@ export class Matricula {
   matricula!: string;
   demissao!: string;
   admissao!: string;
+  razao!: string;
 }

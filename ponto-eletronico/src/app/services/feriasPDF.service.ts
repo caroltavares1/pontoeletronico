@@ -9,6 +9,7 @@ const pdfFonts = require('pdfmake/build/vfs_fonts');
 })
 export class FeriasPDFService {
   cabecalho = {};
+  urlLogo! : string
 
   constructor() {}
 
@@ -20,13 +21,18 @@ export class FeriasPDFService {
     return this.cabecalho;
   }
 
-  public openPDF(cabecalho: any): void {
+  public async openPDF(cabecalho: any): Promise<void> {
     let header: any = {};
     let start = cabecalho.ferias.iniFerias;
     let end = cabecalho.ferias.fimFerias;
     let empresa = cabecalho.empresa;
     let matricula = cabecalho.matricula;
+    const logoURL64 = this.getBase64ImageFromURL("../../assets/images/grupoBCI.jpg")
     
+    await logoURL64.then( el =>{
+      this.urlLogo = el
+    })
+
     console.log(cabecalho);
 
     header = this.getHeader();
@@ -53,7 +59,7 @@ export class FeriasPDFService {
                 // keepWithHeaderRows: 1,
                 body: [
                   [
-                    {image: 'logo', width: 70,height: 45, border: [true, true, false, false]},
+                    {image: this.urlLogo, width: 70,height: 45, border: [true, true, false, false]},
                     {
                       text: 'Recibo de Ferias',
                       style: 'tableHeader',
@@ -109,11 +115,7 @@ export class FeriasPDFService {
         return stack;
       },
 
-      content: this.content(cabecalho),
-
-      images:{
-        logo: 'http://localhost:4200/assets/images/grupoBCI.jpg',
-      }
+      content: this.content(cabecalho)
     };
 
     let name = 'ferias_' + uuid.v4() + '.pdf';
@@ -184,7 +186,7 @@ export class FeriasPDFService {
               {},
               {
                 text:[
-                  { text: 'Carteira de Trabalho\n', style: 'tableHeader', alignment: 'left', bold: true},
+                  { text: 'IRRF\n', style: 'tableHeader', alignment: 'left', bold: true},
                   { text: `${'IRRF'}`},
                 ],
               },
@@ -391,4 +393,29 @@ export class FeriasPDFService {
       datastr.substring(0, 4);
     return dataCorreta;
   }
+
+  getBase64ImageFromURL(url: string) : Promise<any> {
+    return new Promise((resolve, reject) => {
+      var img = new Image();
+      img.setAttribute("crossOrigin", "anonymous");
+    
+      img.onload = () => {
+        var canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+    
+        var ctx = canvas.getContext("2d");
+        ctx!.drawImage(img, 0, 0);
+    
+        var dataURL = canvas.toDataURL("image/png");
+    
+        resolve(dataURL);
+      };
+    
+      img.onerror = error => {
+        reject(error);
+      };
+    
+      img.src = url;
+    });}
 }
