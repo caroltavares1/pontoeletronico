@@ -27,7 +27,6 @@ WSMETHOD GET WSSERVICE detalhesFerias
 
 	bError := { |e| oError := e, BREAK(e) }
 	bErrorBlock := ErrorBlock( bError )
-    conout("Saulo1234: Antes do begin sequence")
 	BEGIN SEQUENCE
 		If nPosId > 0 .AND. nPosFil > 0 .AND. nPosData > 0
 			BEGINSQL ALIAS cAlias
@@ -47,7 +46,7 @@ WSMETHOD GET WSSERVICE detalhesFerias
 				aDados[nPos]['filial'] := (cAlias)->RR_FILIAL
 				aDados[nPos]['matricula' ] := (cAlias)->RR_MAT
 				aDados[nPos]['codVerba' ] := (cAlias)->RR_PD
-				aDados[nPos]['descrVerba' ] := (cAlias)->RR_DESCPD
+				aDados[nPos]['valor' ] := (cAlias)->RR_VALOR
 				aDados[nPos]['tipo' ] := (cAlias)->RR_TIPO1
 				cResponse['hasContent'] := .T.
 				(cAlias)->(DbSkip())
@@ -56,11 +55,9 @@ WSMETHOD GET WSSERVICE detalhesFerias
 		EndIf
 
 		If Len(aDados) == 0
-			conout("Saulo1234: Encontrou dados")
 			Self:SetRestFault(204, 'Nenhuma matricula encontrada')
 			lRet := .F.
 		Else
-			conout("Saulo1234: Não encontrou dados")
 			cResponse['matriculas'] := aDados
 		EndIf
 
@@ -70,5 +67,8 @@ WSMETHOD GET WSSERVICE detalhesFerias
 		cError := oError:Description
 		Self:SetRestFault(500, cError)
 		lRet := .F.
+		Self:SetContentType('application/json')
+		Self:SetResponse(EncodeUTF8(cResponse:toJson()))
+		Return lRet
 	END SEQUENCE
 Return lRet
