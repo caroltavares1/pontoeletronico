@@ -19,6 +19,7 @@ const httpOptions = {
 export class FeriasService {
   ferias: any[] = [];
   apiURL = environment.apiURL;
+  itensFerias!: Array<Object>;
 
   constructor(private http: HttpClient) {}
 
@@ -59,7 +60,7 @@ export class FeriasService {
       .pipe(map((resposta: any) => resposta));
   }
 
-  getPrevFerias(filial: string, matricula: string) : Observable<any>{
+  getPrevFerias(filial: string, matricula: string): Observable<any> {
     const options = httpOptions;
     options.params = {
       filial: filial,
@@ -67,10 +68,19 @@ export class FeriasService {
     };
 
     let url = this.apiURL + `/programacaoFerias/`;
+    return this.http.get<any>(url, options);
+  }
 
-    let response = this.http
-      .get<any>(url, options)
-      .pipe(map((resposta: any) => resposta));
-    return response;
+  getItensferias(filial: string, matricula: string, dataFerias: string): Observable<any> {
+    const options = httpOptions;
+    options.params = {
+      filial: filial,
+      matricula: matricula,
+      data: dataFerias,
+    };
+
+    let url = this.apiURL + `/detalhesFerias/`;
+    let resp = this.http.get(url, options);
+    return resp;
   }
 }

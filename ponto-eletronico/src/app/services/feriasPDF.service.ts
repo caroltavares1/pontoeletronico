@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import * as uuid from 'uuid';
+import { FeriasService } from './ferias.service';
 const pdfMake = require('pdfmake/build/pdfmake.js');
 const pdfFonts = require('pdfmake/build/vfs_fonts');
 (pdfMake as any).vfs = pdfFonts.pdfMake.vfs;
@@ -9,9 +10,10 @@ const pdfFonts = require('pdfmake/build/vfs_fonts');
 })
 export class FeriasPDFService {
   cabecalho = {};
-  urlLogo! : string
+  urlLogo!: string;
+  itensFerias: Array<Object> = [];
 
-  constructor() {}
+  constructor(private feriasService: FeriasService) {}
 
   setHeader(header: any) {
     this.cabecalho = header;
@@ -27,11 +29,24 @@ export class FeriasPDFService {
     let end = cabecalho.ferias.fimFerias;
     let empresa = cabecalho.empresa;
     let matricula = cabecalho.matricula;
-    const logoURL64 = this.getBase64ImageFromURL("../../assets/images/grupoBCI.jpg")
-    
-    await logoURL64.then( el =>{
-      this.urlLogo = el
-    })
+    const logoURL64 = this.getBase64ImageFromURL(
+      '../../assets/images/grupoBCI.jpg'
+    );
+
+    await logoURL64.then((el) => {
+      this.urlLogo = el;
+    });
+
+    this.feriasService
+      .getItensferias(empresa.filial, matricula.matricula, start)
+      .subscribe((data) => {
+        localStorage.setItem('itens', JSON.stringify(data.matriculas));
+      });
+
+    let lista = localStorage.getItem('itens');
+    if (lista != undefined) {
+      this.itensFerias = JSON.parse(lista);
+    }
 
     console.log(cabecalho);
 
@@ -59,7 +74,12 @@ export class FeriasPDFService {
                 // keepWithHeaderRows: 1,
                 body: [
                   [
-                    {image: this.urlLogo, width: 70,height: 45, border: [true, true, false, false]},
+                    {
+                      image: this.urlLogo,
+                      width: 70,
+                      height: 45,
+                      border: [true, true, false, false],
+                    },
                     {
                       text: 'Recibo de Ferias',
                       style: 'tableHeader',
@@ -68,39 +88,59 @@ export class FeriasPDFService {
                       bold: true,
                       fontSize: 18,
                       border: [false, true, true, true],
-                      margin:[-35, 0, 0, 0]
+                      margin: [-35, 0, 0, 0],
                     },
                     {},
                   ],
                   [
                     {
                       text: [
-                        { text: 'Razao Social\n', style: 'tableHeader', alignment: 'left', bold: true},
-                        { text: `${empresa.nome}`},
+                        {
+                          text: 'Razao Social\n',
+                          style: 'tableHeader',
+                          alignment: 'left',
+                          bold: true,
+                        },
+                        { text: `${empresa.nome}` },
                       ],
-                      colSpan:2
+                      colSpan: 2,
                     },
                     {},
                     {
                       text: [
-                        { text: 'CNPJ\n', style: 'tableHeader', alignment: 'left', bold: true},
-                        { text: `${empresa.cgc}`},
-                      ]
+                        {
+                          text: 'CNPJ\n',
+                          style: 'tableHeader',
+                          alignment: 'left',
+                          bold: true,
+                        },
+                        { text: `${empresa.cgc}` },
+                      ],
                     },
                   ],
                   [
                     {
                       text: [
-                        { text: 'Matricula\n', style: 'tableHeader', alignment: 'left', bold: true},
-                        { text: `${matricula.matricula}`},
-                      ]
+                        {
+                          text: 'Matricula\n',
+                          style: 'tableHeader',
+                          alignment: 'left',
+                          bold: true,
+                        },
+                        { text: `${matricula.matricula}` },
+                      ],
                     },
                     {
-                      text:[
-                        { text: 'Nome do Funcionario\n', style: 'tableHeader', alignment: 'left', bold: true},
-                        { text: `${matricula.nome}`},
+                      text: [
+                        {
+                          text: 'Nome do Funcionario\n',
+                          style: 'tableHeader',
+                          alignment: 'left',
+                          bold: true,
+                        },
+                        { text: `${matricula.nome}` },
                       ],
-                      colSpan: 2
+                      colSpan: 2,
                     },
                     {},
                   ],
@@ -114,18 +154,51 @@ export class FeriasPDFService {
 
         return stack;
       },
-
-      content: this.content(cabecalho)
+      content: this.content(cabecalho, this.itensFerias),
     };
 
     let name = 'ferias_' + uuid.v4() + '.pdf';
     pdfMake.createPdf(dd).download(name);
   }
 
-  content(cabecalho: any) {
+  content(cabecalho: any, itens: Array<any>) {
     let mat = cabecalho.matricula;
     let func = cabecalho.funcionario;
     let fer = cabecalho.ferias;
+    let itensPdf: Array<any> = [];
+
+    debugger;
+  
+    itens.forEach((el) => {
+      itensPdf.push([
+        {
+          text: `${el.codVerba}`,
+          style: 'tableHeader',
+          alignment: 'left',
+          fillcolor: '#CCCCCC',
+        },
+        {
+          text: `${'FERIAS'}`,
+          style: 'tableHeader',
+          alignment: 'left',
+        },
+        {
+          text: `${el.referencia}`,
+          style: 'tableHeader',
+          alignment: 'left',
+        },
+        {
+          text: `${el.provento}`,
+          style: 'tableHeader',
+          alignment: 'left',
+        },
+        {
+          text: `${''}`,
+          style: 'tableHeader',
+          alignment: 'left',
+        },
+      ]);
+    });
 
     let ret = [
       {
@@ -136,131 +209,216 @@ export class FeriasPDFService {
             [
               //Linha Funcao
               {
-                text:[
-                  { text: 'Função\n', style: 'tableHeader', alignment: 'left', bold: true},
-                  { text: `${mat.matricula}`,},
-                ]
+                text: [
+                  {
+                    text: 'Função\n',
+                    style: 'tableHeader',
+                    alignment: 'left',
+                    bold: true,
+                  },
+                  { text: `${mat.matricula}` },
+                ],
               },
               {
-                text:[
-                  { text: 'Data de Admissão\n', style: 'tableHeader', alignment: 'left', bold: true},
-                  { text: `${this.fixData(mat.admissao)}`},
-                ]
+                text: [
+                  {
+                    text: 'Data de Admissão\n',
+                    style: 'tableHeader',
+                    alignment: 'left',
+                    bold: true,
+                  },
+                  { text: `${this.fixData(mat.admissao)}` },
+                ],
               },
               {
-                text:[
-                  { text: 'Carteira de Trabalho\n', style: 'tableHeader', alignment: 'left', bold: true},
-                  { text: `${99999}`},
-                ]
+                text: [
+                  {
+                    text: 'Carteira de Trabalho\n',
+                    style: 'tableHeader',
+                    alignment: 'left',
+                    bold: true,
+                  },
+                  { text: `${99999}` },
+                ],
               },
               {
-                text:[
-                  { text: 'Serie\n', style: 'tableHeader', alignment: 'left', bold: true},
-                  { text: `${99999}`},
-                ]
+                text: [
+                  {
+                    text: 'Serie\n',
+                    style: 'tableHeader',
+                    alignment: 'left',
+                    bold: true,
+                  },
+                  { text: `${99999}` },
+                ],
               },
               {
-                text:[
-                  { text: 'UF\n', style: 'tableHeader', alignment: 'left', bold: true},
-                  { text: `${'PE'}`},
-                ]
+                text: [
+                  {
+                    text: 'UF\n',
+                    style: 'tableHeader',
+                    alignment: 'left',
+                    bold: true,
+                  },
+                  { text: `${'PE'}` },
+                ],
               },
             ],
             [
               //Linha CPF
               {
-                text:[
-                  { text: 'CPF\n', style: 'tableHeader', alignment: 'left', bold: true},
-                  { text: `${func.cpf}`},
+                text: [
+                  {
+                    text: 'CPF\n',
+                    style: 'tableHeader',
+                    alignment: 'left',
+                    bold: true,
+                  },
+                  { text: `${func.cpf}` },
                 ],
-                colSpan: 2
+                colSpan: 2,
               },
               {},
               {
-                text:[
-                  { text: 'Identidade\n', style: 'tableHeader', alignment: 'left', bold: true},
-                  { text: `${'RG: 999999'}`},
+                text: [
+                  {
+                    text: 'Identidade\n',
+                    style: 'tableHeader',
+                    alignment: 'left',
+                    bold: true,
+                  },
+                  { text: `${'RG: 999999'}` },
                 ],
-                colSpan: 2
+                colSpan: 2,
               },
               {},
               {
-                text:[
-                  { text: 'IRRF\n', style: 'tableHeader', alignment: 'left', bold: true},
-                  { text: `${'IRRF'}`},
+                text: [
+                  {
+                    text: 'IRRF\n',
+                    style: 'tableHeader',
+                    alignment: 'left',
+                    bold: true,
+                  },
+                  { text: `${'IRRF'}` },
                 ],
               },
             ],
             [
               //Linha Vencimento das Ferias
               {
-                text:[
-                  { text: 'Vencimento das Férias\n', style: 'tableHeader', alignment: 'left', bold: true},
-                  { text: `${this.fixData(fer.fimPerAq)}`},
+                text: [
+                  {
+                    text: 'Vencimento das Férias\n',
+                    style: 'tableHeader',
+                    alignment: 'left',
+                    bold: true,
+                  },
+                  { text: `${this.fixData(fer.fimPerAq)}` },
                 ],
               },
               {
-                text:[
-                  { text: 'Periodo de Gozo de Ferias\n', style: 'tableHeader', alignment: 'left', bold: true},
-                  { text: `${cabecalho.periodoGozo}`},
+                text: [
+                  {
+                    text: 'Periodo de Gozo de Ferias\n',
+                    style: 'tableHeader',
+                    alignment: 'left',
+                    bold: true,
+                  },
+                  { text: `${cabecalho.periodoGozo}` },
                 ],
-                colSpan: 3
+                colSpan: 3,
               },
               {},
               {},
               {
-                text:[
-                  { text: 'Abono Pecuniario\n', style: 'tableHeader', alignment: 'left', bold: true},
-                  { text: `${cabecalho.diasAbono}`},
+                text: [
+                  {
+                    text: 'Abono Pecuniario\n',
+                    style: 'tableHeader',
+                    alignment: 'left',
+                    bold: true,
+                  },
+                  { text: `${cabecalho.diasAbono}` },
                 ],
               },
             ],
             [
               //Linha Salario Fixo
               {
-                text:[
-                  { text: 'Sal. Fixo\n', style: 'tableHeader', alignment: 'left', bold: true},
-                  { text: `${'9.999,99'}`},
+                text: [
+                  {
+                    text: 'Sal. Fixo\n',
+                    style: 'tableHeader',
+                    alignment: 'left',
+                    bold: true,
+                  },
+                  { text: `${'9.999,99'}` },
                 ],
-                colSpan: 2
+                colSpan: 2,
               },
               {},
               {
-                text:[
-                  { text: 'Banco\n', style: 'tableHeader', alignment: 'left', bold: true},
-                  { text: `${'999'}`},
-                ]
+                text: [
+                  {
+                    text: 'Banco\n',
+                    style: 'tableHeader',
+                    alignment: 'left',
+                    bold: true,
+                  },
+                  { text: `${'999'}` },
+                ],
               },
               {
-                text:[
-                  { text: 'Agencia\n', style: 'tableHeader', alignment: 'left', bold: true},
-                  { text: `${'99999'}`},
-                ]
+                text: [
+                  {
+                    text: 'Agencia\n',
+                    style: 'tableHeader',
+                    alignment: 'left',
+                    bold: true,
+                  },
+                  { text: `${'99999'}` },
+                ],
               },
               {
-                text:[
-                  { text: 'Conta\n', style: 'tableHeader', alignment: 'left', bold: true},
-                  { text: `${'999999999'}`},
-                ]
+                text: [
+                  {
+                    text: 'Conta\n',
+                    style: 'tableHeader',
+                    alignment: 'left',
+                    bold: true,
+                  },
+                  { text: `${'999999999'}` },
+                ],
               },
             ],
             [
               //Linha Periodo Aquisitivo
               {
-                text:[
-                  { text: 'Periodo Aquisitivo\n', style: 'tableHeader', alignment: 'left', bold: true},
-                  { text: `${cabecalho.periodoAquisitivo}`},
+                text: [
+                  {
+                    text: 'Periodo Aquisitivo\n',
+                    style: 'tableHeader',
+                    alignment: 'left',
+                    bold: true,
+                  },
+                  { text: `${cabecalho.periodoAquisitivo}` },
                 ],
-                colSpan: 3
+                colSpan: 3,
               },
               {},
               {},
               {
-                text:[
-                  { text: 'Data Pagto\n', style: 'tableHeader', alignment: 'left', bold: true},
-                  { text: `${'DD/MM/AAAA'}`},
+                text: [
+                  {
+                    text: 'Data Pagto\n',
+                    style: 'tableHeader',
+                    alignment: 'left',
+                    bold: true,
+                  },
+                  { text: `${'DD/MM/AAAA'}` },
                 ],
-                colSpan: 2
+                colSpan: 2,
               },
               {},
             ],
@@ -297,72 +455,12 @@ export class FeriasPDFService {
                 bold: true,
               },
             ],
-            [
-              //Linha Itens
-              //Item 1
-              {
-                text: `${'126'}`,
-                style: 'tableHeader',
-                alignment: 'left',
-                fillcolor: '#CCCCCC',
-              },
-              {
-                text: `${'FERIAS'}`,
-                style: 'tableHeader',
-                alignment: 'left',
-              },
-              {
-                text: `${'12,00'}`,
-                style: 'tableHeader',
-                alignment: 'left',
-              },
-              {
-                text: `${'9.999,99'}`,
-                style: 'tableHeader',
-                alignment: 'left',
-              },
-              {
-                text: `${''}`,
-                style: 'tableHeader',
-                alignment: 'left',
-              },
-            ],
-            [
-              //Linha Itens
-              //Item 2
-              {
-                text: `${'127'}`,
-                style: 'tableHeader',
-                alignment: 'left',
-                fillcolor: '#CCCCCC',
-              },
-              {
-                text: `${'1/3 FERIAS'}`,
-                style: 'tableHeader',
-                alignment: 'left',
-              },
-              {
-                text: `${'0,00'}`,
-                style: 'tableHeader',
-                alignment: 'left',
-              },
-              {
-                text: `${'9.999,99'}`,
-                style: 'tableHeader',
-                alignment: 'left',
-              },
-              {
-                text: `${''}`,
-                style: 'tableHeader',
-                alignment: 'left',
-              },
-            ],
+            itensPdf,
           ],
         },
-
         layout: {
           fillColor: function (rowIndex: any, node: any) {
-            // if (rowIndex === 10) { 
+            // if (rowIndex === 10) {
             //   let lista: [] = node.table.body;
             //   lista.filter((el: any) => {
             //     el.style === 'itens'
@@ -394,28 +492,29 @@ export class FeriasPDFService {
     return dataCorreta;
   }
 
-  getBase64ImageFromURL(url: string) : Promise<any> {
+  getBase64ImageFromURL(url: string): Promise<any> {
     return new Promise((resolve, reject) => {
       var img = new Image();
-      img.setAttribute("crossOrigin", "anonymous");
-    
+      img.setAttribute('crossOrigin', 'anonymous');
+
       img.onload = () => {
-        var canvas = document.createElement("canvas");
+        var canvas = document.createElement('canvas');
         canvas.width = img.width;
         canvas.height = img.height;
-    
-        var ctx = canvas.getContext("2d");
+
+        var ctx = canvas.getContext('2d');
         ctx!.drawImage(img, 0, 0);
-    
-        var dataURL = canvas.toDataURL("image/png");
-    
+
+        var dataURL = canvas.toDataURL('image/png');
+
         resolve(dataURL);
       };
-    
-      img.onerror = error => {
+
+      img.onerror = (error) => {
         reject(error);
       };
-    
+
       img.src = url;
-    });}
+    });
+  }
 }

@@ -36,6 +36,7 @@ export class FeriasComponent implements OnInit {
   filial: any;
   cabecalho: any;
   funcionario: any;
+  itensFerias: any = [];
 
   public readonly actions: Array<PoPageAction> = [
     {
