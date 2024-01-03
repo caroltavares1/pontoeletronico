@@ -46,8 +46,9 @@ WSMETHOD GET WSSERVICE detalhesFerias
 				aDados[nPos]['filial'] := (cAlias)->RR_FILIAL
 				aDados[nPos]['matricula' ] := (cAlias)->RR_MAT
 				aDados[nPos]['codVerba' ] := (cAlias)->RR_PD
-				aDados[nPos]['valor' ] := (cAlias)->RR_VALOR
+				aDados[nPos]['provento' ] := (cAlias)->RR_VALOR
 				aDados[nPos]['tipo' ] := (cAlias)->RR_TIPO1
+				aDados[nPos]['referencia' ] := (cAlias)->RR_HORAS
 				cResponse['hasContent'] := .T.
 				(cAlias)->(DbSkip())
 			EndDo
