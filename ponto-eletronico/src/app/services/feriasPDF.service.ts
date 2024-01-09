@@ -40,7 +40,11 @@ export class FeriasPDFService {
     this.feriasService
       .getItensferias(empresa.filial, matricula.matricula, start)
       .subscribe((data) => {
-        localStorage.setItem('itens', JSON.stringify(data.matriculas));
+        if (data == null) {
+          localStorage.removeItem('itens');
+        } else {
+          localStorage.setItem('itens', JSON.stringify(data.matriculas));
+        }
       });
 
     let lista = localStorage.getItem('itens');
@@ -166,8 +170,15 @@ export class FeriasPDFService {
     let func = cabecalho.funcionario;
     let fer = cabecalho.ferias;
     let itensPdf: Array<any> = [];
+    let salario : number = 0
+    let dataPagto : any = ''
 
-    debugger;
+    debugger
+    if (itens.length > 0){
+      salario = itens[0].salario
+      dataPagto = itens[0].dtPagto
+    }
+    
     itensPdf.push([
       //Linha Funcao
       {
@@ -200,7 +211,7 @@ export class FeriasPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${99999}` },
+          { text: `${func.numCp}` },
         ],
       },
       {
@@ -211,7 +222,7 @@ export class FeriasPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${99999}` },
+          { text: `${func.serieCp}` },
         ],
       },
       {
@@ -222,7 +233,7 @@ export class FeriasPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${'PE'}` },
+          { text: `${func.ufCp}` },
         ],
       },
     ]);
@@ -250,7 +261,7 @@ export class FeriasPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${'RG: 999999'}` },
+          { text: `${func.rg}` },
         ],
         colSpan: 2,
       },
@@ -318,7 +329,7 @@ export class FeriasPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${'9.999,99'}` },
+          { text: `${salario}` },
         ],
         colSpan: 2,
       },
@@ -331,7 +342,7 @@ export class FeriasPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${'999'}` },
+          { text: `${''}` },
         ],
       },
       {
@@ -342,7 +353,7 @@ export class FeriasPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${'99999'}` },
+          { text: `${''}` },
         ],
       },
       {
@@ -353,7 +364,7 @@ export class FeriasPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${'999999999'}` },
+          { text: `${''}` },
         ],
       },
     ]);
@@ -382,7 +393,7 @@ export class FeriasPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${'DD/MM/AAAA'}` },
+          { text: `${this.fixData(dataPagto)}` },
         ],
         colSpan: 2,
       },
@@ -423,42 +434,77 @@ export class FeriasPDFService {
       },
     ]);
 
+    debugger;
+    itens.sort((a, b) => {
+      return a.codVerba - b.codVerba;
+    });
     itens.forEach((el) => {
-      itensPdf.push([
-        {
-          text: `${el.codVerba}`,
-          style: 'tableHeader',
-          alignment: 'left',
-          fillcolor: '#CCCCCC',
-        },
-        {
-          text: `${'FERIAS'}`,
-          style: 'tableHeader',
-          alignment: 'left',
-        },
-        {
-          text: `${el.referencia}`,
-          style: 'tableHeader',
-          alignment: 'left',
-        },
-        {
-          text: `${el.provento}`,
-          style: 'tableHeader',
-          alignment: 'left',
-        },
-        {
-          text: `${''}`,
-          style: 'tableHeader',
-          alignment: 'left',
-        },
-      ]);
+      if (el.tipoVerba == '1') {
+        itensPdf.push([
+          {
+            text: `${el.codVerba}`,
+            style: 'tableHeader',
+            alignment: 'left',
+            fillcolor: '#CCCCCC',
+          },
+          {
+            text: `${el.descVerba}`,
+            style: 'tableHeader',
+            alignment: 'left',
+          },
+          {
+            text: `${el.referencia}`,
+            style: 'tableHeader',
+            alignment: 'left',
+          },
+          {
+            text: `${el.provento}`,
+            style: 'tableHeader',
+            alignment: 'left',
+          },
+          {
+            text: `${''}`,
+            style: 'tableHeader',
+            alignment: 'left',
+          },
+        ]);
+      } else if (el.tipoVerba == '2') {
+        itensPdf.push([
+          {
+            text: `${el.codVerba}`,
+            style: 'tableHeader',
+            alignment: 'left',
+            fillcolor: '#CCCCCC',
+          },
+          {
+            text: `${el.descVerba}`,
+            style: 'tableHeader',
+            alignment: 'left',
+          },
+          {
+            text: `${el.referencia}`,
+            style: 'tableHeader',
+            alignment: 'left',
+          },
+          {
+            text: `${''}`,
+            style: 'tableHeader',
+            alignment: 'left',
+          },
+          {
+            text: `${el.provento}`,
+            style: 'tableHeader',
+            alignment: 'left',
+          },
+        ]);
+      }
     });
 
     let ret = [
       {
         style: 'tableExample',
         table: {
-          widths: ['*', 'auto', 'auto', 'auto', 'auto'],
+          widths: ['auto', '*', 'auto', 'auto', 'auto'],
           body: itensPdf,
         },
         layout: {

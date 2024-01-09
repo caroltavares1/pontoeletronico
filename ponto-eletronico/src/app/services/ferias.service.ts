@@ -81,6 +81,9 @@ export class FeriasService {
 
     let url = this.apiURL + `/detalhesFerias/`;
     let resp = this.http.get(url, options);
+    setTimeout(() => {
+      return resp;
+    }, 5000);
     return resp;
   }
 }

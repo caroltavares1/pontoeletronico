@@ -20,56 +20,49 @@ WSMETHOD GET WSSERVICE detalhesFerias
 	Local nPosId := aScan(aParams,{|x| x[1] == "MATRICULA"})
 	Local nPosData := aScan(aParams,{|x| x[1] == "DATA"})
 	Local cAlias := GetNextAlias()
-	Local cError
-	Local bError
-	Local bErrorBlock
-	Local oError
 
-	bError := { |e| oError := e, BREAK(e) }
-	bErrorBlock := ErrorBlock( bError )
-	BEGIN SEQUENCE
-		If nPosId > 0 .AND. nPosFil > 0 .AND. nPosData > 0
-			BEGINSQL ALIAS cAlias
+	If nPosId > 0 .AND. nPosFil > 0 .AND. nPosData > 0
+		BEGINSQL ALIAS cAlias
             SELECT
-                SRR.*
+                SRR.RR_FILIAL, SRR.RR_MAT, SRR.RR_HORAS, SRR.RR_PD, SRR.RR_TIPO1, 
+				SRR.RR_VALOR, SRV.RV_DESC, SRV.RV_TIPOCOD, SRR.RR_VALORBA, SRR.RR_DATAPAG
             FROM %Table:SRR% AS SRR
+			INNER JOIN %Table:SRV% AS SRV
+			ON LEFT(SRV.RV_FILIAL, 2) = LEFT(SRR.RR_FILIAL, 2) AND SRV.RV_COD = SRR.RR_PD
             WHERE
                 SRR.%NotDel%
                 AND SRR.RR_FILIAL = %exp:aParams[nPosFil,2]%
                 AND SRR.RR_MAT  = %exp:aParams[nPosId,2]%
                 AND SRR.RR_DATA = %exp:aParams[nPosData,2]%
-			ENDSQL
+				AND (SRV.RV_TIPOCOD = 1 OR SRV.RV_TIPOCOD = 2)
+		ENDSQL
 
-			While !(cAlias)->(Eof())
-				Aadd(aDados, JsonObject():new())
-				nPos := Len(aDados)
-				aDados[nPos]['filial'] := (cAlias)->RR_FILIAL
-				aDados[nPos]['matricula' ] := (cAlias)->RR_MAT
-				aDados[nPos]['codVerba' ] := (cAlias)->RR_PD
-				aDados[nPos]['provento' ] := (cAlias)->RR_VALOR
-				aDados[nPos]['tipo' ] := (cAlias)->RR_TIPO1
-				aDados[nPos]['referencia' ] := (cAlias)->RR_HORAS
-				cResponse['hasContent'] := .T.
-				(cAlias)->(DbSkip())
-			EndDo
-			(cAlias)->(DbCloseArea())
-		EndIf
+		While !(cAlias)->(Eof())
+			Aadd(aDados, JsonObject():new())
+			nPos := Len(aDados)
+			aDados[nPos]['filial'] := (cAlias)->RR_FILIAL
+			aDados[nPos]['matricula' ] := (cAlias)->RR_MAT
+			aDados[nPos]['codVerba' ] := (cAlias)->RR_PD
+			aDados[nPos]['descVerba' ] := (cAlias)->RV_DESC
+			aDados[nPos]['tipoVerba' ] := (cAlias)->RV_TIPOCOD
+			aDados[nPos]['provento' ] := (cAlias)->RR_VALOR
+			aDados[nPos]['tipo' ] := (cAlias)->RR_TIPO1
+			aDados[nPos]['referencia' ] := (cAlias)->RR_HORAS
+			aDados[nPos]['salario'] := (cAlias)->RR_VALORBA
+			aDados[nPos]['dtPagto'] := (cAlias)->RR_DATAPAG
+			cResponse['hasContent'] := .T.
+			(cAlias)->(DbSkip())
+		EndDo
+		(cAlias)->(DbCloseArea())
+	EndIf
 
-		If Len(aDados) == 0
-			Self:SetRestFault(204, 'Nenhuma matricula encontrada')
-			lRet := .F.
-		Else
-			cResponse['matriculas'] := aDados
-		EndIf
-
-		Self:SetContentType('application/json')
-		Self:SetResponse(EncodeUTF8(cResponse:toJson()))
-		RECOVER
-		cError := oError:Description
-		Self:SetRestFault(500, cError)
+	If Len(aDados) == 0
+		Self:SetRestFault(204, 'Nenhuma matricula encontrada')
 		lRet := .F.
-		Self:SetContentType('application/json')
-		Self:SetResponse(EncodeUTF8(cResponse:toJson()))
-		Return lRet
-	END SEQUENCE
+	Else
+		cResponse['matriculas'] := aDados
+	EndIf
+
+	Self:SetContentType('application/json')
+	Self:SetResponse(EncodeUTF8(cResponse:toJson()))
 Return lRet
