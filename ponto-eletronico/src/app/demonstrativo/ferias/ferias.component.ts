@@ -30,7 +30,7 @@ export class FeriasComponent implements OnInit {
   labelFilter: string = '';
   status: Array<string> = [];
   statusOptions!: Array<PoCheckboxGroupOption>;
-  matriculas: Matricula[] = [];
+  matriculas: Array<Matricula> = [];
   options: any = [];
   matriculaSelecionada!: Matricula;
   filial: any;
@@ -40,7 +40,7 @@ export class FeriasComponent implements OnInit {
 
   public readonly actions: Array<PoPageAction> = [
     {
-      label: 'Prévia',
+      label: 'Imprimir',
       action: this.imprimirRecibo.bind(this),
       disabled: this.disableHireButton.bind(this),
     },
@@ -196,7 +196,8 @@ export class FeriasComponent implements OnInit {
         .getPrevFerias(value.filial, value.matricula)
         .subscribe((data) => {
           if (data.hasContent) {
-            let lista = data.programacaoFerias as [];
+            let lista : Array<any> = data.programacaoFerias as [];
+            lista.sort( (a, b) => b.iniPerAq - a.iniPerAq)
             lista.forEach((el: Ferias) => {
               this.processoFerias.push({
                 periodoAquisitivo:

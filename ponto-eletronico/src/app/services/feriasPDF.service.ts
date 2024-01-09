@@ -170,7 +170,7 @@ export class FeriasPDFService {
     let func = cabecalho.funcionario;
     let fer = cabecalho.ferias;
     let itensPdf: Array<any> = [];
-    let salario : number = 0
+    let salario : string = ''
     let dataPagto : any = ''
 
     debugger
@@ -329,7 +329,7 @@ export class FeriasPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${salario}` },
+          { text: `${salario.toLocaleString()}` },
         ],
         colSpan: 2,
       },
@@ -458,7 +458,7 @@ export class FeriasPDFService {
             alignment: 'left',
           },
           {
-            text: `${el.provento}`,
+            text: `${el.provento.toLocaleString()}`,
             style: 'tableHeader',
             alignment: 'left',
           },
@@ -492,7 +492,7 @@ export class FeriasPDFService {
             alignment: 'left',
           },
           {
-            text: `${el.provento}`,
+            text: `${el.provento.toLocaleString()}`,
             style: 'tableHeader',
             alignment: 'left',
           },
