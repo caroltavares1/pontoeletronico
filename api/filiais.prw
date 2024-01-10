@@ -17,7 +17,7 @@ WSMETHOD GET WSSERVICE filiais
 	Local aParams := Self:AQueryString
 	Local cFilFunc := ""
 	Local nPosId := aScan(aParams,{|x| x[1] == "FILIAL"})
-	Local aCampos := {"M0_CODFIL","M0_FILIAL", "M0_CGC", "M0_ENDENT"}
+	Local aCampos := {"M0_CODFIL","M0_NOMECOM", "M0_CGC", "M0_ENDENT"}
 	Local aDadosFilial := {}
 
 	If nPosId > 0

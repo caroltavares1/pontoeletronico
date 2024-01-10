@@ -74,6 +74,9 @@ Static Function getArrFun(cId)
 		aDados[nPos]['serieCp' ] := AllTrim(SRA->RA_SERCP )
 		aDados[nPos]['ufCp' ] := AllTrim(SRA->RA_UFCP )
 		aDados[nPos]['categoria' ] := AllTrim(SRA->RA_CATFUNC )
+		aDados[nPos]['depIR' ] := AllTrim(SRA->RA_DEPIR )
+		aDados[nPos]['bancoAgencia' ] := AllTrim(SRA->RA_BCDEPSA )
+		aDados[nPos]['conta' ] := AllTrim(SRA->RA_CTDEPSA )
 		if (AllTrim(SRA->RA_SITFOLH ) == '')
 			aDados[nPos]['situacao' ] := 'NORMAL'
 		elseif AllTrim(SRA->RA_SITFOLH ) == 'F'

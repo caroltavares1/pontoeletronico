@@ -40,6 +40,7 @@ WSMETHOD GET WSSERVICE programacaoFerias
 			aDados[nPos]['fimPerAq' ] := (cAlias)->RH_DBASEAT
 			aDados[nPos]['iniFerias' ] := (cAlias)->RH_DATAINI
 			aDados[nPos]['fimFerias' ] := (cAlias)->RH_DATAFIM
+			aDados[nPos]['diasAbono' ] := (cAlias)->RH_DABONPE
 			cResponse['hasContent'] := .T.
 			(cAlias)->(DbSkip())
 		EndDo

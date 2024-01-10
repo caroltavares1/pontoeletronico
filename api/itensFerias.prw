@@ -20,6 +20,9 @@ WSMETHOD GET WSSERVICE detalhesFerias
 	Local nPosId := aScan(aParams,{|x| x[1] == "MATRICULA"})
 	Local nPosData := aScan(aParams,{|x| x[1] == "DATA"})
 	Local cAlias := GetNextAlias()
+	Local nTotalPro := 0
+	Local nTotalDes := 0
+	Local cLiqExt := ""
 
 	If nPosId > 0 .AND. nPosFil > 0 .AND. nPosData > 0
 		BEGINSQL ALIAS cAlias
@@ -35,6 +38,7 @@ WSMETHOD GET WSSERVICE detalhesFerias
                 AND SRR.RR_MAT  = %exp:aParams[nPosId,2]%
                 AND SRR.RR_DATA = %exp:aParams[nPosData,2]%
 				AND (SRV.RV_TIPOCOD = 1 OR SRV.RV_TIPOCOD = 2)
+				AND SRV.RV_CODFOL != '0102'
 		ENDSQL
 
 		While !(cAlias)->(Eof())
@@ -48,9 +52,20 @@ WSMETHOD GET WSSERVICE detalhesFerias
 			aDados[nPos]['provento' ] := (cAlias)->RR_VALOR
 			aDados[nPos]['tipo' ] := (cAlias)->RR_TIPO1
 			aDados[nPos]['referencia' ] := (cAlias)->RR_HORAS
-			aDados[nPos]['salario'] := (cAlias)->RR_VALORBA
-			aDados[nPos]['dtPagto'] := (cAlias)->RR_DATAPAG
+			If (cAlias)->RV_TIPOCOD == "1"
+				nTotalPro += (cAlias)->RR_VALOR
+			ElseIf (cAlias)->RV_TIPOCOD == "2"
+				nTotalDes += (cAlias)->RR_VALOR
+			EndIf
+			cResponse['salario'] := (cAlias)->RR_VALORBA
+			cResponse['dtPagto'] := (cAlias)->RR_DATAPAG
 			cResponse['hasContent'] := .T.
+			cResponse['totalProventos'] := nTotalPro
+			cResponse['totalDescontos'] := nTotalDes
+			cResponse['liquidoReceber'] := nTotalPro - nTotalDes
+			cLiqExt := Upper(Alltrim(Extenso(nTotalPro - nTotalDes,.F.,1,,"1",.T.,.F.)))
+			cResponse['receberExtenso'] := cLiqExt
+
 			(cAlias)->(DbSkip())
 		EndDo
 		(cAlias)->(DbCloseArea())

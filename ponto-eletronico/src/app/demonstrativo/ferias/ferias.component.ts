@@ -210,7 +210,7 @@ export class FeriasComponent implements OnInit {
                   this.convertData(el.iniFerias, '/', true) +
                   ' A ' +
                   this.convertData(el.fimFerias, '/', true),
-                diasAbono: this.calcDias(el.iniFerias, el.fimFerias),
+                diasAbono: el.diasAbono,
                 empresa: this.filial,
                 ferias: el,
                 matricula: matricula.value,

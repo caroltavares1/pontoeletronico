@@ -38,6 +38,7 @@ WSMETHOD GET WSSERVICE matriculas
             WHERE
                 SRA.%NotDel%
                 AND SRA.RA_CIC = %exp:cCpf%
+				ORDER BY SRA.RA_DEMISSA
 			ENDSQL
 
 			While !(cAlias)->(Eof())

@@ -11,7 +11,7 @@ const pdfFonts = require('pdfmake/build/vfs_fonts');
 export class FeriasPDFService {
   cabecalho = {};
   urlLogo!: string;
-  itensFerias: Array<Object> = [];
+  ferias: Array<Object> = [];
 
   constructor(private feriasService: FeriasService) {}
 
@@ -43,18 +43,20 @@ export class FeriasPDFService {
         if (data == null) {
           localStorage.removeItem('itens');
         } else {
-          localStorage.setItem('itens', JSON.stringify(data.matriculas));
+          localStorage.setItem('ferias', JSON.stringify(data));
         }
       });
 
-    let lista = localStorage.getItem('itens');
-    if (lista != undefined) {
-      this.itensFerias = JSON.parse(lista);
+    let ferias = localStorage.getItem('ferias');
+    if (ferias != undefined) {
+      this.ferias = JSON.parse(ferias);
     }
 
-    console.log(cabecalho);
-
     header = this.getHeader();
+
+    setTimeout(() => {
+      console.log('');
+    }, 2000);
 
     var dd = {
       pageMargins: [40, 120, 40, 60],
@@ -158,27 +160,39 @@ export class FeriasPDFService {
 
         return stack;
       },
-      content: this.content(cabecalho, this.itensFerias),
+      content: this.content(cabecalho, this.ferias),
     };
 
     let name = 'ferias_' + uuid.v4() + '.pdf';
     pdfMake.createPdf(dd).download(name);
   }
 
-  content(cabecalho: any, itens: Array<any>) {
+  content(cabecalho: any, ferias: any) {
     let mat = cabecalho.matricula;
     let func = cabecalho.funcionario;
     let fer = cabecalho.ferias;
     let itensPdf: Array<any> = [];
-    let salario : string = ''
-    let dataPagto : any = ''
+    let itens: Array<any> = ferias.matriculas;
+    let banco = func.bancoAgencia.substring(0, 3);
+    let agencia = func.bancoAgencia.substring(3);
+    let conta = func.conta;
 
-    debugger
-    if (itens.length > 0){
-      salario = itens[0].salario
-      dataPagto = itens[0].dtPagto
-    }
-    
+    let totalProventos = ferias.totalProventos.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+    });
+
+    let totalDescontos = ferias.totalDescontos.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+    });
+
+    let liquidoReceber = ferias.liquidoReceber.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+    });
+
+    let salario = ferias.salario.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+    });
+
     itensPdf.push([
       //Linha Funcao
       {
@@ -189,7 +203,7 @@ export class FeriasPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${mat.matricula}` },
+          { text: `${func.funcao}` },
         ],
       },
       {
@@ -269,12 +283,12 @@ export class FeriasPDFService {
       {
         text: [
           {
-            text: 'IRRF\n',
+            text: 'Dep. IRRF\n',
             style: 'tableHeader',
             alignment: 'left',
             bold: true,
           },
-          { text: `${'IRRF'}` },
+          { text: `${func.depIR}` },
         ],
       },
     ]);
@@ -324,12 +338,14 @@ export class FeriasPDFService {
       {
         text: [
           {
-            text: 'Sal. Fixo\n',
+            text: 'Salário\n',
             style: 'tableHeader',
             alignment: 'left',
             bold: true,
           },
-          { text: `${salario.toLocaleString()}` },
+          {
+            text: `${salario}`,
+          },
         ],
         colSpan: 2,
       },
@@ -342,7 +358,7 @@ export class FeriasPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${''}` },
+          { text: `${banco}` },
         ],
       },
       {
@@ -353,7 +369,7 @@ export class FeriasPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${''}` },
+          { text: `${agencia}` },
         ],
       },
       {
@@ -364,7 +380,7 @@ export class FeriasPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${''}` },
+          { text: `${conta}` },
         ],
       },
     ]);
@@ -393,7 +409,7 @@ export class FeriasPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${this.fixData(dataPagto)}` },
+          { text: `${this.fixData(ferias.dtPagto)}` },
         ],
         colSpan: 2,
       },
@@ -434,11 +450,13 @@ export class FeriasPDFService {
       },
     ]);
 
-    debugger;
     itens.sort((a, b) => {
       return a.codVerba - b.codVerba;
     });
     itens.forEach((el) => {
+      let referencia = el.referencia.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+      });
       if (el.tipoVerba == '1') {
         itensPdf.push([
           {
@@ -453,12 +471,14 @@ export class FeriasPDFService {
             alignment: 'left',
           },
           {
-            text: `${el.referencia}`,
+            text: `${referencia}`,
             style: 'tableHeader',
             alignment: 'left',
           },
           {
-            text: `${el.provento.toLocaleString()}`,
+            text: `${el.provento.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}`,
             style: 'tableHeader',
             alignment: 'left',
           },
@@ -482,7 +502,7 @@ export class FeriasPDFService {
             alignment: 'left',
           },
           {
-            text: `${el.referencia}`,
+            text: `${referencia}`,
             style: 'tableHeader',
             alignment: 'left',
           },
@@ -492,13 +512,124 @@ export class FeriasPDFService {
             alignment: 'left',
           },
           {
-            text: `${el.provento.toLocaleString()}`,
+            text: `${el.provento.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}`,
             style: 'tableHeader',
             alignment: 'left',
           },
         ]);
       }
     });
+
+    itensPdf.push([
+      //Linha Resumo
+      {
+        text: [
+          {
+            text: 'Total de Proventos\n',
+            style: 'tableHeader',
+            alignment: 'left',
+            bold: true,
+          },
+          {
+            text: `${totalProventos}`,
+          },
+        ],
+        colSpan: 2,
+      },
+      {},
+      {
+        text: [
+          {
+            text: 'Total de Descontos\n',
+            style: 'tableHeader',
+            alignment: 'left',
+            bold: true,
+          },
+          {
+            text: `${totalDescontos}`,
+          },
+        ],
+        colSpan: 2,
+      },
+      {},
+      {
+        text: [
+          {
+            text: 'Líquido a Receber\n',
+            style: 'tableHeader',
+            alignment: 'left',
+            bold: true,
+          },
+          {
+            text: `${liquidoReceber}`,
+          },
+        ],
+      },
+    ]);
+
+    itensPdf.push([
+      //Linha Resumo
+      {
+        text: [
+          {
+            text: 'Informativo:\n\n\n',
+            style: 'tableHeader',
+            alignment: 'left',
+            bold: true,
+            fontSize: 9,
+          },
+        ],
+        colSpan: 5,
+      },
+      {},
+      {},
+      {},
+      {},
+    ]);
+
+    itensPdf.push([
+      //Linha Resumo
+      {
+        text: [
+          {
+            text: `De acordo com o parágrafo único do artigo 145 da CLT, recebi da firma ${cabecalho.empresa.nome}, a importância líquida de R$ ${liquidoReceber} (${ferias.receberExtenso})  que me paga adiantadamente por motivos de minhas férias regulamentares. Ora concedidas e que vou gozar de acordo com a descrição acima. Tudo conforme aviso que recebi em tempo ao que dei meu ciente. Para clareza e documento, firmo o presente recebido.Dando firma, plena e geral quitação\n\n`,
+            style: 'tableHeader',
+            alignment: 'left',
+            fontSize: 9,
+          },
+        ],
+        colSpan: 5,
+      },
+      {},
+      {},
+      {},
+      {},
+    ]);
+
+    itensPdf.push([
+      //Linha Resumo
+      {
+        columns: [
+          {
+            text: `${"__________________________________________________"}\n${func.nome}\n\n`,
+            style: 'tableHeader',
+            alignment: 'center',
+          },
+          {
+            text: `${"__________________________________________________"}\n${cabecalho.empresa.nome}\n\n`,
+            style: 'tableHeader',
+            alignment: 'center',
+          },
+        ],
+        colSpan: 5,
+      },
+      {},
+      {},
+      {},
+      {},
+    ]);
 
     let ret = [
       {
