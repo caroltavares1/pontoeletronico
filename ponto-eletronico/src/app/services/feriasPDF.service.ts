@@ -23,12 +23,12 @@ export class FeriasPDFService {
     return this.cabecalho;
   }
 
-  public async openPDF(cabecalho: any): Promise<void> {
-    let header: any = {};
-    let start = cabecalho.ferias.iniFerias;
-    let end = cabecalho.ferias.fimFerias;
-    let empresa = cabecalho.empresa;
-    let matricula = cabecalho.matricula;
+  async setDados(
+    filial: string,
+    matricula: string,
+    data: string,
+    callback: any
+  ) {
     const logoURL64 = this.getBase64ImageFromURL(
       '../../assets/images/grupoBCI.jpg'
     );
@@ -38,25 +38,50 @@ export class FeriasPDFService {
     });
 
     this.feriasService
-      .getItensferias(empresa.filial, matricula.matricula, start)
+      .getItensferias(filial, matricula, data)
       .subscribe((data) => {
-        if (data == null) {
-          localStorage.removeItem('itens');
-        } else {
-          localStorage.setItem('ferias', JSON.stringify(data));
-        }
+        this.ferias = data
       });
 
+    if (callback != null) {
+      callback();
+    }
+  }
+
+  public openPDF(cabecalho: {
+    ferias: { iniFerias: any; fimFerias: any };
+    empresa: any;
+    matricula: any;
+  }) {
+    let header: any = {};
+    let start = cabecalho.ferias.iniFerias;
+    let end = cabecalho.ferias.fimFerias;
+    let empresa = cabecalho.empresa;
+    let matricula = cabecalho.matricula;
+
+    this.setDados(empresa.filial, matricula.matricula, start, ()=>{
+      setTimeout(() => {
+        this.processa(cabecalho);
+      }, 1000);
+    });
+  }
+
+  processa(cabecalho: {
+    ferias: { iniFerias: any; fimFerias: any };
+    empresa: any;
+    matricula: any;
+  }) {
+    let header: any = {};
+    let start = cabecalho.ferias.iniFerias;
+    let end = cabecalho.ferias.fimFerias;
+    let empresa = cabecalho.empresa;
+    let matricula = cabecalho.matricula;
     let ferias = localStorage.getItem('ferias');
     if (ferias != undefined) {
       this.ferias = JSON.parse(ferias);
     }
 
     header = this.getHeader();
-
-    setTimeout(() => {
-      console.log('');
-    }, 2000);
 
     var dd = {
       pageMargins: [40, 120, 40, 60],
@@ -613,12 +638,16 @@ export class FeriasPDFService {
       {
         columns: [
           {
-            text: `${"__________________________________________________"}\n${func.nome}\n\n`,
+            text: `${'__________________________________________________'}\n${
+              func.nome
+            }\n\n`,
             style: 'tableHeader',
             alignment: 'center',
           },
           {
-            text: `${"__________________________________________________"}\n${cabecalho.empresa.nome}\n\n`,
+            text: `${'__________________________________________________'}\n${
+              cabecalho.empresa.nome
+            }\n\n`,
             style: 'tableHeader',
             alignment: 'center',
           },
