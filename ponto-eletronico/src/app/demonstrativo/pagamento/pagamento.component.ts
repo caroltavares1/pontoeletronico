@@ -35,12 +35,13 @@ export class PagamentoComponent implements OnInit {
   cabecalho: any;
   funcionario: any;
   hidden: boolean = false;
+  cpf: any;
 
   public readonly actions: Array<PoPageAction> = [
     {
       label: 'Imprimir',
       action: this.imprimirRecibo.bind(this),
-      disabled: this.disableHireButton.bind(this),
+      disabled: this.disableButton.bind(this),
     },
   ];
 
@@ -64,22 +65,27 @@ export class PagamentoComponent implements OnInit {
       change: this.onChangeDisclaimer.bind(this),
       remove: this.onClearDisclaimer.bind(this),
     };
+
     this.processoPagtoColumns = this.pagamentoService.getColumns();
     this.statusOptions = this.pagamentoService.getOptions();
     this.processoPagtoFiltered = [...this.processoPagto];
     this.getFilial();
 
     let data: any;
-    this.pagamentoService.getFolhaPagto('00976379473').subscribe({
-      next: (dados) => {
-        data = dados.folhaPagto;
-      },
-      complete: () => {
-        this.processoPagto = data;
-        this.processoPagtoFiltered = [...this.processoPagto];
-        this.hidden = true;
-      },
-    });
+    this.cpf = sessionStorage.getItem('cpf');
+
+    if (this.cpf != null && this.cpf != undefined) {
+      this.pagamentoService.getFolhaPagto(this.cpf).subscribe({
+        next: (dados) => {
+          data = dados.folhaPagto;
+        },
+        complete: () => {
+          this.processoPagto = data;
+          this.processoPagtoFiltered = [...this.processoPagto];
+          this.hidden = true;
+        },
+      });
+    }
   }
 
   getFilial() {
@@ -88,7 +94,7 @@ export class PagamentoComponent implements OnInit {
     });
   }
 
-  disableHireButton() {
+  disableButton() {
     return !this.processoPagto.find((recibo: any) => recibo['$selected']);
   }
 
@@ -110,11 +116,10 @@ export class PagamentoComponent implements OnInit {
     const periodoSelecionado: any = this.processoPagto.find(
       (recibo: any) => recibo['$selected']
     );
-      
-    debugger
 
     if (periodoSelecionado != undefined) {
       this.cabecalho = periodoSelecionado;
+      this.cabecalho.cpf = this.cpf
       this.pdf.openPDF(this.cabecalho);
     }
   }

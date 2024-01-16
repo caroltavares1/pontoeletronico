@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import * as uuid from 'uuid';
-import { FeriasService } from './ferias.service';
 import { PagamentoService } from './pagamento.service';
 const pdfMake = require('pdfmake/build/pdfmake.js');
 const pdfFonts = require('pdfmake/build/vfs_fonts');
@@ -12,27 +11,22 @@ const pdfFonts = require('pdfmake/build/vfs_fonts');
 export class PagtoPDFService {
   cabecalho = {};
   urlLogo!: string;
-  ferias: Array<Object> = [];
+  pagtos: Array<Object> = [];
 
-  constructor(private feriasService: FeriasService, private pagtoService : PagamentoService) {}
+  constructor(private pagtoService: PagamentoService) {}
 
-  setDados(filial: string, matricula: string, data: string, callback: any) {
-    this.feriasService
-      .getItensferias(filial, matricula, data)
-      .subscribe((data) => {
-        this.ferias = data;
-      });
-
-    if (callback != null) {
-      callback();
-    }
+  setDados(cpf: string) {
+    this.pagtoService.getItensPagto(cpf).subscribe((data) => {
+      this.pagtos = data;
+    });
+    // if (callback != null) {
+    //   callback();
+    // }
   }
 
-  public async openPDF(cabecalho: { ferias: { iniFerias: any; fimFerias: any; }; empresa: any; matricula: any; }, empresa: any, matricula: any) {
-    
+  public async openPDF(cabecalho: any) {
     let ferias: any = null;
-    let cpf : any = '00976379473'
-
+    
     const logoURL64 = this.getBase64ImageFromURL(
       '../../assets/images/grupoBCI.jpg'
     );
@@ -41,32 +35,25 @@ export class PagtoPDFService {
       this.urlLogo = el;
     });
 
-    this.pagtoService
-      .getItensPagto(cpf)
-      .subscribe({
-        next: (data: any) => {
-          ferias = data;
-        },
-        complete: () => {
-          this.ferias = ferias;
-          this.processa(cabecalho);
-        },
-      });
+    this.pagtoService.getItensPagto(cabecalho.cpf).subscribe({
+      next: (data: any) => {
+        ferias = data;
+      },
+      complete: () => {
+        this.pagtos = ferias;
+        this.processa(cabecalho);
+      },
+    });
   }
 
-  processa(cabecalho: {
-    ferias: { iniFerias: any; fimFerias: any };
-    empresa: any;
-    matricula: any;
-  }) {
-    
+  processa(cabecalho: any) {
     let start = cabecalho.ferias.iniFerias;
     let end = cabecalho.ferias.fimFerias;
     let empresa = cabecalho.empresa;
     let matricula = cabecalho.matricula;
     let ferias = localStorage.getItem('ferias');
     if (ferias != undefined) {
-      this.ferias = JSON.parse(ferias);
+      this.pagtos = JSON.parse(ferias);
     }
 
     var dd = {
@@ -171,7 +158,7 @@ export class PagtoPDFService {
 
         return stack;
       },
-      content: this.content(cabecalho, this.ferias),
+      content: this.content(cabecalho, this.pagtos),
     };
 
     let name = 'ferias_' + uuid.v4() + '.pdf';

@@ -43,7 +43,7 @@ export class LoginComponent implements OnInit {
     private auth: AuthService,
     private userService: UserService,
     private poNotification: PoNotificationService,
-    private feriasService: FeriasService
+    private feriasService: FeriasService,
   ) {}
 
   checkLogin(formData: any) {
@@ -73,6 +73,9 @@ export class LoginComponent implements OnInit {
         this.feriasService.getMatriculas(formData.login).subscribe((mat) => {
           this.setMatriculas(mat);
         });
+
+        sessionStorage.setItem('cpf', this.userService.userCPF);
+        this.userService.userCPF
       },
     });
   }
