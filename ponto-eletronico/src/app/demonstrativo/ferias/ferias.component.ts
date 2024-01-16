@@ -12,8 +12,8 @@ import {
 import { FeriasService } from 'src/app/services/ferias.service';
 import { FeriasPDFService } from 'src/app/services/feriasPDF.service';
 import { UserService } from 'src/app/services/user.service';
+import { Matricula } from '../matriculas.model';
 import { Ferias } from './ferias.model';
-import { Matricula } from './matriculas.model';
 
 @Component({
   selector: 'app-ferias',
