@@ -23,24 +23,11 @@ export class FeriasPDFService {
     return this.cabecalho;
   }
 
-  async setDados(
-    filial: string,
-    matricula: string,
-    data: string,
-    callback: any
-  ) {
-    const logoURL64 = this.getBase64ImageFromURL(
-      '../../assets/images/grupoBCI.jpg'
-    );
-
-    await logoURL64.then((el) => {
-      this.urlLogo = el;
-    });
-
+  setDados(filial: string, matricula: string, data: string, callback: any) {
     this.feriasService
       .getItensferias(filial, matricula, data)
       .subscribe((data) => {
-        this.ferias = data
+        this.ferias = data;
       });
 
     if (callback != null) {
@@ -48,7 +35,7 @@ export class FeriasPDFService {
     }
   }
 
-  public openPDF(cabecalho: {
+  public async openPDF(cabecalho: {
     ferias: { iniFerias: any; fimFerias: any };
     empresa: any;
     matricula: any;
@@ -58,12 +45,27 @@ export class FeriasPDFService {
     let end = cabecalho.ferias.fimFerias;
     let empresa = cabecalho.empresa;
     let matricula = cabecalho.matricula;
+    let ferias: any = null;
 
-    this.setDados(empresa.filial, matricula.matricula, start, ()=>{
-      setTimeout(() => {
-        this.processa(cabecalho);
-      }, 1000);
+    const logoURL64 = this.getBase64ImageFromURL(
+      '../../assets/images/grupoBCI.jpg'
+    );
+
+    await logoURL64.then((el) => {
+      this.urlLogo = el;
     });
+
+    this.feriasService
+      .getItensferias(empresa.filial, matricula.matricula, start)
+      .subscribe({
+        next: (data) => {
+          ferias = data;
+        },
+        complete: () => {
+          this.ferias = ferias;
+          this.processa(cabecalho);
+        },
+      });
   }
 
   processa(cabecalho: {
