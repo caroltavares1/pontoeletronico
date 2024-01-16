@@ -96,16 +96,12 @@ export class PagamentoService {
     return this.http.get<any>(url, options);
   }
 
-  getItensferias(
-    filial: string,
-    matricula: string,
-    dataFerias: string
+  getItensPagto(
+    cpf: string,
   ): Observable<any> {
     const options = httpOptions;
     options.params = {
-      filial: filial,
-      matricula: matricula,
-      data: dataFerias,
+      cpf: cpf,
     };
 
     let url = this.apiURL + `/detalhesFerias/`;

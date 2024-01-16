@@ -34,7 +34,7 @@ export class PagamentoComponent implements OnInit {
   filial: any;
   cabecalho: any;
   funcionario: any;
-  hidden : boolean = false
+  hidden: boolean = false;
 
   public readonly actions: Array<PoPageAction> = [
     {
@@ -77,8 +77,7 @@ export class PagamentoComponent implements OnInit {
       complete: () => {
         this.processoPagto = data;
         this.processoPagtoFiltered = [...this.processoPagto];
-        this.hidden = true
-        debugger
+        this.hidden = true;
       },
     });
   }
@@ -111,9 +110,10 @@ export class PagamentoComponent implements OnInit {
     const periodoSelecionado: any = this.processoPagto.find(
       (recibo: any) => recibo['$selected']
     );
+      
+    debugger
 
     if (periodoSelecionado != undefined) {
-      this.pdf.setHeader(periodoSelecionado);
       this.cabecalho = periodoSelecionado;
       this.pdf.openPDF(this.cabecalho);
     }

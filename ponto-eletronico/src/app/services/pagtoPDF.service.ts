@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as uuid from 'uuid';
 import { FeriasService } from './ferias.service';
+import { PagamentoService } from './pagamento.service';
 const pdfMake = require('pdfmake/build/pdfmake.js');
 const pdfFonts = require('pdfmake/build/vfs_fonts');
 (pdfMake as any).vfs = pdfFonts.pdfMake.vfs;
@@ -13,15 +14,7 @@ export class PagtoPDFService {
   urlLogo!: string;
   ferias: Array<Object> = [];
 
-  constructor(private feriasService: FeriasService) {}
-
-  setHeader(header: any) {
-    this.cabecalho = header;
-  }
-
-  getHeader() {
-    return this.cabecalho;
-  }
+  constructor(private feriasService: FeriasService, private pagtoService : PagamentoService) {}
 
   setDados(filial: string, matricula: string, data: string, callback: any) {
     this.feriasService
@@ -35,17 +28,10 @@ export class PagtoPDFService {
     }
   }
 
-  public async openPDF(cabecalho: {
-    ferias: { iniFerias: any; fimFerias: any };
-    empresa: any;
-    matricula: any;
-  }) {
-    let header: any = {};
-    let start = cabecalho.ferias.iniFerias;
-    let end = cabecalho.ferias.fimFerias;
-    let empresa = cabecalho.empresa;
-    let matricula = cabecalho.matricula;
+  public async openPDF(cabecalho: { ferias: { iniFerias: any; fimFerias: any; }; empresa: any; matricula: any; }, empresa: any, matricula: any) {
+    
     let ferias: any = null;
+    let cpf : any = '00976379473'
 
     const logoURL64 = this.getBase64ImageFromURL(
       '../../assets/images/grupoBCI.jpg'
@@ -55,10 +41,10 @@ export class PagtoPDFService {
       this.urlLogo = el;
     });
 
-    this.feriasService
-      .getItensferias(empresa.filial, matricula.matricula, start)
+    this.pagtoService
+      .getItensPagto(cpf)
       .subscribe({
-        next: (data) => {
+        next: (data: any) => {
           ferias = data;
         },
         complete: () => {
@@ -73,7 +59,7 @@ export class PagtoPDFService {
     empresa: any;
     matricula: any;
   }) {
-    let header: any = {};
+    
     let start = cabecalho.ferias.iniFerias;
     let end = cabecalho.ferias.fimFerias;
     let empresa = cabecalho.empresa;
@@ -83,13 +69,11 @@ export class PagtoPDFService {
       this.ferias = JSON.parse(ferias);
     }
 
-    header = this.getHeader();
-
     var dd = {
       pageMargins: [40, 120, 40, 60],
       pageSize: 'A4',
       pageOrientation: 'portrait',
-      header: (currentPage: any, pageCount: any) => {
+      header: () => {
         let s, e;
 
         s = this.fixData(start);
