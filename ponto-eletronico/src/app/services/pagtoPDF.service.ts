@@ -46,7 +46,7 @@ export class PagtoPDFService {
   processa(cabecalho: any) {
     let empresa = cabecalho.empfil;
     let matricula = cabecalho.funcionario;
-    
+
     var dd = {
       pageMargins: [40, 120, 40, 60],
       pageSize: 'A4',
@@ -71,7 +71,7 @@ export class PagtoPDFService {
                       border: [true, true, false, false],
                     },
                     {
-                      text: 'Recibo de Ferias',
+                      text: 'Demonstrativo de Pagamento Mensal',
                       style: 'tableHeader',
                       colSpan: 2,
                       alignment: 'left',
@@ -187,7 +187,14 @@ export class PagtoPDFService {
           },
           { text: `${func.funcao}` },
         ],
-      },
+        colSpan: 6,
+
+      }, {}, {}, {}, {}, {}
+
+    ]);
+
+    itensPdf.push([
+      //Linha Data de Admissao
       {
         text: [
           {
@@ -202,23 +209,54 @@ export class PagtoPDFService {
       {
         text: [
           {
-            text: 'Carteira de Trabalho\n',
+            text: 'Endereço\n',
             style: 'tableHeader',
             alignment: 'left',
             bold: true,
           },
-          { text: `${func.numCp}` },
+          { text: `${func.endereco}` },
         ],
-      },
+        colSpan: 5
+      }, {}, {}, {}, {}
+    ]);
+
+    itensPdf.push([
+      //Linha Bairro
       {
         text: [
           {
-            text: 'Serie\n',
+            text: 'Bairro\n',
             style: 'tableHeader',
             alignment: 'left',
             bold: true,
           },
-          { text: `${func.serieCp}` },
+          { text: `${func.bairro}` },
+        ],
+        colSpan: 2,
+      },
+      {},
+      {
+        text: [
+          {
+            text: 'CEP\n',
+            style: 'tableHeader',
+            alignment: 'left',
+            bold: true,
+          },
+          { text: `${func.cep}` },
+        ],
+        colSpan: 2,
+      },
+      {},
+      {
+        text: [
+          {
+            text: 'Cidade\n',
+            style: 'tableHeader',
+            alignment: 'left',
+            bold: true,
+          },
+          { text: `${func.municipio}` },
         ],
       },
       {
@@ -229,13 +267,24 @@ export class PagtoPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${func.ufCp}` },
+          { text: `${func.estado}` },
         ],
-      },
+      }
     ]);
 
     itensPdf.push([
-      //Linha CPF
+      //Linha PIS
+      {
+        text: [
+          {
+            text: 'PIS\n',
+            style: 'tableHeader',
+            alignment: 'left',
+            bold: true,
+          },
+          { text: `${func.pis}` },
+        ],
+      },
       {
         text: [
           {
@@ -246,9 +295,7 @@ export class PagtoPDFService {
           },
           { text: `${func.cpf}` },
         ],
-        colSpan: 2,
       },
-      {},
       {
         text: [
           {
@@ -259,9 +306,29 @@ export class PagtoPDFService {
           },
           { text: `${func.rg}` },
         ],
-        colSpan: 2,
       },
-      {},
+      {
+        text: [
+          {
+            text: 'Competência\n',
+            style: 'tableHeader',
+            alignment: 'left',
+            bold: true,
+          },
+          { text: `${func.pis}` },
+        ],
+      },
+      {
+        text: [
+          {
+            text: 'Dep. Sal. Família\n',
+            style: 'tableHeader',
+            alignment: 'left',
+            bold: true,
+          },
+          { text: `${func.depSF}` },
+        ],
+      },
       {
         text: [
           {
@@ -276,47 +343,7 @@ export class PagtoPDFService {
     ]);
 
     itensPdf.push([
-      //Linha Vencimento das Ferias
-      {
-        text: [
-          {
-            text: 'Vencimento das Férias\n',
-            style: 'tableHeader',
-            alignment: 'left',
-            bold: true,
-          },
-          { text: `${this.fixData("")}` },
-        ],
-      },
-      {
-        text: [
-          {
-            text: 'Periodo de Gozo de Ferias\n',
-            style: 'tableHeader',
-            alignment: 'left',
-            bold: true,
-          },
-          { text: `${cabecalho.periodoGozo}` },
-        ],
-        colSpan: 3,
-      },
-      {},
-      {},
-      {
-        text: [
-          {
-            text: 'Abono Pecuniario\n',
-            style: 'tableHeader',
-            alignment: 'left',
-            bold: true,
-          },
-          { text: `${cabecalho.diasAbono}` },
-        ],
-      },
-    ]);
-
-    itensPdf.push([
-      //Linha Salario Fixo
+      //Linha Salario
       {
         text: [
           {
@@ -329,9 +356,20 @@ export class PagtoPDFService {
             text: `${salario}`,
           },
         ],
-        colSpan: 2,
       },
-      {},
+      {
+        text: [
+          {
+            text: 'Data Pagto\n',
+            style: 'tableHeader',
+            alignment: 'left',
+            bold: true,
+          },
+          {
+            text: `${this.fixData(pagtos.dtPagto)}`,
+          },
+        ],
+      },
       {
         text: [
           {
@@ -364,38 +402,8 @@ export class PagtoPDFService {
           },
           { text: `${conta}` },
         ],
-      },
-    ]);
-
-    itensPdf.push([
-      //Linha Periodo Aquisitivo
-      {
-        text: [
-          {
-            text: 'Periodo Aquisitivo\n',
-            style: 'tableHeader',
-            alignment: 'left',
-            bold: true,
-          },
-          { text: `${cabecalho.periodoAquisitivo}` },
-        ],
-        colSpan: 3,
-      },
-      {},
-      {},
-      {
-        text: [
-          {
-            text: 'Data Pagto\n',
-            style: 'tableHeader',
-            alignment: 'left',
-            bold: true,
-          },
-          { text: `${this.fixData(pagtos.dtPagto)}` },
-        ],
         colSpan: 2,
-      },
-      {},
+      }, {}
     ]);
 
     itensPdf.push([
@@ -411,7 +419,8 @@ export class PagtoPDFService {
         style: 'itens',
         alignment: 'left',
         bold: true,
-      },
+        colSpan: 2,
+      }, {},
       {
         text: 'Referencia',
         style: 'itens',
@@ -435,6 +444,7 @@ export class PagtoPDFService {
     itens.sort((a, b) => {
       return a.codVerba - b.codVerba;
     });
+
     itens.forEach((el) => {
       let referencia = el.referencia.toLocaleString(undefined, {
         minimumFractionDigits: 2,
@@ -451,7 +461,8 @@ export class PagtoPDFService {
             text: `${el.descVerba}`,
             style: 'tableHeader',
             alignment: 'left',
-          },
+            colSpan: 2,
+          }, {},
           {
             text: `${referencia}`,
             style: 'tableHeader',
@@ -482,7 +493,8 @@ export class PagtoPDFService {
             text: `${el.descVerba}`,
             style: 'tableHeader',
             alignment: 'left',
-          },
+            colSpan: 2,
+          }, {},
           {
             text: `${referencia}`,
             style: 'tableHeader',
@@ -505,7 +517,54 @@ export class PagtoPDFService {
     });
 
     itensPdf.push([
-      //Linha Resumo
+      //Linha Observacoes
+      {
+        text: [
+          {
+            text: `'Valido como Comprovante Mensal de Rendimentos' - ( Artigo no. 41 e 464 da CLT, Portaria MTPS/GM 3.626 de 13/11/1991 )\n\n`,
+            style: 'tableHeader',
+            alignment: 'left',
+            fontSize: 9,
+          },
+        ],
+        colSpan: 6,
+      }, {}, {}, {}, {}, {}
+    ]);
+
+    itensPdf.push([
+      //Linha Base para FGTS
+      {
+        text: [
+          {
+            text: 'Base para FGTS\n',
+            style: 'tableHeader',
+            alignment: 'left',
+            bold: true,
+          },
+          {
+            text: `${9999.99}`,
+            color: '#FF0000',
+          },
+        ],
+        colSpan: 2,
+      },
+      {},
+      {
+        text: [
+          {
+            text: 'FGTS do Mês\n',
+            style: 'tableHeader',
+            alignment: 'left',
+            bold: true,
+          },
+          {
+            text: `${9999.99}`,
+            color: '#FF0000',
+          },
+        ],
+        colSpan: 2,
+      },
+      {},
       {
         text: [
           {
@@ -516,6 +575,41 @@ export class PagtoPDFService {
           },
           {
             text: `${totalProventos}`,
+          },
+        ],
+        colSpan: 2,
+      }, {}
+    ]);
+
+    itensPdf.push([
+      //Linha Base Calc IRRF
+      {
+        text: [
+          {
+            text: 'Base Cálc. IRRF\n',
+            style: 'tableHeader',
+            alignment: 'left',
+            bold: true,
+          },
+          {
+            text: `${9999.99}`,
+            color: '#FF0000',
+          },
+        ],
+        colSpan: 2,
+      },
+      {},
+      {
+        text: [
+          {
+            text: 'Pensão Alimentícia Judicial\n',
+            style: 'tableHeader',
+            alignment: 'left',
+            bold: true,
+          },
+          {
+            text: `${9999.99}`,
+            color: '#FF0000',
           },
         ],
         colSpan: 2,
@@ -534,6 +628,40 @@ export class PagtoPDFService {
           },
         ],
         colSpan: 2,
+      }, {}
+    ]);
+
+    itensPdf.push([
+      //Linha Sal. Contribuição
+      {
+        text: [
+          {
+            text: 'Sal. Contribuição. INSS\n',
+            style: 'tableHeader',
+            alignment: 'left',
+            bold: true,
+          },
+          {
+            text: `${9999.99}`,
+            color: '#FF0000',
+          },
+        ],
+        colSpan: 2,
+      },
+      {},
+      {
+        text: [
+          {
+            text: '\n',
+            style: 'tableHeader',
+            alignment: 'left',
+            bold: true,
+          },
+          {
+            text: `${""}`,
+          },
+        ],
+        colSpan: 2,
       },
       {},
       {
@@ -548,78 +676,15 @@ export class PagtoPDFService {
             text: `${liquidoReceber}`,
           },
         ],
-      },
-    ]);
-
-    itensPdf.push([
-      //Linha Resumo
-      {
-        text: [
-          {
-            text: 'Informativo:\n\n\n',
-            style: 'tableHeader',
-            alignment: 'left',
-            bold: true,
-            fontSize: 9,
-          },
-        ],
-        colSpan: 5,
-      },
-      {},
-      {},
-      {},
-      {},
-    ]);
-
-    itensPdf.push([
-      //Linha Resumo
-      {
-        text: [
-          {
-            text: `De acordo com o parágrafo único do artigo 145 da CLT, recebi da firma ${cabecalho.empresa.nome}, a importância líquida de R$ ${liquidoReceber} (${""})  que me paga adiantadamente por motivos de minhas férias regulamentares. Ora concedidas e que vou gozar de acordo com a descrição acima. Tudo conforme aviso que recebi em tempo ao que dei meu ciente. Para clareza e documento, firmo o presente recebido.Dando firma, plena e geral quitação\n\n`,
-            style: 'tableHeader',
-            alignment: 'left',
-            fontSize: 9,
-          },
-        ],
-        colSpan: 5,
-      },
-      {},
-      {},
-      {},
-      {},
-    ]);
-
-    itensPdf.push([
-      //Linha Resumo
-      {
-        columns: [
-          {
-            text: `${'__________________________________________________'}\n${func.nome
-              }\n\n`,
-            style: 'tableHeader',
-            alignment: 'center',
-          },
-          {
-            text: `${'__________________________________________________'}\n${cabecalho.empresa.nome
-              }\n\n`,
-            style: 'tableHeader',
-            alignment: 'center',
-          },
-        ],
-        colSpan: 5,
-      },
-      {},
-      {},
-      {},
-      {},
+        colSpan: 2,
+      }, {}
     ]);
 
     let ret = [
       {
         style: 'tableExample',
         table: {
-          widths: ['auto', '*', 'auto', 'auto', 'auto'],
+          widths: ['auto', '*', 'auto', 'auto', 'auto', 60],
           body: itensPdf,
         },
         layout: {
@@ -641,6 +706,8 @@ export class PagtoPDFService {
   }
 
   fixData(datastr: string): string {
+    datastr = datastr.replaceAll("/", "")
+
     let dataCorreta =
       datastr.substring(6, 8) +
       '/' +

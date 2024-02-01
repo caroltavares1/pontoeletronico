@@ -75,8 +75,16 @@ Static Function getArrFun(cId)
 		aDados[nPos]['ufCp' ] := AllTrim(SRA->RA_UFCP )
 		aDados[nPos]['categoria' ] := AllTrim(SRA->RA_CATFUNC )
 		aDados[nPos]['depIR' ] := AllTrim(SRA->RA_DEPIR )
+		aDados[nPos]['depSF' ] := AllTrim(SRA->RA_DEPSF )
 		aDados[nPos]['bancoAgencia' ] := AllTrim(SRA->RA_BCDEPSA )
 		aDados[nPos]['conta' ] := AllTrim(SRA->RA_CTDEPSA )
+		aDados[nPos]['endereco' ] := AllTrim(SRA->RA_ENDEREC ) +" "+AllTrim(SRA->RA_LOGRNUM)
+		aDados[nPos]['bairro' ] := AllTrim(SRA->RA_BAIRRO )
+		aDados[nPos]['municipio' ] := AllTrim(SRA->RA_MUNICIP )
+		aDados[nPos]['estado' ] := AllTrim(SRA->RA_ESTADO )
+		aDados[nPos]['cep' ] := AllTrim(SRA->RA_CEP )
+		aDados[nPos]['pis' ] := AllTrim(SRA->RA_PIS )
+		
 		if (AllTrim(SRA->RA_SITFOLH ) == '')
 			aDados[nPos]['situacao' ] := 'NORMAL'
 		elseif AllTrim(SRA->RA_SITFOLH ) == 'F'
