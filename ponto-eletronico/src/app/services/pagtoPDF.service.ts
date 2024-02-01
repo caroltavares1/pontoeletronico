@@ -175,6 +175,30 @@ export class PagtoPDFService {
       minimumFractionDigits: 2,
     });
 
+    let valorFgts = pagtos.valorFgts.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+    });
+
+    let baseFgts = pagtos.baseFgts.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+    });
+
+    let baseIrrf = pagtos.baseIrrf.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+    });
+
+    let contribInss = pagtos.contribInss.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+    });
+
+    pagtos.pensaoAliment = 0
+
+    let pensaoAliment = pagtos.pensaoAliment.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+    });
+
+    console.log(cabecalho)
+
     itensPdf.push([
       //Linha Funcao
       {
@@ -315,7 +339,7 @@ export class PagtoPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${func.pis}` },
+          { text: `${this.getCompetencia(cabecalho.ano, cabecalho.mes)}` },
         ],
       },
       {
@@ -542,8 +566,7 @@ export class PagtoPDFService {
             bold: true,
           },
           {
-            text: `${9999.99}`,
-            color: '#FF0000',
+            text: `${baseFgts}`,
           },
         ],
         colSpan: 2,
@@ -558,8 +581,7 @@ export class PagtoPDFService {
             bold: true,
           },
           {
-            text: `${9999.99}`,
-            color: '#FF0000',
+            text: `${valorFgts}`,
           },
         ],
         colSpan: 2,
@@ -592,8 +614,7 @@ export class PagtoPDFService {
             bold: true,
           },
           {
-            text: `${9999.99}`,
-            color: '#FF0000',
+            text: `${baseIrrf}`,
           },
         ],
         colSpan: 2,
@@ -608,7 +629,7 @@ export class PagtoPDFService {
             bold: true,
           },
           {
-            text: `${9999.99}`,
+            text: `${pensaoAliment}`,
             color: '#FF0000',
           },
         ],
@@ -642,8 +663,7 @@ export class PagtoPDFService {
             bold: true,
           },
           {
-            text: `${9999.99}`,
-            color: '#FF0000',
+            text: `${contribInss}`,
           },
         ],
         colSpan: 2,
@@ -715,6 +735,62 @@ export class PagtoPDFService {
       '/' +
       datastr.substring(0, 4);
     return dataCorreta;
+  }
+
+  getCompetencia(ano: string, mes: string) {
+    let competencia = ano+mes
+    let mesExtenso
+
+    if (mes == "01"){
+      mesExtenso = "Janeiro"
+    }
+
+    if (mes == "02"){
+      mesExtenso = "Fevereiro"
+    }
+
+    if (mes == "03"){
+      mesExtenso = "Março"
+    }
+
+    if (mes == "04"){
+      mesExtenso = "Abril"
+    }
+
+    if (mes == "05"){
+      mesExtenso = "Maio"
+    }
+
+    if (mes == "06"){
+      mesExtenso = "Junho"
+    }
+
+    if (mes == "07"){
+      mesExtenso = "Julho"
+    }
+
+    if (mes == "08"){
+      mesExtenso = "Agosto"
+    }
+
+    if (mes == "09"){
+      mesExtenso = "Setembro"
+    }
+
+    if (mes == "10"){
+      mesExtenso = "Outubro"
+    }
+
+    if (mes == "11"){
+      mesExtenso = "Novembro"
+    }
+
+    if (mes == "12"){
+      mesExtenso = "Dezembro"
+    }
+
+    competencia = mesExtenso+"/"+ano
+    return competencia
   }
 
   getBase64ImageFromURL(url: string): Promise<any> {

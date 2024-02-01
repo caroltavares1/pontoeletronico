@@ -21,7 +21,12 @@ WSMETHOD GET WSSERVICE detalhesPagto
 	Local nPosMatr := aScan(aParams,{|x| x[1] == "MATRICULA"})
 	Local nPosDtArq := aScan(aParams,{|x| x[1] == "DATAARQ"})
 	Local nPosRoteiro := aScan(aParams,{|x| x[1] == "ROTEIRO"})
-	Local nTotalDes := nTotalPro := 0
+	Local nTotalDes := 0
+	Local nTotalPro := 0
+	Local nValFgts := 0
+	Local nBaseFgts := 0
+	Local nBaseIrrf := 0
+	Local nContrInss := 0
 
 	If nPosFilial > 0 .AND. nPosMatr > 0  .AND. nPosDtArq > 0 .AND. nPosRoteiro > 0
 		BEGINSQL ALIAS cAlias
@@ -36,7 +41,8 @@ WSMETHOD GET WSSERVICE detalhesPagto
 				SRD.RD_DATPGT,
 				SRD.RD_VALORBA,
                 SRV.RV_DESC,
-				SRV.RV_TIPOCOD
+				SRV.RV_TIPOCOD,
+				SRV.RV_CODFOL
             FROM
                 %Table:SRD% as SRD
                 INNER JOIN %Table:SRV% SRV ON SRV.RV_FILIAL = LEFT(SRD.RD_FILIAL, 2)
@@ -46,7 +52,6 @@ WSMETHOD GET WSSERVICE detalhesPagto
                 AND SRD.RD_MAT = %exp:aParams[nPosMatr,2]%
                 AND SRD.RD_DATARQ = %exp:aParams[nPosDtArq,2]%
                 AND SRD.RD_ROTEIR = %exp:aParams[nPosRoteiro,2]%
-				AND (SRV.RV_TIPOCOD = 1 OR SRV.RV_TIPOCOD = 2)
 		ENDSQL
 
 		// cResponse['query'] := GetLastQuery()[2]
@@ -70,6 +75,16 @@ WSMETHOD GET WSSERVICE detalhesPagto
 			ElseIf (cAlias)->RV_TIPOCOD == "2"
 				nTotalDes += (cAlias)->RD_VALOR
 			EndIf
+			
+			If (cAlias)->RV_CODFOL == "0017"
+				nBaseFgts += (cAlias)->RD_VALOR
+			ElseIf (cAlias)->RV_CODFOL == "0018"
+				nValFgts += (cAlias)->RD_VALOR
+			ElseIf (cAlias)->RV_CODFOL == "0015"
+				nBaseIrrf += (cAlias)->RD_VALOR
+			ElseIf (cAlias)->RV_CODFOL == "0013"
+				nContrInss += (cAlias)->RD_VALOR
+			EndIf
 
 			cResponse['salario'] := (cAlias)->RD_VALORBA
 			cResponse['dtPagto'] := (cAlias)->RD_DATPGT
@@ -85,6 +100,10 @@ WSMETHOD GET WSSERVICE detalhesPagto
 		cResponse['message'] := 'Nenhum registro de ferias encontrado'
 		lRet := .F.
 	Else
+		cResponse['baseFgts'] := nBaseFgts
+		cResponse['valorFgts'] := nValFgts
+		cResponse['baseIrrf'] := nBaseIrrf
+		cResponse['contribInss'] := nContrInss
 		cResponse['totalProventos'] := nTotalPro
 		cResponse['totalDescontos'] := nTotalDes
 		cResponse['liquidoReceber'] := nTotalPro - nTotalDes
