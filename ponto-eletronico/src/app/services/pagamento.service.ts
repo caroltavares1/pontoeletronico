@@ -23,7 +23,7 @@ export class PagamentoService {
   apiURL = environment.apiURL;
   itensFerias!: Array<Object>;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getColumns(): Array<PoTableColumn> {
     return [
@@ -97,18 +97,45 @@ export class PagamentoService {
   }
 
   getItensPagto(
-    cpf: string,
+    periodo: any,
   ): Observable<any> {
     const options = httpOptions;
+    const per = periodo
+
     options.params = {
-      cpf: cpf,
+      filial: per.filial,
+      matricula: per.matricula,
+      dataarq: per.ano + per.mes,
+      roteiro: this.getRoteiro(per.roteiro)
     };
 
-    let url = this.apiURL + `/detalhesFerias/`;
+    let url = this.apiURL + `/detalhesPagto/`;
     let resp = this.http.get(url, options);
     setTimeout(() => {
       return resp;
     }, 5000);
     return resp;
+  }
+
+  getRoteiro( id:string){
+    let cod = id.substring(0,1)
+    
+    if(cod === "1"){
+      cod = "ADI"
+    }
+
+    if(cod === "2"){
+      cod = "FOL"
+    }
+
+    if(cod === "3"){
+      cod = "131"
+    }
+    
+    if(cod === "4"){
+      cod = "132"
+    }
+    
+    return cod
   }
 }

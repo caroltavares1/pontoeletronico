@@ -56,7 +56,7 @@ export class PagamentoComponent implements OnInit {
     private userService: UserService,
     private pdf: PagtoPDFService,
     private pagamentoService: PagamentoService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.disclaimerGroup = {
@@ -113,6 +113,8 @@ export class PagamentoComponent implements OnInit {
   }
 
   imprimirRecibo() {
+    
+
     const periodoSelecionado: any = this.processoPagto.find(
       (recibo: any) => recibo['$selected']
     );
@@ -120,6 +122,26 @@ export class PagamentoComponent implements OnInit {
     if (periodoSelecionado != undefined) {
       this.cabecalho = periodoSelecionado;
       this.cabecalho.cpf = this.cpf
+
+      this.userService.getUser().subscribe({
+        next: (data) => {
+          this.funcionario = data.user[0]
+        },
+        complete: () => {
+          this.cabecalho.funcionario = this.funcionario
+        }
+      })
+
+      this.userService.getFilialById(this.cabecalho.filial).subscribe({
+        next: (data) => {
+          this.filial = data
+          // console.log(this.filial)
+        },
+        complete: () => {
+          this.cabecalho.empfil = this.filial
+        }
+      })
+
       this.pdf.openPDF(this.cabecalho);
     }
   }
@@ -167,19 +189,6 @@ export class PagamentoComponent implements OnInit {
   resetFilterHiringProcess() {
     this.processoPagtoFiltered = [...this.processoPagto];
     this.status = [];
-  }
-
-  onSelect(matricula: any) {
-    const value = matricula.value;
-    if (value != null) {
-      this.userService.getFilialById(value.filial).subscribe((resp) => {
-        this.setFilial(resp);
-      });
-
-      this.userService.getUser().subscribe((func) => {
-        this.setFuncionario(func.user);
-      });
-    }
   }
 
   setFilial(filial: any) {

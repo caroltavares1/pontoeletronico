@@ -13,20 +13,17 @@ export class PagtoPDFService {
   urlLogo!: string;
   pagtos: Array<Object> = [];
 
-  constructor(private pagtoService: PagamentoService) {}
+  constructor(private pagtoService: PagamentoService) { }
 
   setDados(cpf: string) {
     this.pagtoService.getItensPagto(cpf).subscribe((data) => {
       this.pagtos = data;
     });
-    // if (callback != null) {
-    //   callback();
-    // }
   }
 
   public async openPDF(cabecalho: any) {
-    let ferias: any = null;
-    
+    let pagto: any = null;
+
     const logoURL64 = this.getBase64ImageFromURL(
       '../../assets/images/grupoBCI.jpg'
     );
@@ -35,36 +32,26 @@ export class PagtoPDFService {
       this.urlLogo = el;
     });
 
-    this.pagtoService.getItensPagto(cabecalho.cpf).subscribe({
+    this.pagtoService.getItensPagto(cabecalho).subscribe({
       next: (data: any) => {
-        ferias = data;
+        pagto = data;
       },
       complete: () => {
-        this.pagtos = ferias;
+        this.pagtos = pagto;
         this.processa(cabecalho);
       },
     });
   }
 
   processa(cabecalho: any) {
-    let start = cabecalho.ferias.iniFerias;
-    let end = cabecalho.ferias.fimFerias;
-    let empresa = cabecalho.empresa;
-    let matricula = cabecalho.matricula;
-    let ferias = localStorage.getItem('ferias');
-    if (ferias != undefined) {
-      this.pagtos = JSON.parse(ferias);
-    }
-
+    let empresa = cabecalho.empfil;
+    let matricula = cabecalho.funcionario;
+    
     var dd = {
       pageMargins: [40, 120, 40, 60],
       pageSize: 'A4',
       pageOrientation: 'portrait',
       header: () => {
-        let s, e;
-
-        s = this.fixData(start);
-        e = this.fixData(end);
 
         let stack = {
           stack: [
@@ -75,7 +62,6 @@ export class PagtoPDFService {
                 widths: ['*', 'auto', '*'],
                 heights: [50],
                 headerRows: 3,
-                // keepWithHeaderRows: 1,
                 body: [
                   [
                     {
@@ -161,33 +147,31 @@ export class PagtoPDFService {
       content: this.content(cabecalho, this.pagtos),
     };
 
-    let name = 'ferias_' + uuid.v4() + '.pdf';
+    let name = 'pagto_' + uuid.v4() + '.pdf';
     pdfMake.createPdf(dd).download(name);
   }
 
-  content(cabecalho: any, ferias: any) {
-    let mat = cabecalho.matricula;
+  content(cabecalho: any, pagtos: any) {
     let func = cabecalho.funcionario;
-    let fer = cabecalho.ferias;
     let itensPdf: Array<any> = [];
-    let itens: Array<any> = ferias.matriculas;
+    let itens: Array<any> = pagtos.itensPagto;
     let banco = func.bancoAgencia.substring(0, 3);
     let agencia = func.bancoAgencia.substring(3);
     let conta = func.conta;
 
-    let totalProventos = ferias.totalProventos.toLocaleString(undefined, {
+    let totalProventos = pagtos.totalProventos.toLocaleString(undefined, {
       minimumFractionDigits: 2,
     });
 
-    let totalDescontos = ferias.totalDescontos.toLocaleString(undefined, {
+    let totalDescontos = pagtos.totalDescontos.toLocaleString(undefined, {
       minimumFractionDigits: 2,
     });
 
-    let liquidoReceber = ferias.liquidoReceber.toLocaleString(undefined, {
+    let liquidoReceber = pagtos.liquidoReceber.toLocaleString(undefined, {
       minimumFractionDigits: 2,
     });
 
-    let salario = ferias.salario.toLocaleString(undefined, {
+    let salario = pagtos.salario.toLocaleString(undefined, {
       minimumFractionDigits: 2,
     });
 
@@ -212,7 +196,7 @@ export class PagtoPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${this.fixData(mat.admissao)}` },
+          { text: `${this.fixData(func.admissao)}` },
         ],
       },
       {
@@ -301,7 +285,7 @@ export class PagtoPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${this.fixData(fer.fimPerAq)}` },
+          { text: `${this.fixData("")}` },
         ],
       },
       {
@@ -407,7 +391,7 @@ export class PagtoPDFService {
             alignment: 'left',
             bold: true,
           },
-          { text: `${this.fixData(ferias.dtPagto)}` },
+          { text: `${this.fixData(pagtos.dtPagto)}` },
         ],
         colSpan: 2,
       },
@@ -592,7 +576,7 @@ export class PagtoPDFService {
       {
         text: [
           {
-            text: `De acordo com o parágrafo único do artigo 145 da CLT, recebi da firma ${cabecalho.empresa.nome}, a importância líquida de R$ ${liquidoReceber} (${ferias.receberExtenso})  que me paga adiantadamente por motivos de minhas férias regulamentares. Ora concedidas e que vou gozar de acordo com a descrição acima. Tudo conforme aviso que recebi em tempo ao que dei meu ciente. Para clareza e documento, firmo o presente recebido.Dando firma, plena e geral quitação\n\n`,
+            text: `De acordo com o parágrafo único do artigo 145 da CLT, recebi da firma ${cabecalho.empresa.nome}, a importância líquida de R$ ${liquidoReceber} (${""})  que me paga adiantadamente por motivos de minhas férias regulamentares. Ora concedidas e que vou gozar de acordo com a descrição acima. Tudo conforme aviso que recebi em tempo ao que dei meu ciente. Para clareza e documento, firmo o presente recebido.Dando firma, plena e geral quitação\n\n`,
             style: 'tableHeader',
             alignment: 'left',
             fontSize: 9,
@@ -611,16 +595,14 @@ export class PagtoPDFService {
       {
         columns: [
           {
-            text: `${'__________________________________________________'}\n${
-              func.nome
-            }\n\n`,
+            text: `${'__________________________________________________'}\n${func.nome
+              }\n\n`,
             style: 'tableHeader',
             alignment: 'center',
           },
           {
-            text: `${'__________________________________________________'}\n${
-              cabecalho.empresa.nome
-            }\n\n`,
+            text: `${'__________________________________________________'}\n${cabecalho.empresa.nome
+              }\n\n`,
             style: 'tableHeader',
             alignment: 'center',
           },
