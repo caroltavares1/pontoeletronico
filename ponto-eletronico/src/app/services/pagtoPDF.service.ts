@@ -197,8 +197,6 @@ export class PagtoPDFService {
       minimumFractionDigits: 2,
     });
 
-    console.log(cabecalho)
-
     itensPdf.push([
       //Linha Funcao
       {
@@ -540,6 +538,25 @@ export class PagtoPDFService {
       }
     });
 
+    let linhasEmBranco = 28 - itensPdf.length
+
+    for (let index = 0; index < linhasEmBranco; index++) {
+      itensPdf.push([
+        //Linhas em Branco
+        {
+          text: [
+            {
+              text: '    ',
+              style: 'tableHeader',
+              alignment: 'left',
+              fontSize: 9,
+            },
+          ],
+          colSpan: 6,
+        }, {}, {}, {}, {}, {}
+      ]);
+    }
+
     itensPdf.push([
       //Linha Observacoes
       {
@@ -721,7 +738,6 @@ export class PagtoPDFService {
         fontSize: 10,
       },
     ];
-
     return ret;
   }
 
@@ -738,58 +754,58 @@ export class PagtoPDFService {
   }
 
   getCompetencia(ano: string, mes: string) {
-    let competencia = ano+mes
+    let competencia = ano + mes
     let mesExtenso
 
-    if (mes == "01"){
+    if (mes == "01") {
       mesExtenso = "Janeiro"
     }
 
-    if (mes == "02"){
+    if (mes == "02") {
       mesExtenso = "Fevereiro"
     }
 
-    if (mes == "03"){
+    if (mes == "03") {
       mesExtenso = "Março"
     }
 
-    if (mes == "04"){
+    if (mes == "04") {
       mesExtenso = "Abril"
     }
 
-    if (mes == "05"){
+    if (mes == "05") {
       mesExtenso = "Maio"
     }
 
-    if (mes == "06"){
+    if (mes == "06") {
       mesExtenso = "Junho"
     }
 
-    if (mes == "07"){
+    if (mes == "07") {
       mesExtenso = "Julho"
     }
 
-    if (mes == "08"){
+    if (mes == "08") {
       mesExtenso = "Agosto"
     }
 
-    if (mes == "09"){
+    if (mes == "09") {
       mesExtenso = "Setembro"
     }
 
-    if (mes == "10"){
+    if (mes == "10") {
       mesExtenso = "Outubro"
     }
 
-    if (mes == "11"){
+    if (mes == "11") {
       mesExtenso = "Novembro"
     }
 
-    if (mes == "12"){
+    if (mes == "12") {
       mesExtenso = "Dezembro"
     }
 
-    competencia = mesExtenso+"/"+ano
+    competencia = mesExtenso + "/" + ano
     return competencia
   }
 
