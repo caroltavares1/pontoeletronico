@@ -19,6 +19,10 @@
       [p-striped]="true"
       [p-columns]="processoPagtoColumns"
       [p-items]="processoPagtoFiltered"
+      [p-height]="400"
+      [p-loading-show-more]="true"
+      [p-loading]="!hidden"
+      [p-infinite-scroll]="false"
     >
     </po-table>
     <po-loading-overlay [hidden]="hidden">

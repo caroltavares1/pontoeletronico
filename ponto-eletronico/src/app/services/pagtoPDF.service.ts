@@ -191,9 +191,7 @@ export class PagtoPDFService {
       minimumFractionDigits: 2,
     });
 
-    pagtos.pensaoAliment = 0
-
-    let pensaoAliment = pagtos.pensaoAliment.toLocaleString(undefined, {
+    let pensaoAliment = pagtos.totalPensao.toLocaleString(undefined, {
       minimumFractionDigits: 2,
     });
 
@@ -647,7 +645,6 @@ export class PagtoPDFService {
           },
           {
             text: `${pensaoAliment}`,
-            color: '#FF0000',
           },
         ],
         colSpan: 2,

@@ -24,9 +24,11 @@ WSMETHOD GET WSSERVICE detalhesPagto
 	Local nTotalDes := 0
 	Local nTotalPro := 0
 	Local nValFgts := 0
+	Local nTotalPensao := 0
 	Local nBaseFgts := 0
 	Local nBaseIrrf := 0
 	Local nContrInss := 0
+	Local cVrbPensao := ""
 
 	If nPosFilial > 0 .AND. nPosMatr > 0  .AND. nPosDtArq > 0 .AND. nPosRoteiro > 0
 		BEGINSQL ALIAS cAlias
@@ -68,14 +70,14 @@ WSMETHOD GET WSSERVICE detalhesPagto
 			aDados[nPos]['codVerba' ] := (cAlias)->RD_PD
 			aDados[nPos]['descVerba' ] := ALLTRIM((cAlias)->RV_DESC)
 			aDados[nPos]['tipoVerba' ] := (cAlias)->RV_TIPOCOD
-			
-			
+
+
 			If (cAlias)->RV_TIPOCOD == "1"
 				nTotalPro += (cAlias)->RD_VALOR
 			ElseIf (cAlias)->RV_TIPOCOD == "2"
 				nTotalDes += (cAlias)->RD_VALOR
 			EndIf
-			
+
 			If (cAlias)->RV_CODFOL == "0017"
 				nBaseFgts += (cAlias)->RD_VALOR
 			ElseIf (cAlias)->RV_CODFOL == "0018"
@@ -84,6 +86,11 @@ WSMETHOD GET WSSERVICE detalhesPagto
 				nBaseIrrf += (cAlias)->RD_VALOR
 			ElseIf (cAlias)->RV_CODFOL == "0013"
 				nContrInss += (cAlias)->RD_VALOR
+			EndIf
+
+			cVrbPensao := GetVrbPensao(aParams[nPosFilial,2], aParams[nPosMatr,2])
+			If (cAlias)->RD_PD $ cVrbPensao
+				nTotalPensao += (cAlias)->RD_VALOR
 			EndIf
 
 			cResponse['salario'] := (cAlias)->RD_VALORBA
@@ -106,6 +113,7 @@ WSMETHOD GET WSSERVICE detalhesPagto
 		cResponse['contribInss'] := nContrInss
 		cResponse['totalProventos'] := nTotalPro
 		cResponse['totalDescontos'] := nTotalDes
+		cResponse['totalPensao'] := nTotalPensao
 		cResponse['liquidoReceber'] := nTotalPro - nTotalDes
 		cResponse['itensPagto'] := aDados
 	EndIf
@@ -113,3 +121,57 @@ WSMETHOD GET WSSERVICE detalhesPagto
 	Self:SetContentType('application/json')
 	Self:SetResponse(EncodeUTF8(cResponse:toJson()))
 Return lRet
+
+
+Static Function GetVrbPensao(cFilFunc, cMatricula)
+	Local cVrbPensao := ""
+	Local cAlias := GetNextAlias()
+
+	BEGINSQL ALIAS cAlias
+        SELECT
+            SRQ.RQ_VERBADT,
+            SRQ.RQ_VERBFOL,
+            SRQ.RQ_VERBFER,
+            SRQ.RQ_VERB131,
+            SRQ.RQ_VERB132,
+            SRQ.RQ_VERBPLR
+        FROM
+            %Table:SRQ% AS SRQ
+        WHERE
+            SRQ.%NotDel%
+            AND SRQ.RQ_FILIAL = %exp:cFilFunc%
+            AND SRQ.RQ_MAT = %exp:cMatricula%
+            AND SRQ.RQ_CIC != ''
+	ENDSQL
+
+	While !(cAlias)->(Eof())
+		If !Empty((cAlias)->RQ_VERBADT)
+			cVrbPensao += (cAlias)->RQ_VERBADT + ";"
+		EndIf
+
+		If !Empty((cAlias)->RQ_VERBFOL)
+			cVrbPensao += (cAlias)->RQ_VERBFOL + ";"
+		EndIf
+
+		If !Empty((cAlias)->RQ_VERBFER)
+			cVrbPensao += (cAlias)->RQ_VERBFER + ";"
+		EndIf
+
+		If !Empty((cAlias)->RQ_VERB131)
+			cVrbPensao += (cAlias)->RQ_VERB131 + ";"
+		EndIf
+
+		If !Empty((cAlias)->RQ_VERB132)
+			cVrbPensao += (cAlias)->RQ_VERB132 + ";"
+		EndIf
+
+		If !Empty((cAlias)->RQ_VERBPLR)
+			cVrbPensao += (cAlias)->RQ_VERBPLR + ";"
+		EndIf
+		(cAlias)->(DbSkip())
+	EndDo
+	(cAlias)->(DbCloseArea())
+
+	cVrbPensao := LEFT(cVrbPensao, Len(cVrbPensao)-1)
+
+Return cVrbPensao
