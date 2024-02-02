@@ -182,15 +182,25 @@ export class FeriasComponent implements OnInit {
   }
 
   onSelect(matricula: any) {
+    let funcionario : any
     const value = matricula.value;
     if (value != null) {
       this.userService.getFilialById(value.filial).subscribe((resp) => {
         this.setFilial(resp);
       });
 
-      this.userService.getUser().subscribe((func) => {
-        this.setFuncionario(func.user);
-      });
+      // this.userService.getUser().subscribe((func) => {
+      //   this.setFuncionario(func.user);
+      // });
+
+      this.userService.getUser().subscribe({
+        next: (data) =>{
+          funcionario = data
+        },
+        complete: () =>{
+          this.funcionario = funcionario.user[0] //Temp
+        }
+      })
 
       this.feriasService
         .getPrevFerias(value.filial, value.matricula)
