@@ -32,7 +32,7 @@ WSMETHOD GET WSSERVICE detalhesPagto
 
 	If nPosFilial > 0 .AND. nPosMatr > 0  .AND. nPosDtArq > 0 .AND. nPosRoteiro > 0
 		BEGINSQL ALIAS cAlias
-            SELECT
+            SELECT DISTINCT
                 SRD.RD_FILIAL,
                 SRD.RD_MAT,
                 SRD.RD_DATARQ,
@@ -56,7 +56,7 @@ WSMETHOD GET WSSERVICE detalhesPagto
                 AND SRD.RD_ROTEIR = %exp:aParams[nPosRoteiro,2]%
 		ENDSQL
 
-		// cResponse['query'] := GetLastQuery()[2]
+		// cReksponse['query'] := GetLastQuery()[2]
 
 		While !(cAlias)->(Eof())
 			Aadd(aDados, JsonObject():new())

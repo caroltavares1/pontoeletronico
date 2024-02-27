@@ -26,7 +26,7 @@ WSMETHOD GET WSSERVICE detalhesFerias
 
 	If nPosId > 0 .AND. nPosFil > 0 .AND. nPosData > 0
 		BEGINSQL ALIAS cAlias
-            SELECT
+            SELECT DISTINCT
                 SRR.RR_FILIAL, SRR.RR_MAT, SRR.RR_HORAS, SRR.RR_PD, SRR.RR_TIPO1, 
 				SRR.RR_VALOR, SRV.RV_DESC, SRV.RV_TIPOCOD, SRR.RR_VALORBA, SRR.RR_DATAPAG
             FROM %Table:SRR% AS SRR
