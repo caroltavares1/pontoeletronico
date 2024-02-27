@@ -29,12 +29,12 @@ export class HomeComponent implements OnInit {
       shortLabel: 'Ponto',
     },
     {
-      label: 'Demonstrativo',
+      label: 'Demonstrativos',
       icon: 'po-icon po-icon-menu-open',
-      shortLabel: 'Demonstrativo',
+      shortLabel: 'Demonstrativos',
       subItems: [
         { label: 'Ferias', link: '/demonstrativo/ferias' },
-        { label: 'Pagamento', link: '/demonstrativo/pagamento' },
+        { label: 'Pgto. Salario', link: '/demonstrativo/pagamento' },
       ],
     },
     {

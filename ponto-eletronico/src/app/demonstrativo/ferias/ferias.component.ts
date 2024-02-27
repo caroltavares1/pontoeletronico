@@ -48,6 +48,11 @@ export class FeriasComponent implements OnInit {
 
   setOptions() {
     if (this.matriculas.length > 0) {
+      
+      this.matriculas = this.matriculas.filter( (el) =>{
+        return el.demissao.trim() === ''
+      })
+
       this.matriculas.forEach((el) => {
         this.options.push({
           value: el,
