@@ -71,13 +71,14 @@ export class PagamentoComponent implements OnInit {
     this.processoPagtoFiltered = [...this.processoPagto];
     this.getFilial();
 
-    let data: any;
+    let data: [any];
     this.cpf = sessionStorage.getItem('cpf');
 
     if (this.cpf != null && this.cpf != undefined) {
       this.pagamentoService.getFolhaPagto(this.cpf).subscribe({
         next: (dados) => {
           data = dados.folhaPagto;
+          data = data.sort( (a, b) => b.ano - a.ano || b.mes - a.mes)
         },
         complete: () => {
           this.processoPagto = data;
