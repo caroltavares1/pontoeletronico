@@ -22,6 +22,7 @@ WSMETHOD GET WSSERVICE folhaPagto
 	If nPosId > 0
 		BEGINSQL ALIAS cAlias
 			SELECT
+				'SRD' ARQ,
 				LEFT(SRD.RD_FILIAL, 2) EMPRESA,
 				SRD.RD_FILIAL FILIAL,
 				SRD.RD_MAT MATRICULA,
@@ -46,9 +47,35 @@ WSMETHOD GET WSSERVICE folhaPagto
 				SRD.RD_SEMANA,
 				SRD.RD_ROTEIR,
 				SRA.RA_DEMISSA
+			UNION
+			SELECT
+				'SRC' ARQ,
+				LEFT(SRC.RC_FILIAL, 2) EMPRESA,
+				SRC.RC_FILIAL FILIAL,
+				SRC.RC_MAT MATRICULA,
+				LEFT(SRC.RC_PERIODO, 4) ANO,
+				RIGHT(SRC.RC_PERIODO, 2) MES,
+				SRC.RC_SEMANA SEMANA,
+				SRC.RC_ROTEIR ROTEIRO
+			FROM
+				%Table:SRC% SRC
+				INNER JOIN %Table:SRA% SRA ON SRA.RA_MAT = SRC.RC_MAT
+				AND SRA.RA_FILIAL = SRC.RC_FILIAL
+			WHERE
+				SRC.D_E_L_E_T_ = ''
+				AND SRA.D_E_L_E_T_ = ''
+				AND SRA.RA_CIC = %exp:aParams[nPosId,2]%
+			GROUP BY
+				LEFT(SRC.RC_FILIAL, 2),
+				SRC.RC_FILIAL,
+				SRC.RC_MAT,
+				LEFT(SRC.RC_PERIODO, 4),
+				RIGHT(SRC.RC_PERIODO, 2),
+				SRC.RC_SEMANA,
+				SRC.RC_ROTEIR,
+				SRA.RA_DEMISSA
 			ORDER BY
-				LEFT(SRD.RD_PERIODO, 4) DESC,
-				RIGHT(SRD.RD_PERIODO, 2) DESC
+				ANO, MES
 		ENDSQL
 
 		While !(cAlias)->(Eof())
@@ -60,6 +87,7 @@ WSMETHOD GET WSSERVICE folhaPagto
 			aDados[nPos]['ano' ] := (cAlias)->ANO
 			aDados[nPos]['mes' ] := (cAlias)->MES
 			aDados[nPos]['semana' ] := (cAlias)->SEMANA
+			aDados[nPos]['arquivo' ] := (cAlias)->ARQ
 			aDados[nPos]['roteiro' ] := GetDescri((cAlias)->ROTEIRO)
 			cResponse['hasContent'] := .T.
 			(cAlias)->(DbSkip())

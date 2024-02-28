@@ -33,18 +33,18 @@ WSMETHOD GET WSSERVICE detalhesPagto
 	If nPosFilial > 0 .AND. nPosMatr > 0  .AND. nPosDtArq > 0 .AND. nPosRoteiro > 0
 		BEGINSQL ALIAS cAlias
             SELECT DISTINCT
-                SRD.RD_FILIAL,
-                SRD.RD_MAT,
-                SRD.RD_DATARQ,
-                SRD.RD_ROTEIR,
-                SRD.RD_VALOR,
-                SRD.RD_PD,
-				SRD.RD_HORAS,
-				SRD.RD_DATPGT,
-				SRD.RD_VALORBA,
-                SRV.RV_DESC,
-				SRV.RV_TIPOCOD,
-				SRV.RV_CODFOL
+                SRD.RD_FILIAL FILIAL,
+                SRD.RD_MAT MATRICULA,
+                SRD.RD_DATARQ DATAARQ,
+                SRD.RD_ROTEIR ROTEIRO,
+                SRD.RD_VALOR VALOR,
+                SRD.RD_PD PD,
+				SRD.RD_HORAS HORAS,
+				SRD.RD_DATPGT DATA_PAGTO,
+				SRD.RD_VALORBA VALOR_BASE,
+                SRV.RV_DESC DESCRICAO,
+				SRV.RV_TIPOCOD TIPO,
+				SRV.RV_CODFOL CODFOL
             FROM
                 %Table:SRD% as SRD
                 INNER JOIN %Table:SRV% SRV ON SRV.RV_FILIAL = LEFT(SRD.RD_FILIAL, 2)
@@ -54,47 +54,70 @@ WSMETHOD GET WSSERVICE detalhesPagto
                 AND SRD.RD_MAT = %exp:aParams[nPosMatr,2]%
                 AND SRD.RD_DATARQ = %exp:aParams[nPosDtArq,2]%
                 AND SRD.RD_ROTEIR = %exp:aParams[nPosRoteiro,2]%
+			UNION
+			SELECT DISTINCT
+                SRC.RC_FILIAL FILIAL,
+                SRC.RC_MAT MATRICULA,
+                SRC.RC_PERIODO DATAARQ,
+                SRC.RC_ROTEIR ROTEIRO,
+                SRC.RC_VALOR VALOR,
+                SRC.RC_PD PD,
+				SRC.RC_HORAS HORAS,
+				SRC.RC_DTREF DATA_PAGTO,
+				SRC.RC_VALORBA VALOR_BASE,
+                SRV.RV_DESC DESCRICAO,
+				SRV.RV_TIPOCOD TIPO,
+				SRV.RV_CODFOL CODFOL
+            FROM
+                %Table:SRC% as SRC
+                INNER JOIN %Table:SRV% SRV ON SRV.RV_FILIAL = LEFT(SRC.RC_FILIAL, 2)
+                AND SRV.RV_COD = SRC.RC_PD
+            WHERE
+                SRC.RC_FILIAL = %exp:aParams[nPosFilial,2]%
+                AND SRC.RC_MAT = %exp:aParams[nPosMatr,2]%
+                AND SRC.RC_PERIODO = %exp:aParams[nPosDtArq,2]%
+                AND SRC.RC_ROTEIR = %exp:aParams[nPosRoteiro,2]%
 		ENDSQL
 
-		// cReksponse['query'] := GetLastQuery()[2]
+		// cResponse['query'] := GetLastQuery()[2]
 
 		While !(cAlias)->(Eof())
 			Aadd(aDados, JsonObject():new())
 			nPos := Len(aDados)
-			aDados[nPos]['filial'] := (cAlias)->RD_FILIAL
-			aDados[nPos]['matricula' ] := (cAlias)->RD_MAT
-			aDados[nPos]['dataArquivo' ] := (cAlias)->RD_DATARQ
-			aDados[nPos]['roteiro' ] := (cAlias)->RD_ROTEIR
-			aDados[nPos]['provento' ] := (cAlias)->RD_VALOR
-			aDados[nPos]['referencia' ] := (cAlias)->RD_HORAS
-			aDados[nPos]['codVerba' ] := (cAlias)->RD_PD
-			aDados[nPos]['descVerba' ] := ALLTRIM((cAlias)->RV_DESC)
-			aDados[nPos]['tipoVerba' ] := (cAlias)->RV_TIPOCOD
+			aDados[nPos]['filial'] := (cAlias)->FILIAL
+			aDados[nPos]['matricula' ] := (cAlias)->MATRICULA
+			aDados[nPos]['dataArquivo' ] := (cAlias)->DATAARQ
+			aDados[nPos]['roteiro' ] := (cAlias)->ROTEIRO
+			aDados[nPos]['provento' ] := (cAlias)->VALOR
+			aDados[nPos]['referencia' ] := (cAlias)->HORAS
+			aDados[nPos]['codVerba' ] := (cAlias)->PD
+			aDados[nPos]['descVerba' ] := ALLTRIM((cAlias)->DESCRICAO)
+			aDados[nPos]['tipoVerba' ] := (cAlias)->TIPO
 
 
-			If (cAlias)->RV_TIPOCOD == "1"
-				nTotalPro += (cAlias)->RD_VALOR
-			ElseIf (cAlias)->RV_TIPOCOD == "2"
-				nTotalDes += (cAlias)->RD_VALOR
+			If (cAlias)->TIPO == "1"
+				nTotalPro += (cAlias)->VALOR
+			ElseIf (cAlias)->TIPO == "2"
+				nTotalDes += (cAlias)->VALOR
 			EndIf
 
-			If (cAlias)->RV_CODFOL == "0017"
-				nBaseFgts += (cAlias)->RD_VALOR
-			ElseIf (cAlias)->RV_CODFOL == "0018"
-				nValFgts += (cAlias)->RD_VALOR
-			ElseIf (cAlias)->RV_CODFOL == "0015"
-				nBaseIrrf += (cAlias)->RD_VALOR
-			ElseIf (cAlias)->RV_CODFOL == "0013"
-				nContrInss += (cAlias)->RD_VALOR
+			If (cAlias)->CODFOL == "0017"
+				nBaseFgts += (cAlias)->VALOR
+			ElseIf (cAlias)->CODFOL == "0018"
+				nValFgts += (cAlias)->VALOR
+			ElseIf (cAlias)->CODFOL == "0015"
+				nBaseIrrf += (cAlias)->VALOR
+			ElseIf (cAlias)->CODFOL == "0013"
+				nContrInss += (cAlias)->VALOR
 			EndIf
 
 			cVrbPensao := GetVrbPensao(aParams[nPosFilial,2], aParams[nPosMatr,2])
-			If (cAlias)->RD_PD $ cVrbPensao
-				nTotalPensao += (cAlias)->RD_VALOR
+			If (cAlias)->PD $ cVrbPensao
+				nTotalPensao += (cAlias)->VALOR
 			EndIf
 
-			cResponse['salario'] := (cAlias)->RD_VALORBA
-			cResponse['dtPagto'] := (cAlias)->RD_DATPGT
+			cResponse['salario'] := (cAlias)->VALOR_BASE
+			cResponse['dtPagto'] := (cAlias)->DATA_PAGTO
 			cResponse['hasContent'] := .T.
 
 			(cAlias)->(DbSkip())
