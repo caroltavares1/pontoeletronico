@@ -81,7 +81,7 @@ export class PagamentoComponent implements OnInit {
           data = data.sort( (a, b) => b.ano - a.ano || b.mes - a.mes)
           
           data = data.filter( (el)=>{
-            return el.arquivo === 'SRD' || (el.arquivo === 'SRC' && el.substring(0,1) === '1' || (el.arquivo === 'SRC' && el.ano+el.mes === el.MV_XPERFOL))
+            return el.arquivo === 'SRD' || (el.arquivo === 'SRC' && el.roteiro.substring(0,1) === '1' || (el.arquivo === 'SRC' && el.ano+el.mes === el.MV_XPERFOL))
           })
         },
         
