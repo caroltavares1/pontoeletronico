@@ -71,7 +71,7 @@ export class PagamentoComponent implements OnInit {
     this.processoPagtoFiltered = [...this.processoPagto];
     this.getFilial();
 
-    let data: [any];
+    let data: any[];
     this.cpf = sessionStorage.getItem('cpf');
 
     if (this.cpf != null && this.cpf != undefined) {
@@ -79,7 +79,12 @@ export class PagamentoComponent implements OnInit {
         next: (dados) => {
           data = dados.folhaPagto;
           data = data.sort( (a, b) => b.ano - a.ano || b.mes - a.mes)
+          
+          data = data.filter( (el)=>{
+            return el.arquivo === 'SRD' || (el.arquivo === 'SRC' && el.substring(0,1) === '1' || (el.arquivo === 'SRC' && el.ano+el.mes === el.MV_XPERFOL))
+          })
         },
+        
         complete: () => {
           this.processoPagto = data;
           this.processoPagtoFiltered = [...this.processoPagto];
