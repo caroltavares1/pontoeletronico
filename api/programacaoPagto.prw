@@ -39,6 +39,7 @@ WSMETHOD GET WSSERVICE folhaPagto
 			WHERE
 				SRD.D_E_L_E_T_ = ''
 				AND SRA.D_E_L_E_T_ = ''
+				AND SX6.D_E_L_E_T_ = ''
 				AND SRA.RA_CIC = %exp:aParams[nPosId,2]%
 			GROUP BY
 				LEFT(SRD.RD_FILIAL, 2),
@@ -69,6 +70,7 @@ WSMETHOD GET WSSERVICE folhaPagto
 			WHERE
 				SRC.D_E_L_E_T_ = ''
 				AND SRA.D_E_L_E_T_ = ''
+				AND SX6.D_E_L_E_T_ = ''
 				AND SRA.RA_CIC = %exp:aParams[nPosId,2]%
 			GROUP BY
 				LEFT(SRC.RC_FILIAL, 2),
@@ -81,8 +83,10 @@ WSMETHOD GET WSSERVICE folhaPagto
 				SRA.RA_DEMISSA,
 				SX6.X6_CONTEUD
 			ORDER BY
-				ANO, MES
+				FILIAL, ANO, MES
 		ENDSQL
+
+		// cResponse['query'] := GetLastQuery()[2]
 
 		While !(cAlias)->(Eof())
 			Aadd(aDados, JsonObject():new())
