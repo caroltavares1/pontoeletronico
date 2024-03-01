@@ -374,6 +374,7 @@ export class PagtoPDFService {
           },
           {
             text: `${salario}`,
+            alignment: 'right',
           },
         ],
       },
@@ -486,14 +487,14 @@ export class PagtoPDFService {
           {
             text: `${referencia}`,
             style: 'tableHeader',
-            alignment: 'left',
+            alignment: 'right',
           },
           {
             text: `${el.provento.toLocaleString(undefined, {
               minimumFractionDigits: 2,
             })}`,
             style: 'tableHeader',
-            alignment: 'left',
+            alignment: 'right',
           },
           {
             text: `${''}`,
@@ -518,7 +519,7 @@ export class PagtoPDFService {
           {
             text: `${referencia}`,
             style: 'tableHeader',
-            alignment: 'left',
+            alignment: 'right',
           },
           {
             text: `${''}`,
@@ -530,7 +531,7 @@ export class PagtoPDFService {
               minimumFractionDigits: 2,
             })}`,
             style: 'tableHeader',
-            alignment: 'left',
+            alignment: 'right',
           },
         ]);
       }
