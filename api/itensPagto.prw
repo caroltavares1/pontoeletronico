@@ -97,6 +97,7 @@ WSMETHOD GET WSSERVICE detalhesPagto
 
 			If (cAlias)->TIPO == "1"
 				nTotalPro += (cAlias)->VALOR
+				cResponse['salario'] := (cAlias)->VALOR_BASE
 			ElseIf (cAlias)->TIPO == "2"
 				nTotalDes += (cAlias)->VALOR
 			EndIf
@@ -116,7 +117,7 @@ WSMETHOD GET WSSERVICE detalhesPagto
 				nTotalPensao += (cAlias)->VALOR
 			EndIf
 
-			cResponse['salario'] := (cAlias)->VALOR_BASE
+			
 			cResponse['dtPagto'] := (cAlias)->DATA_PAGTO
 			cResponse['hasContent'] := .T.
 
