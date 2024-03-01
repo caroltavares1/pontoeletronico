@@ -61,6 +61,17 @@ export class UserService {
     );
   }
 
+  public getFilialById(filatu : string): Observable<any> {
+    const options = httpOptions
+    options.params = {
+      'filial': filatu
+    }
+
+    return this.http.get<any>(this.apiURL + `/filiais/`, options).pipe(
+      map((resposta: any) => resposta)
+    );
+  }
+
   public getUserCPF() {
     return this.userCPF
   }

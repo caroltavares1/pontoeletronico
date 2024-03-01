@@ -1,37 +1,38 @@
 {
   "name": "ponto-eletronico",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "ng build --output-hashing=all --aot=true --configuration=production --source-map=true",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
   "private": true,
   "dependencies": {
-    "@angular/animations": "~14.0.2",
-    "@angular/common": "~14.0.2",
-    "@angular/compiler": "~14.0.2",
-    "@angular/core": "~14.0.2",
-    "@angular/forms": "~14.0.2",
-    "@angular/platform-browser": "~14.0.2",
-    "@angular/platform-browser-dynamic": "~14.0.2",
-    "@angular/router": "~14.0.2",
-    "@po-ui/ng-components": "^14.11.0",
-    "@po-ui/ng-templates": "^14.11.0",
-    "@totvs/po-theme": "^14.11.0",
+    "@angular/animations": "~16.2.0",
+    "@angular/common": "~16.2.0",
+    "@angular/compiler": "~16.2.0",
+    "@angular/core": "~16.2.0",
+    "@angular/forms": "~16.2.0",
+    "@angular/platform-browser": "~16.2.0",
+    "@angular/platform-browser-dynamic": "~16.2.0",
+    "@angular/router": "~16.2.0",
+    "@po-ui/ng-components": "16.14.0",
+    "@po-ui/ng-templates": "16.14.0",
+    "@totvs/po-theme": "16.14.0",
+    "@types/uuid": "^9.0.7",
     "html-to-pdfmake": "^2.4.11",
     "jspdf": "^2.5.1",
     "pdfmake": "^0.2.7",
     "rxjs": "~7.5.5",
     "tslib": "^2.3.0",
-    "zone.js": "~0.11.4"
+    "zone.js": "~0.13.1"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^14.2.4",
-    "@angular/cli": "~14.0.2",
-    "@angular/compiler-cli": "~14.0.2",
+    "@angular-devkit/build-angular": "~16.2.0",
+    "@angular/cli": "~16.2.0",
+    "@angular/compiler-cli": "~16.2.0",
     "@types/jasmine": "~3.10.0",
     "@types/node": "^12.11.1",
     "@types/pdfmake": "^0.2.2",
@@ -41,6 +42,6 @@
     "karma-coverage": "~2.1.0",
     "karma-jasmine": "~4.0.0",
     "karma-jasmine-html-reporter": "~1.7.0",
-    "typescript": "~4.7.4"
+    "typescript": "~5.1.6"
   }
 }

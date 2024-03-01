@@ -1,0 +1,31 @@
+<div class="padding position: relative">
+  <po-page-list
+    #poPageList
+    [p-actions]="actions"
+    [p-disclaimer-group]="disclaimerGroup"
+    [p-filter]="filterSettings"
+    p-title="Demonstrativos de Pagamento"
+  >
+    <p>
+      Apresenta os períodos disponíveis para consulta do demonstrativo de pagamento. De acordo com o período selecionado, é exibido o recibo de pagamento, adiantamento, Folha, 1° parcela 13°, 2° parcela 13°
+    </p>
+
+    <br />
+
+    <po-table
+      [p-selectable]="true"
+      [p-single-select]="true"
+      [p-sort]="true"
+      [p-striped]="true"
+      [p-columns]="processoPagtoColumns"
+      [p-items]="processoPagtoFiltered"
+      [p-height]="400"
+      [p-loading-show-more]="true"
+      [p-loading]="!hidden"
+      [p-infinite-scroll]="false"
+    >
+    </po-table>
+    <!-- <po-loading-overlay [hidden]="hidden">
+    </po-loading-overlay> -->
+  </po-page-list>
+</div>

@@ -6,41 +6,56 @@ import { AuthService } from '../auth/auth.service';
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css']
+  styleUrls: ['./home.component.css'],
 })
 export class HomeComponent implements OnInit {
-
-  constructor(
-    private router: Router,
-    private auth: AuthService,
-  ) { }
+  constructor(private router: Router, private auth: AuthService) {}
 
   actions: Array<PoToolbarAction> = [
     { label: 'Sair', icon: 'po-icon-exit', action: this.logout.bind(this) },
   ];
 
   public readonly menus: Array<PoMenuItem> = [
-    { label: 'Dados do Funcionário', link: '/user/info', icon: "po-icon-user", shortLabel: 'Info' },
-    { label: 'Ponto', link: '/user/list', icon: "po-icon-calendar-ok", shortLabel: 'Ponto' },
-    { label: 'Alterar Senha', link: '/user/edit', icon: "po-icon-edit", shortLabel: 'Senha' }
+    {
+      label: 'Dados do Funcionário',
+      link: '/user/info',
+      icon: 'po-icon-user',
+      shortLabel: 'Info',
+    },
+    {
+      label: 'Ponto',
+      link: '/user/list',
+      icon: 'po-icon-calendar-ok',
+      shortLabel: 'Ponto',
+    },
+    {
+      label: 'Demonstrativos',
+      icon: 'po-icon po-icon-menu-open',
+      shortLabel: 'Demonstrativos',
+      subItems: [
+        { label: 'Ferias', link: '/demonstrativo/ferias' },
+        { label: 'Pgto. Salario', link: '/demonstrativo/pagamento' },
+      ],
+    },
+    {
+      label: 'Alterar Senha',
+      link: '/user/edit',
+      icon: 'po-icon-edit',
+      shortLabel: 'Senha',
+    },
   ];
 
-  ngOnInit(): void {
-  }
+  ngOnInit(): void {}
 
   public logout() {
-
     setTimeout(() => {
-      this.auth.isLoggedIn = false
-      this.router.navigate(['/login'])
+      this.auth.isLoggedIn = false;
+      this.router.navigate(['/login']);
     }, 1500);
-
   }
 
   @HostListener('window:beforeunload', ['$event'])
-    handleKeyDown(event: BeforeUnloadEvent) {
-      event.returnValue = false
-    }
-
-
+  handleKeyDown(event: BeforeUnloadEvent) {
+    event.returnValue = false;
+  }
 }

@@ -1,0 +1,35 @@
+<div class="padding position: relative">
+  <po-page-list
+    #poPageList
+    [p-actions]="actions"
+    [p-disclaimer-group]="disclaimerGroup"
+    [p-filter]="filterSettings"
+    p-title="Recibos de Férias"
+  >
+    <p>
+      Disponibiliza as férias calculadas para o funcionário, possibilitando que
+      seja impresso, ou somente vizualizado, o recibo de pagamento do período
+      selecionado.
+    </p>
+
+    <br />
+
+    <po-combo
+      name="matricula"
+      p-label="Matricula"
+      [p-options]="options"
+      p-placeholder="Escolha uma matricula"
+      [p-emit-object-value]="true"
+      (p-change)="onSelect($event)"
+    ></po-combo>
+    <po-table
+      [p-selectable]="true"
+      [p-single-select]="true"
+      [p-sort]="true"
+      [p-striped]="true"
+      [p-columns]="processoFeriasColumns"
+      [p-items]="processoFeriasFiltered"
+    >
+    </po-table>
+  </po-page-list>
+</div>

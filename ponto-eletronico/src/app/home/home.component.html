@@ -1,15 +1,12 @@
 <div class="po-wrapper">
-  <po-toolbar p-title="Ponto Eletrônico"
-  p-actions-icon="po-icon-more-vert"
-  [p-actions]="actions">
+  <po-toolbar
+    p-title="Gestão de Capital Humano"
+    p-actions-icon="po-icon-more-vert"
+    [p-actions]="actions"
+  >
   </po-toolbar>
 
-  <po-menu
-    [p-filter]="false"
-    [p-collapsed]="true"
-    [p-menus]="menus">
-  </po-menu>
+  <po-menu [p-filter]="false" [p-menus]="menus" [p-automatic-toggle]="true" [p-collapsed]="true"> </po-menu>
 
   <router-outlet></router-outlet>
-
 </div>
