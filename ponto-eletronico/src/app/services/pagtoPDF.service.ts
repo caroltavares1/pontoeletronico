@@ -582,6 +582,7 @@ export class PagtoPDFService {
           },
           {
             text: `${baseFgts}`,
+            alignment: 'right',
           },
         ],
         colSpan: 2,
@@ -597,6 +598,7 @@ export class PagtoPDFService {
           },
           {
             text: `${valorFgts}`,
+            alignment: 'right',
           },
         ],
         colSpan: 2,
@@ -612,6 +614,7 @@ export class PagtoPDFService {
           },
           {
             text: `${totalProventos}`,
+            alignment: 'right',
           },
         ],
         colSpan: 2,
@@ -630,6 +633,7 @@ export class PagtoPDFService {
           },
           {
             text: `${baseIrrf}`,
+            alignment: 'right',
           },
         ],
         colSpan: 2,
@@ -645,6 +649,7 @@ export class PagtoPDFService {
           },
           {
             text: `${pensaoAliment}`,
+            alignment: 'right',
           },
         ],
         colSpan: 2,
@@ -660,6 +665,7 @@ export class PagtoPDFService {
           },
           {
             text: `${totalDescontos}`,
+            alignment: 'right',
           },
         ],
         colSpan: 2,
@@ -678,6 +684,7 @@ export class PagtoPDFService {
           },
           {
             text: `${contribInss}`,
+            alignment: 'right',
           },
         ],
         colSpan: 2,
@@ -708,6 +715,7 @@ export class PagtoPDFService {
           },
           {
             text: `${liquidoReceber}`,
+            alignment: 'right',
           },
         ],
         colSpan: 2,
