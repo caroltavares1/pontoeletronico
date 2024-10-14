@@ -46,26 +46,32 @@ export class FeriasPDFService {
     let empresa = cabecalho.empresa;
     let matricula = cabecalho.matricula;
     let ferias: any = null;
+    let imagemNome: string = 'lgrl01' + cabecalho.empresa + '.bmp';
 
-    const logoURL64 = this.getBase64ImageFromURL(
-      '../../assets/images/grupoBCI.jpg'
-    );
+    try {
+      // Obtém a imagem em Base64
+      this.urlLogo = await this.getBase64ImageFromURL(
+        '../../assets/images/' + imagemNome
+      );
 
-    await logoURL64.then((el) => {
-      this.urlLogo = el;
-    });
-
-    this.feriasService
-      .getItensferias(empresa.filial, matricula.matricula, start)
-      .subscribe({
-        next: (data) => {
-          ferias = data;
-        },
-        complete: () => {
-          this.ferias = ferias;
-          this.processa(cabecalho);
-        },
-      });
+      // Faz a chamada ao serviço para obter os itens de férias
+      this.feriasService
+        .getItensferias(empresa.filial, matricula.matricula, start)
+        .subscribe({
+          next: (data) => {
+            ferias = data;
+          },
+          complete: () => {
+            this.ferias = ferias;
+            this.processa(cabecalho); // Processa os dados após a obtenção
+          },
+          error: (err) => {
+            console.error('Erro ao obter itens de férias:', err);
+          },
+        });
+    } catch (error) {
+      console.error('Erro ao carregar a imagem:', error);
+    }
   }
 
   processa(cabecalho: {

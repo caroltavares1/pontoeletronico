@@ -13,7 +13,7 @@ export class PagtoPDFService {
   urlLogo!: string;
   pagtos: Array<Object> = [];
 
-  constructor(private pagtoService: PagamentoService) { }
+  constructor(private pagtoService: PagamentoService) {}
 
   setDados(cpf: string) {
     this.pagtoService.getItensPagto(cpf).subscribe((data) => {
@@ -23,24 +23,27 @@ export class PagtoPDFService {
 
   public async openPDF(cabecalho: any) {
     let pagto: any = null;
+    let imagemNome: string = 'lgrl01' + cabecalho.filial + '.bmp';
 
-    const logoURL64 = this.getBase64ImageFromURL(
-      '../../assets/images/grupoBCI.jpg'
-    );
+    try {
+      // Obtém a imagem em Base64
+      this.urlLogo = await this.getBase64ImageFromURL(
+        '../../assets/images/' + imagemNome
+      );
 
-    await logoURL64.then((el) => {
-      this.urlLogo = el;
-    });
-
-    this.pagtoService.getItensPagto(cabecalho).subscribe({
-      next: (data: any) => {
-        pagto = data;
-      },
-      complete: () => {
-        this.pagtos = pagto;
-        this.processa(cabecalho);
-      },
-    });
+      // Chama o serviço para obter os itens de pagamento
+      this.pagtoService.getItensPagto(cabecalho).subscribe({
+        next: (data: any) => {
+          pagto = data;
+        },
+        complete: () => {
+          this.pagtos = pagto;
+          this.processa(cabecalho);
+        },
+      });
+    } catch (error) {
+      console.error('Erro ao carregar a imagem ou processar pagamento:', error);
+    }
   }
 
   processa(cabecalho: any) {
@@ -52,7 +55,6 @@ export class PagtoPDFService {
       pageSize: 'A4',
       pageOrientation: 'portrait',
       header: () => {
-
         let stack = {
           stack: [
             {
@@ -208,9 +210,12 @@ export class PagtoPDFService {
           { text: `${func.funcao}` },
         ],
         colSpan: 6,
-
-      }, {}, {}, {}, {}, {}
-
+      },
+      {},
+      {},
+      {},
+      {},
+      {},
     ]);
 
     itensPdf.push([
@@ -236,8 +241,12 @@ export class PagtoPDFService {
           },
           { text: `${func.endereco}` },
         ],
-        colSpan: 5
-      }, {}, {}, {}, {}
+        colSpan: 5,
+      },
+      {},
+      {},
+      {},
+      {},
     ]);
 
     itensPdf.push([
@@ -289,7 +298,7 @@ export class PagtoPDFService {
           },
           { text: `${func.estado}` },
         ],
-      }
+      },
     ]);
 
     itensPdf.push([
@@ -424,7 +433,8 @@ export class PagtoPDFService {
           { text: `${conta}` },
         ],
         colSpan: 2,
-      }, {}
+      },
+      {},
     ]);
 
     itensPdf.push([
@@ -441,7 +451,8 @@ export class PagtoPDFService {
         alignment: 'left',
         bold: true,
         colSpan: 2,
-      }, {},
+      },
+      {},
       {
         text: 'Referencia',
         style: 'itens',
@@ -483,7 +494,8 @@ export class PagtoPDFService {
             style: 'tableHeader',
             alignment: 'left',
             colSpan: 2,
-          }, {},
+          },
+          {},
           {
             text: `${referencia}`,
             style: 'tableHeader',
@@ -515,7 +527,8 @@ export class PagtoPDFService {
             style: 'tableHeader',
             alignment: 'left',
             colSpan: 2,
-          }, {},
+          },
+          {},
           {
             text: `${referencia}`,
             style: 'tableHeader',
@@ -537,7 +550,7 @@ export class PagtoPDFService {
       }
     });
 
-    let linhasEmBranco = 28 - itensPdf.length
+    let linhasEmBranco = 28 - itensPdf.length;
 
     for (let index = 0; index < linhasEmBranco; index++) {
       itensPdf.push([
@@ -552,7 +565,12 @@ export class PagtoPDFService {
             },
           ],
           colSpan: 6,
-        }, {}, {}, {}, {}, {}
+        },
+        {},
+        {},
+        {},
+        {},
+        {},
       ]);
     }
 
@@ -568,7 +586,12 @@ export class PagtoPDFService {
           },
         ],
         colSpan: 6,
-      }, {}, {}, {}, {}, {}
+      },
+      {},
+      {},
+      {},
+      {},
+      {},
     ]);
 
     itensPdf.push([
@@ -619,7 +642,8 @@ export class PagtoPDFService {
           },
         ],
         colSpan: 2,
-      }, {}
+      },
+      {},
     ]);
 
     itensPdf.push([
@@ -670,7 +694,8 @@ export class PagtoPDFService {
           },
         ],
         colSpan: 2,
-      }, {}
+      },
+      {},
     ]);
 
     itensPdf.push([
@@ -700,7 +725,7 @@ export class PagtoPDFService {
             bold: true,
           },
           {
-            text: `${""}`,
+            text: `${''}`,
           },
         ],
         colSpan: 2,
@@ -720,7 +745,8 @@ export class PagtoPDFService {
           },
         ],
         colSpan: 2,
-      }, {}
+      },
+      {},
     ]);
 
     let ret = [
@@ -748,7 +774,7 @@ export class PagtoPDFService {
   }
 
   fixData(datastr: string): string {
-    datastr = datastr.replaceAll("/", "")
+    datastr = datastr.replaceAll('/', '');
 
     let dataCorreta =
       datastr.substring(6, 8) +
@@ -760,59 +786,59 @@ export class PagtoPDFService {
   }
 
   getCompetencia(ano: string, mes: string) {
-    let competencia = ano + mes
-    let mesExtenso
+    let competencia = ano + mes;
+    let mesExtenso;
 
-    if (mes == "01") {
-      mesExtenso = "Janeiro"
+    if (mes == '01') {
+      mesExtenso = 'Janeiro';
     }
 
-    if (mes == "02") {
-      mesExtenso = "Fevereiro"
+    if (mes == '02') {
+      mesExtenso = 'Fevereiro';
     }
 
-    if (mes == "03") {
-      mesExtenso = "Março"
+    if (mes == '03') {
+      mesExtenso = 'Março';
     }
 
-    if (mes == "04") {
-      mesExtenso = "Abril"
+    if (mes == '04') {
+      mesExtenso = 'Abril';
     }
 
-    if (mes == "05") {
-      mesExtenso = "Maio"
+    if (mes == '05') {
+      mesExtenso = 'Maio';
     }
 
-    if (mes == "06") {
-      mesExtenso = "Junho"
+    if (mes == '06') {
+      mesExtenso = 'Junho';
     }
 
-    if (mes == "07") {
-      mesExtenso = "Julho"
+    if (mes == '07') {
+      mesExtenso = 'Julho';
     }
 
-    if (mes == "08") {
-      mesExtenso = "Agosto"
+    if (mes == '08') {
+      mesExtenso = 'Agosto';
     }
 
-    if (mes == "09") {
-      mesExtenso = "Setembro"
+    if (mes == '09') {
+      mesExtenso = 'Setembro';
     }
 
-    if (mes == "10") {
-      mesExtenso = "Outubro"
+    if (mes == '10') {
+      mesExtenso = 'Outubro';
     }
 
-    if (mes == "11") {
-      mesExtenso = "Novembro"
+    if (mes == '11') {
+      mesExtenso = 'Novembro';
     }
 
-    if (mes == "12") {
-      mesExtenso = "Dezembro"
+    if (mes == '12') {
+      mesExtenso = 'Dezembro';
     }
 
-    competencia = mesExtenso + "/" + ano
-    return competencia
+    competencia = mesExtenso + '/' + ano;
+    return competencia;
   }
 
   getBase64ImageFromURL(url: string): Promise<any> {
