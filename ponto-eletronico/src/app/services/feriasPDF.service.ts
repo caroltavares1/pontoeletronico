@@ -46,7 +46,7 @@ export class FeriasPDFService {
     let empresa = cabecalho.empresa;
     let matricula = cabecalho.matricula;
     let ferias: any = null;
-    let imagemNome: string = 'lgrl01' + cabecalho.empresa + '.bmp';
+    let imagemNome: string = 'lgrl01' + cabecalho.empresa.filial + '.bmp';
 
     try {
       // Obtém a imagem em Base64
