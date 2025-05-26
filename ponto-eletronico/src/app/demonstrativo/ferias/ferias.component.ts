@@ -48,7 +48,7 @@ export class FeriasComponent implements OnInit {
 
   setOptions() {
     if (this.matriculas.length > 0) {
-      
+
       this.matriculas = this.matriculas.filter( (el) =>{
         return el.demissao.trim() === ''
       })
@@ -197,8 +197,8 @@ export class FeriasComponent implements OnInit {
       // this.userService.getUser().subscribe((func) => {
       //   this.setFuncionario(func.user);
       // });
-
-      this.userService.getUser().subscribe({
+      debugger
+      this.userService.getUser('2025', '01').subscribe({
         next: (data) =>{
           funcionario = data
         },
