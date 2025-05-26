@@ -79,12 +79,12 @@ export class PagamentoComponent implements OnInit {
         next: (dados) => {
           data = dados.folhaPagto;
           data = data.sort( (a, b) => b.ano - a.ano || b.mes - a.mes)
-          
+
           data = data.filter( (el)=>{
             return el.arquivo === 'SRD' || (el.arquivo === 'SRC' && el.roteiro.substring(0,1) === '1' || (el.arquivo === 'SRC' && el.ano+el.mes === el.MV_XPERFOL))
           })
         },
-        
+
         complete: () => {
           this.processoPagto = data;
           this.processoPagtoFiltered = [...this.processoPagto];
@@ -119,7 +119,7 @@ export class PagamentoComponent implements OnInit {
   }
 
   imprimirRecibo() {
-    
+
 
     const periodoSelecionado: any = this.processoPagto.find(
       (recibo: any) => recibo['$selected']
@@ -129,8 +129,9 @@ export class PagamentoComponent implements OnInit {
       this.cabecalho = periodoSelecionado;
       this.cabecalho.cpf = this.cpf
 
-      this.userService.getUser().subscribe({
+      this.userService.getUser(this.cabecalho.ano, this.cabecalho.mes).subscribe({
         next: (data) => {
+          debugger
           this.funcionario = data.user[0]
         },
         complete: () => {

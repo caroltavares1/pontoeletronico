@@ -5,8 +5,8 @@
 export const environment = {
   production: false,
   title: 'Ambiente de Desenvolvimento',
-  apiURL: 'https://lk5.shineraydobrasil.com.br:8095/rest',
-  authorization: "Basic " + btoa("admin:")
+  apiURL: 'https://192.168.41.60:8095/rest',
+  authorization: "Basic " + btoa("saulomaciel:17072610")
 };
 /* export const environment = {
   production: false,

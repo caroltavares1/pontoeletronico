@@ -39,10 +39,12 @@ export class UserService {
     );
   }
 
-  public getUser(): Observable<any> {
+  public getUser(ano:string, mes:string): Observable<any> {
     const options = httpOptions
     options.params = {
-      'cpf': this.userCPF
+      'cpf': this.userCPF,
+      'ano': ano,
+      'mes': mes
     }
 
     return this.http.get<any>(this.apiURL + `/funcionarios/`, options).pipe(

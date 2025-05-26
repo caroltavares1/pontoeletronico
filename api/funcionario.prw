@@ -98,3 +98,9 @@ Static Function getArrFun(cId)
 	RestArea(aArea)
 	SRA->(RestArea(aAreaSRA))
 Return aDados
+
+Static Function GetFuncao(cFilFunc, cMatric)
+	Local cFuncao := ''
+
+	//ALLTRIM(POSICIONE("SRJ", 1, cFilFunc+SR7->R7_FUNCAO, "RJ_DESC"))
+Return cFuncao
