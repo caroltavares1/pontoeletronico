@@ -6,7 +6,7 @@ export const environment = {
   production: false,
   title: 'Ambiente de Desenvolvimento',
   apiURL: 'https://192.168.41.60:8095/rest',
-  authorization: "Basic " + btoa("saulomaciel:17072610")
+  authorization: "Basic " + btoa("pontoeletronico:Pe@2023#")
 };
 /* export const environment = {
   production: false,

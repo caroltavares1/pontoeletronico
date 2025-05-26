@@ -17,12 +17,27 @@ WSMETHOD GET WSSERVICE funcionarios
 	//Local aUrlParams := Self:aUrlParms
 	Local aParams := Self:AQueryString
 	Local nPosId := aScan(aParams,{|x| x[1] == "CPF"})
-	//Local cId := aUrlParams[1]
+	Local nPosAno := aScan(aParams,{|x| x[1] == "ANO"})
+	Local nPosMes := aScan(aParams,{|x| x[1] == "MES"})
+	Local cAno := ''
+	Local cMes := ''
 
 	If nPosId > 0
 		cCpf := aParams[nPosId,2]
+	Else
+		SetRestFault(400, "Verifique se todos os parametros obrigatorios foram enviados!")
+		lRet := .F.
+		Return lRet
 	EndIf
-	aDados := getArrFun(cvaltochar(cCpf))
+
+	If nPosAno > 0 .AND. nPosMes > 0
+		cAno := aParams[nPosAno,2]
+		cMes := aParams[nPosMes,2]
+		aDados := getArrFun(cvaltochar(cCpf), cAno, cMes)
+	Else
+		aDados := getArrFun(cvaltochar(cCpf))
+	EndIf
+
 
 	If Len(aDados) == 0		//SetRestFault(204, "Nenhum registro encontrado!")
 		cResponse['code'] := 204
@@ -37,12 +52,14 @@ WSMETHOD GET WSSERVICE funcionarios
 	Self:SetResponse(EncodeUTF8(cResponse:toJson()))
 Return lRet
 
-Static Function getArrFun(cId)
+Static Function getArrFun(cId, cAno, cMes)
 	Local aArea := GetArea()
 	Local aAreaSRA := SRA->(GetArea())
 	Local aDados := {}
 	Local nSRAreg := 0
 
+	Default cAno := '0000'
+	Default cMes := '00''
 
 	BEGINSQL ALIAS 'TSRA'
 		SELECT
@@ -66,7 +83,13 @@ Static Function getArrFun(cId)
 		aDados[nPos]['matricula' ] := AllTrim(SRA->RA_MAT)
 		aDados[nPos]['nome' ] := AllTrim(SRA->RA_NOME)
 		aDados[nPos]['admissao' ] := (SRA->RA_ADMISSA)
-		aDados[nPos]['funcao' ] := ALLTRIM(POSICIONE("SRJ", 1, xFilial("SRJ")+SRA->RA_CODFUNC, "RJ_DESC"))
+
+		If cAno == '0000' .AND. cMes == '00'
+			aDados[nPos]['funcao' ] := ALLTRIM(POSICIONE("SRJ", 1, xFilial("SRJ")+SRA->RA_CODFUNC, "RJ_DESC"))
+		Else
+			aDados[nPos]['funcao' ] := GetFuncao(SRA->RA_FILIAL, AllTrim(SRA->RA_MAT), cAno, cMes)
+		EndIf
+
 		aDados[nPos]['cc' ] := AllTrim(SRA->RA_CC)
 		aDados[nPos]['rg' ] := AllTrim(SRA->RA_RG)
 		aDados[nPos]['cpf' ] := AllTrim(SRA->RA_CIC )
@@ -84,7 +107,7 @@ Static Function getArrFun(cId)
 		aDados[nPos]['estado' ] := AllTrim(SRA->RA_ESTADO )
 		aDados[nPos]['cep' ] := AllTrim(SRA->RA_CEP )
 		aDados[nPos]['pis' ] := AllTrim(SRA->RA_PIS )
-		
+
 		if (AllTrim(SRA->RA_SITFOLH ) == '')
 			aDados[nPos]['situacao' ] := 'NORMAL'
 		elseif AllTrim(SRA->RA_SITFOLH ) == 'F'
@@ -99,8 +122,78 @@ Static Function getArrFun(cId)
 	SRA->(RestArea(aAreaSRA))
 Return aDados
 
-Static Function GetFuncao(cFilFunc, cMatric)
+Static Function GetFuncao(cFilFunc, cMatric, cAno, cMes)
 	Local cFuncao := ''
+	Local cAliasSR7 := GetNextAlias()
+	Local cDataOri := cAno+cMes+"01"
+	Local dLastData := LastDate(STOD(cDataOri))
+	Local nDia := Last_Day(dLastData)
+	Local nAno := YEAR(dLastData)
+	Local nMes := MONTH(dLastData)
 
-	//ALLTRIM(POSICIONE("SRJ", 1, cFilFunc+SR7->R7_FUNCAO, "RJ_DESC"))
+	BEGINSQL ALIAS cAliasSR7
+		%noparser%
+		SELECT TOP 1
+			T.R7_FILIAL,
+			T.R7_FUNCAO,
+			T.R7_DESCFUN FUNCAO,
+			T.R7_DATA DT_FUNC
+		FROM
+			(
+				SELECT
+					SR7.R7_FILIAL,
+					SR7.R7_FUNCAO,
+					SR7.R7_DESCFUN,
+					SR7.R7_DATA,
+					0 AS PrioridadeTipoBusca,
+					CASE
+						WHEN DATEPART(MONTH, SR7.R7_DATA) = %exp:nMes% AND DATEPART(YEAR, SR7.R7_DATA) = %exp:nAno% THEN 0
+						ELSE 1
+					END AS PrioridadeMesAno,
+					SR7.R7_DATA AS DataOrdenacaoPrimaria,
+					NULL AS DataOrdenacaoSecundaria
+				FROM
+					%Table:SR7% SR7
+				WHERE
+					SR7.R7_FILIAL = %exp:cFilFunc%
+					AND SR7.R7_MAT = %exp:cMatric%
+					AND SR7.R7_DATA <= DATEFROMPARTS(%exp:nAno%, %exp:nMes%, %exp:nDia%)
+					AND SR7.%NotDel%
+
+				UNION ALL
+
+				SELECT
+					SR7_OLD.R7_FILIAL,
+					SR7_OLD.R7_FUNCAO,
+					SR7_OLD.R7_DESCFUN,
+					SR7_OLD.R7_DATA,
+					1 AS PrioridadeTipoBusca,
+					99 AS PrioridadeMesAno,
+					NULL AS DataOrdenacaoPrimaria,
+					SR7_OLD.R7_DATA AS DataOrdenacaoSecundaria
+				FROM
+					%Table:SR7% SR7_OLD
+				WHERE
+					SR7_OLD.R7_FILIAL = %exp:cFilFunc%
+					AND SR7_OLD.R7_MAT = %exp:cMatric%
+					AND SR7_OLD.%NotDel%
+			) T
+		ORDER BY
+			T.PrioridadeTipoBusca ASC,
+			T.PrioridadeMesAno ASC,
+			CASE WHEN T.PrioridadeTipoBusca = 0 THEN T.DataOrdenacaoPrimaria END DESC,
+			CASE WHEN T.PrioridadeTipoBusca = 1 THEN T.DataOrdenacaoSecundaria END ASC
+	ENDSQL
+
+
+
+	// conout('Query de consulta de funcao')
+	// conout(GetLastquery()[2])
+
+	If !(cAliasSR7)->(Eof())
+		cFuncao := (cAliasSR7)->FUNCAO
+	EndIf
+
+	(cAliasSR7)->(DbCloseArea())
+
 Return cFuncao

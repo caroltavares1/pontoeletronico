@@ -197,8 +197,8 @@ export class FeriasComponent implements OnInit {
       // this.userService.getUser().subscribe((func) => {
       //   this.setFuncionario(func.user);
       // });
-      debugger
-      this.userService.getUser('2025', '01').subscribe({
+
+      this.userService.getUser2('2025', '01').subscribe({
         next: (data) =>{
           funcionario = data
         },

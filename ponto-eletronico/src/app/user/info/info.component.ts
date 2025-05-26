@@ -39,7 +39,7 @@ export class InfoComponent implements OnInit {
 
   ngOnInit(): void {
     this.getEmpresa()
-    this.funcionario = this.userService.getUser('2025','01')
+    this.funcionario = this.userService.getUser()
       .subscribe({
         next: (v: any) => {
           if (v.user !== undefined) {

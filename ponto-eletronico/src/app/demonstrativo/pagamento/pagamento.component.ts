@@ -129,9 +129,8 @@ export class PagamentoComponent implements OnInit {
       this.cabecalho = periodoSelecionado;
       this.cabecalho.cpf = this.cpf
 
-      this.userService.getUser(this.cabecalho.ano, this.cabecalho.mes).subscribe({
+      this.userService.getUser2(this.cabecalho.ano, this.cabecalho.mes).subscribe({
         next: (data) => {
-          debugger
           this.funcionario = data.user[0]
         },
         complete: () => {

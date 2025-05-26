@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import * as uuid from 'uuid';
 import { FeriasService } from './ferias.service';
+import { debug } from 'console';
+import { UserService } from './user.service';
 const pdfMake = require('pdfmake/build/pdfmake.js');
 const pdfFonts = require('pdfmake/build/vfs_fonts');
 (pdfMake as any).vfs = pdfFonts.pdfMake.vfs;
@@ -13,7 +15,7 @@ export class FeriasPDFService {
   urlLogo!: string;
   ferias: Array<Object> = [];
 
-  constructor(private feriasService: FeriasService) {}
+  constructor(private feriasService: FeriasService, private userService: UserService) { }
 
   setHeader(header: any) {
     this.cabecalho = header;
@@ -74,130 +76,142 @@ export class FeriasPDFService {
     }
   }
 
-  processa(cabecalho: {
-    ferias: { iniFerias: any; fimFerias: any };
-    empresa: any;
-    matricula: any;
-  }) {
+  processa(cabecalho: any) {
     let header: any = {};
     let start = cabecalho.ferias.iniFerias;
     let end = cabecalho.ferias.fimFerias;
     let empresa = cabecalho.empresa;
     let matricula = cabecalho.matricula;
     let ferias = localStorage.getItem('ferias');
+    let funcionario: any
+
     if (ferias != undefined) {
       this.ferias = JSON.parse(ferias);
     }
 
     header = this.getHeader();
+    debugger
 
-    var dd = {
-      pageMargins: [40, 120, 40, 60],
-      pageSize: 'A4',
-      pageOrientation: 'portrait',
-      header: (currentPage: any, pageCount: any) => {
-        let s, e;
+    const ano: string = cabecalho.ferias.iniFerias.substring(0, 4)
+    const mes: string = cabecalho.ferias.iniFerias.substring(4, 6)
 
-        s = this.fixData(start);
-        e = this.fixData(end);
+    this.userService.getUser2(ano, mes).subscribe({
+      next: (data) => {
+        funcionario = data
+      },
+      complete: () => {
+        cabecalho.funcionario = funcionario.user[0]
 
-        let stack = {
-          stack: [
-            {
-              style: 'tableExample',
-              color: '#444',
-              table: {
-                widths: ['*', 'auto', '*'],
-                heights: [50],
-                headerRows: 3,
-                // keepWithHeaderRows: 1,
-                body: [
-                  [
-                    {
-                      image: this.urlLogo,
-                      width: 70,
-                      height: 45,
-                      border: [true, true, false, false],
-                    },
-                    {
-                      text: 'Recibo de Ferias',
-                      style: 'tableHeader',
-                      colSpan: 2,
-                      alignment: 'left',
-                      bold: true,
-                      fontSize: 18,
-                      border: [false, true, true, true],
-                      margin: [-35, 0, 0, 0],
-                    },
-                    {},
-                  ],
-                  [
-                    {
-                      text: [
+        var dd = {
+          pageMargins: [40, 120, 40, 60],
+          pageSize: 'A4',
+          pageOrientation: 'portrait',
+          header: (currentPage: any, pageCount: any) => {
+            let s, e;
+
+            s = this.fixData(start);
+            e = this.fixData(end);
+
+            let stack = {
+              stack: [
+                {
+                  style: 'tableExample',
+                  color: '#444',
+                  table: {
+                    widths: ['*', 'auto', '*'],
+                    heights: [50],
+                    headerRows: 3,
+                    // keepWithHeaderRows: 1,
+                    body: [
+                      [
                         {
-                          text: 'Razao Social\n',
+                          image: this.urlLogo,
+                          width: 70,
+                          height: 45,
+                          border: [true, true, false, false],
+                        },
+                        {
+                          text: 'Recibo de Ferias',
                           style: 'tableHeader',
+                          colSpan: 2,
                           alignment: 'left',
                           bold: true,
+                          fontSize: 18,
+                          border: [false, true, true, true],
+                          margin: [-35, 0, 0, 0],
                         },
-                        { text: `${empresa.nome}` },
+                        {},
                       ],
-                      colSpan: 2,
-                    },
-                    {},
-                    {
-                      text: [
+                      [
                         {
-                          text: 'CNPJ\n',
-                          style: 'tableHeader',
-                          alignment: 'left',
-                          bold: true,
+                          text: [
+                            {
+                              text: 'Razao Social\n',
+                              style: 'tableHeader',
+                              alignment: 'left',
+                              bold: true,
+                            },
+                            { text: `${empresa.nome}` },
+                          ],
+                          colSpan: 2,
                         },
-                        { text: `${empresa.cgc}` },
-                      ],
-                    },
-                  ],
-                  [
-                    {
-                      text: [
+                        {},
                         {
-                          text: 'Matricula\n',
-                          style: 'tableHeader',
-                          alignment: 'left',
-                          bold: true,
+                          text: [
+                            {
+                              text: 'CNPJ\n',
+                              style: 'tableHeader',
+                              alignment: 'left',
+                              bold: true,
+                            },
+                            { text: `${empresa.cgc}` },
+                          ],
                         },
-                        { text: `${matricula.matricula}` },
                       ],
-                    },
-                    {
-                      text: [
+                      [
                         {
-                          text: 'Nome do Funcionario\n',
-                          style: 'tableHeader',
-                          alignment: 'left',
-                          bold: true,
+                          text: [
+                            {
+                              text: 'Matricula\n',
+                              style: 'tableHeader',
+                              alignment: 'left',
+                              bold: true,
+                            },
+                            { text: `${matricula.matricula}` },
+                          ],
                         },
-                        { text: `${matricula.nome}` },
+                        {
+                          text: [
+                            {
+                              text: 'Nome do Funcionario\n',
+                              style: 'tableHeader',
+                              alignment: 'left',
+                              bold: true,
+                            },
+                            { text: `${matricula.nome}` },
+                          ],
+                          colSpan: 2,
+                        },
+                        {},
                       ],
-                      colSpan: 2,
-                    },
-                    {},
-                  ],
-                ],
-              },
-            },
-          ],
-          margin: [10, 5, 2, 2],
-          fontSize: 10,
+                    ],
+                  },
+                },
+              ],
+              margin: [10, 5, 2, 2],
+              fontSize: 10,
+            };
+
+            return stack;
+          },
+          content: this.content(cabecalho, this.ferias),
         };
 
-        return stack;
-      },
-      content: this.content(cabecalho, this.ferias),
-    };
+        let name = 'ferias_' + uuid.v4() + '.pdf';
+        pdfMake.createPdf(dd).download(name);
+      }
+    })
 
-    let name = 'ferias_' + uuid.v4() + '.pdf';
-    pdfMake.createPdf(dd).download(name);
   }
 
   content(cabecalho: any, ferias: any) {
@@ -646,16 +660,14 @@ export class FeriasPDFService {
       {
         columns: [
           {
-            text: `${'__________________________________________________'}\n${
-              func.nome
-            }\n\n`,
+            text: `${'__________________________________________________'}\n${func.nome
+              }\n\n`,
             style: 'tableHeader',
             alignment: 'center',
           },
           {
-            text: `${'__________________________________________________'}\n${
-              cabecalho.empresa.nome
-            }\n\n`,
+            text: `${'__________________________________________________'}\n${cabecalho.empresa.nome
+              }\n\n`,
             style: 'tableHeader',
             alignment: 'center',
           },
