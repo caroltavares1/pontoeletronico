@@ -5880,7 +5880,7 @@ png-js@^1.0.0:
   integrity sha512-k+YsbhpA9e+EFfKjTCH3VW6aoKlyNYI6NYdTfDL4CIvFnvsuO84ttonmZE7rc+v23SLTH8XX+5w/Ak9v0xGY4g==
 
 "ponto-eletronico@file:":
-  version "0.0.4"
+  version "0.0.5"
   resolved "file:"
   dependencies:
     "@angular/animations" "~16.2.0"
