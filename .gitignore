@@ -4,3 +4,4 @@ ponto-eletronico/.vscode/
 *.txt
 api/zArrToTxt.prw
 console_error.log
+api/compilar/*.*

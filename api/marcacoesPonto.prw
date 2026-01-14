@@ -626,11 +626,21 @@ Static Function GetFeriados(cDataIni, cDataFin, cFilFunc, cMatricula)
 			SP3.%NotDel%
 			AND SP3.P3_DATA BETWEEN %exp:DTOS(cDataIni)% AND %exp:DTOS(cDataFin)%
 			AND SP3.P3_FILIAL = %exp:cFilFunc%
+			AND SP3.P3_FIXO = 'N'
+		UNION ALL
+		SELECT
+			SP3.P3_DATA AS 'DATA', SP3.P3_DESC AS 'DESC', SP3.P3_FIXO AS 'FIXO', SP3.P3_MESDIA
+		FROM %Table:SP3% AS SP3
+		WHERE
+			SP3.%NotDel%
+			AND SP3.P3_FILIAL = %exp:cFilFunc%
+			AND SP3.P3_FIXO = 'S'
+			AND MONTH(SP3.P3_DATA) = %exp:Month(cDataFin)%
 	ENDSQL
 
 	While !TSP3->(Eof())
 		If TSP3->FIXO == 'S'
-			cAno := cValToChar(Ano(Date()))
+			cAno := IIf(Empty(cDataFin), cValToChar(Ano(Date())), Year2Str(cDataFin))
 			cMesDia := TSP3->P3_MESDIA
 			aJornada := GetJornada(cFilFunc, cMatricula, TSP3->DATA)
 			cJornadaPrevista := aJornada[1]
