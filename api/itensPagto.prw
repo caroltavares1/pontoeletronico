@@ -48,12 +48,13 @@ WSMETHOD GET WSSERVICE detalhesPagto
             FROM
                 %Table:SRD% as SRD
                 INNER JOIN %Table:SRV% SRV ON SRV.RV_FILIAL = LEFT(SRD.RD_FILIAL, 2)
-                AND SRV.RV_COD = SRD.RD_PD
+                AND SRV.RV_COD = SRD.RD_PD AND SRV.%NotDel%
             WHERE
                 SRD.RD_FILIAL = %exp:aParams[nPosFilial,2]%
                 AND SRD.RD_MAT = %exp:aParams[nPosMatr,2]%
                 AND SRD.RD_DATARQ = %exp:aParams[nPosDtArq,2]%
                 AND SRD.RD_ROTEIR = %exp:aParams[nPosRoteiro,2]%
+				AND SRD.%NotDel%
 			UNION
 			SELECT DISTINCT
                 SRC.RC_FILIAL FILIAL,
@@ -71,12 +72,13 @@ WSMETHOD GET WSSERVICE detalhesPagto
             FROM
                 %Table:SRC% as SRC
                 INNER JOIN %Table:SRV% SRV ON SRV.RV_FILIAL = LEFT(SRC.RC_FILIAL, 2)
-                AND SRV.RV_COD = SRC.RC_PD
+                AND SRV.RV_COD = SRC.RC_PD AND SRV.%NotDel%
             WHERE
                 SRC.RC_FILIAL = %exp:aParams[nPosFilial,2]%
                 AND SRC.RC_MAT = %exp:aParams[nPosMatr,2]%
                 AND SRC.RC_PERIODO = %exp:aParams[nPosDtArq,2]%
                 AND SRC.RC_ROTEIR = %exp:aParams[nPosRoteiro,2]%
+				AND SRC.%NotDel%
 		ENDSQL
 
 		// cResponse['query'] := GetLastQuery()[2]
