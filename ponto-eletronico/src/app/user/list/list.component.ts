@@ -96,6 +96,8 @@ export class ListComponent implements OnInit {
   onLoadFields() {
 
     const today = new Date()
+    today.setDate(today.getDate() - 5)
+
     let month = today.getMonth()
     let start = new Date(today.getFullYear(), month, 1).toISOString().slice(0, 10)
     let end = new Date(today.getFullYear(), month + 1, 0).toISOString().slice(0, 10)
