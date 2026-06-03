@@ -5,8 +5,8 @@
 export const environment = {
   production: false,
   title: 'Ambiente de Desenvolvimento',
-  apiURL: 'https://prod202:8098/rest',
-  authorization: "Basic " + btoa("pontoeletronico:Pe@2023#")
+  apiURL: 'https://prop204:8097/rest',
+  authorization: "Basic " + "cG9udG9lbGV0cm9uaWNvOlBvbnRvIzI2"
 };
 /* export const environment = {
   production: false,
